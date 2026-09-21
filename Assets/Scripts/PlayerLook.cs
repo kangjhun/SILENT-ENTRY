@@ -9,7 +9,7 @@ public class PlayerLook : MonoBehaviour
     [SerializeField] float _distance = 3f;
     [SerializeField] float _shoulderOffset = -0.5f;
 
-    [SerializeField] float _mouseSensitivity = 2f;
+    [SerializeField] float _mouseSensitivity = 1f;
     [SerializeField] float _minPitch = -30f;
     [SerializeField] float _maxPitch = 60f;
 
