@@ -18,6 +18,7 @@ public class EnemyFSM : MonoBehaviour
 
     [SerializeField] Transform[] _patrolPoints;
     [SerializeField] float _walkSpeed = 2f;
+    [SerializeField, Min(0.1f)] float _investigateSpeed = 1.5f;
     [SerializeField] float _patrolWaitTime = 1f;
 
     [SerializeField] float _chaseSpeed = 4f;
@@ -30,6 +31,9 @@ public class EnemyFSM : MonoBehaviour
     [SerializeField] float _stoppingDistance = 0.3f;
     [SerializeField] float _sampleRadius = 2f;
     [SerializeField] float _moveTimeout = 12f;
+
+    [SerializeField] GameManager _gameManger;
+    [SerializeField, Min(0.1f)] float _catchDistance = 1.2f;
 
     NavMeshAgent _agent;
     EnemyVision _vision;
@@ -106,6 +110,8 @@ public class EnemyFSM : MonoBehaviour
     {
         if (!_initialized || !AgentReady) return;
 
+        if (_gameManger != null && !_gameManger.IsPlaying) return;
+
         bool seesPlayer = _vision.CanSeePlayer && _vision.PlayerTarget != null;
 
         if (seesPlayer)
@@ -151,6 +157,7 @@ public class EnemyFSM : MonoBehaviour
         _agent.updateRotation = true;
         _agent.ResetPath();
         _agent.isStopped = false;
+
         _hasDestination = false;
         _waitTimer = 0f;
         _moveTimer = 0f;
@@ -158,7 +165,7 @@ public class EnemyFSM : MonoBehaviour
         _nextMoveTime = 0f;
         _searchingAround = false;
 
-        _agent.speed = _currentState == EnemyState.Chase ? _chaseSpeed : _walkSpeed;
+        _agent.speed = _walkSpeed;
 
         switch(_currentState)
         {
@@ -166,10 +173,11 @@ public class EnemyFSM : MonoBehaviour
                 MoveTo(_patrolPoints[_patrolIndex].position);
                 break;
             case EnemyState.Investigate:
+                _agent.speed = _investigateSpeed;
                 MoveTo(_noisePosition);
                 break;
             case EnemyState.Chase:
-
+                _agent.speed = _chaseSpeed;
                 break;
             case EnemyState.Search:
                 MoveTo(_searchPosition);
@@ -212,11 +220,35 @@ public class EnemyFSM : MonoBehaviour
 
     void UpdateChase()
     {
+        if (CheckCatchPlayer()) return;
+
         if (Time.time < _nextMoveTime) return;
         _nextMoveTime = Time.time + _repathInterval;
         MoveTo(_lastSeenPosition);
     }
 
+    bool CheckCatchPlayer()
+    {
+        if(_gameManger == null || !_gameManger.IsPlaying) return false;
+        if(!_vision.CanSeePlayer || _vision.PlayerTarget == null) return false;
+
+        Vector3 origin = _vision.EyePosition;
+        Vector3 toPlayer = _vision.PlayerTarget.position - origin;
+
+        float distance = toPlayer.magnitude;
+
+        if(distance > _catchDistance) return false;
+
+        if(distance > 0.001f && _vision.CheckObstacle(origin,toPlayer/distance,distance,out _))
+        {
+            return false;
+        }
+
+        StopMoving();
+        _gameManger.FailMission();
+
+        return true;
+    }
     void UpdateSearch()
     {
         if (!_searchingAround)
