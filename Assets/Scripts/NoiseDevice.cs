@@ -13,25 +13,31 @@ public class NoiseDevice : MonoBehaviour,IInteractable
     [SerializeField, Min(0.1f)] float _hearingRadius = 10f;
     [SerializeField, Min(0f)] float _cooldown = 2f;
 
+    //다음 작동이 가능한 게임 시간
     float _nextUseTime;
 
+    //상호작용 안내에 표시할 이름
     public string DisplayName => _displayName;
 
+    //거리, 방향, 가림 판정에 사용할 월드 좌표
     public Vector3 InteractionPosition => _interactionPoint != null ? _interactionPoint.position : transform.position;
 
+    //쿨타임 중에도 상호작용 대상으로 선택되도록 유지
     public bool CanInteract => isActiveAndEnabled;
     public void Interact()
     {
         if (!CanInteract) return;
-
+        //쿨타임이 지나지 않았다면 재작동하지 않음
         if (Time.time < _nextUseTime) return;
 
+        //다음 작동 가능 시간 갱신
         _nextUseTime = Time.time + _cooldown;
 
         Debug.Log($"{_displayName} 소음 발생", this);
 
         if (_enemies == null) return;
 
+        //등록된 적들에게 소음 발새 위치와 청각 범위 전달
         foreach(EnemyFSM enemy in _enemies)
         {
             if (enemy == null) continue;

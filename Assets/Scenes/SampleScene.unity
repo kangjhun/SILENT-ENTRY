@@ -1113,6 +1113,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerAnimation
   _animator: {fileID: 1454007739}
   _blendTime: 0.1
+  _playerMovement: {fileID: 739977560}
 --- !u!114 &739977562
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1530,8 +1531,8 @@ MonoBehaviour:
   - {fileID: 1305842995}
   - {fileID: 1710143040}
   _walkSpeed: 2
-  _investigateSpeed: 1.5
   _patrolWaitTime: 1
+  _investigateSpeed: 1.5
   _chaseSpeed: 4
   _repathInterval: 0.2
   _searchDuration: 4
