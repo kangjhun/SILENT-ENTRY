@@ -18,12 +18,30 @@ public class PlayerInteraction : MonoBehaviour
     [Header("상호작용 대상과 장애물 레이어")]
     [SerializeField] LayerMask _rayMask;
 
+    [Header("엄폐")]
+    [SerializeField] PlayerCover _playerCover;
+
     IInteractable _currentTarget;
 
     //한 대상에 Collider가 여러 개 있어도 한 번만 검사
     readonly HashSet<IInteractable> _checkedTargets = new HashSet<IInteractable>();
     void Update()
     {
+        if(Time.timeScale == 0f || Cursor.lockState != CursorLockMode.Locked)
+        {
+            UpdateCurrentTarget(null);
+            return;
+        }
+
+        if(_playerCover != null && _playerCover.IsInCover)
+        {
+            UpdateCurrentTarget(null);
+            if (Input.GetKeyDown(KeyCode.E))
+            {
+                _playerCover.ExitCover();
+            }
+            return;
+        }
         //매 프레임 현재 조건에 맞는 대상 선택
         IInteractable target = FindTarget();
 
