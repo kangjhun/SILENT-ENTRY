@@ -109,8 +109,12 @@ public class PlayerMovement : MonoBehaviour
 
         if (isInCover)
         {
-            //엄폐 중 : A/D 입력으로 벽을 따라 이동
-            velocity = _cover.GetVelocity(input.x);
+            //캐릭터의 오른쪽과 카메라의 오른쪽이 같은 방향인지 확인
+            float alignment = Vector3.Dot(transform.right, right);
+            //서로 반대 방향이면 입력을 뒤집어 화면 기준 좌우를 맞춤
+            float coverInput = alignment < 0f ? - input.x : input.x;
+            
+            velocity = _cover.GetVelocity(coverInput);
         }
         else
         {

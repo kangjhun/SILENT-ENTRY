@@ -64,8 +64,8 @@ public class PlayerCover : MonoBehaviour
 
         if(_visualRoot != null)
         {
-            float offset = _visualWallOffset > 0f ? _visualWallOffset : _controller.radius;
-            _visualRoot.localPosition = _visualOriginalLocalPosition + Vector3.back * offset;
+            _visualRoot.localPosition = _visualOriginalLocalPosition;
+            _visualRoot.position -= _wallNormal * _visualWallOffset;   
         }
 
         

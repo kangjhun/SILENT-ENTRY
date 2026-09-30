@@ -20,7 +20,7 @@ public class EnemyAnimation : MonoBehaviour
     {
         _agent = GetComponent<NavMeshAgent>();  
 
-        if( _agent == null)
+        if( _animator == null)
         {
             _animator = GetComponentInChildren<Animator>();
         }
