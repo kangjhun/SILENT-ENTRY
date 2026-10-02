@@ -13,8 +13,11 @@ public class PlayerLook : MonoBehaviour
 
     [Header("마우스 회전")]
     [SerializeField,Min(0f)] float _mouseSensitivity = 1f;
-    [SerializeField] float _minPitch = -30f;
-    [SerializeField] float _maxPitch = 60f;
+    [SerializeField] float _minPitch = -10f;
+    [SerializeField] float _maxPitch = 35f;
+
+    [SerializeField, Min(0f)]
+    float _verticlaSensitivity = 0.4f;
 
     float _yaw; //좌우 회전 각도
     float _pitch = 20f; //위아래 회전 각도
@@ -48,11 +51,11 @@ public class PlayerLook : MonoBehaviour
         }
 
         //커서가 풀렸거나 게임 시간이 정지됐으면 회전 입력 무시
-        if (Cursor.lockState != CursorLockMode.Locked) return;
+        if (Cursor.lockState != CursorLockMode.Locked || Time.timeScale == 0f) return;
 
         //마우스 이동량으로 회전 각도 누적
         _yaw += Input.GetAxis("Mouse X") * _mouseSensitivity;
-        _pitch += Input.GetAxis("Mouse Y") * _mouseSensitivity;
+        _pitch += Input.GetAxis("Mouse Y") * _verticlaSensitivity;
 
         //카메라가 지나치게 위아래로 회전하지 않도록 제한
         _pitch = Mathf.Clamp(_pitch,_minPitch, _maxPitch);  

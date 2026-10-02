@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.AI;
 
-[RequireComponent(typeof(NavMeshAgent))]
+[RequireComponent(typeof(NavMeshAgent), typeof(EnemyFSM))]
 public class EnemyAnimation : MonoBehaviour
 {
     [SerializeField] Animator _animator;
@@ -10,15 +10,19 @@ public class EnemyAnimation : MonoBehaviour
     float _blendTime = 0.15f;
 
     NavMeshAgent _agent;
+    EnemyFSM _fsm;
 
     //매번 문자열을 반환하지 않도록 파마미터 ID를 저장
     static readonly int SpeedHash = Animator.StringToHash("Speed");
+    static readonly int isTurningHash = Animator.StringToHash("IsTurning");
+    static readonly int TurnDirectionHash = Animator.StringToHash("TurnDirection");
 
     //아주 작은 움직임은 정지로 처리
     const float StopThreshole = 0.05f;
      void Awake()
     {
         _agent = GetComponent<NavMeshAgent>();  
+        _fsm = GetComponent<EnemyFSM>();
 
         if( _animator == null)
         {
@@ -40,12 +44,20 @@ public class EnemyAnimation : MonoBehaviour
         //게임이 일시정지된 동안 파라미터 갱신 중단
         if (Time.timeScale == 0f) return;
 
-        float speed = GetMovementSpeed();
+        bool isTurning = _fsm.isActiveAndEnabled && _fsm.IsTurning;
 
+        _animator.SetFloat(TurnDirectionHash, isTurning ? _fsm.TurnDirection : 0f);
 
-        //실제 이동 속도를 Blend Tree에 전달
-        //blendTime을 사용해 속도 값이 부드럽게 바뀌도록 처리
-        _animator.SetFloat(SpeedHash,speed,_blendTime,Time.deltaTime);
+        _animator.SetBool(isTurningHash,isTurning);
+
+        if (isTurning)
+        {
+            _animator.SetFloat(SpeedHash, 0f);
+        }
+        else
+        {
+            _animator.SetFloat(SpeedHash, GetMovementSpeed(), _blendTime, Time.deltaTime);
+        }
     }
 
     float GetMovementSpeed()

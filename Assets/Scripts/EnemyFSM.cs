@@ -22,6 +22,12 @@ public class EnemyFSM : MonoBehaviour
     [SerializeField] float _walkSpeed = 2f;
     [SerializeField] float _patrolWaitTime = 1f;
 
+    [Header("순찰 출발 전 회전")]
+    [SerializeField, Min(1f)] float _turnSpeed = 240f;
+    [SerializeField, Range(1f, 45f)] float _startMoveAngle = 15f;
+
+    bool _turningBeforeMove;
+
     [Header("조사")]
     [SerializeField, Min(0.1f)] float _investigateSpeed = 1.5f;
 
@@ -67,6 +73,8 @@ public class EnemyFSM : MonoBehaviour
     const float ReturnRetryInterval = 1f;
 
     public EnemyState CurrentState => _currentState;
+    public bool IsTurning => _turningBeforeMove;
+    public float TurnDirection {  get; private set; }   
 
     //Agent가 실제 NavMesh 이동을 수행할 수 있는 상태인지 확인
     bool AgentReady => _agent != null && _agent.enabled && _agent.isOnNavMesh;
@@ -146,6 +154,8 @@ public class EnemyFSM : MonoBehaviour
         //어떤 상태에서든 플레이어 발견을 최우선으로 처리
         UpdatePlayerDetection();
 
+        if (UpdateTurnBeforeMove()) return;
+
         switch(_currentState)
         {
             case EnemyState.Patrol:
@@ -195,6 +205,8 @@ public class EnemyFSM : MonoBehaviour
 
     void EnterState()
     {
+        _turningBeforeMove = false;
+
         //이전 상태의 이동 경로와 타이머 초기화
         _agent.updateRotation = true;
         _agent.ResetPath();
@@ -214,9 +226,12 @@ public class EnemyFSM : MonoBehaviour
         switch(_currentState)
         {
             case EnemyState.Patrol:
+                MoveTo(_patrolPoints[_patrolIndex].position,true);
+                break;   
             case EnemyState.Return:
+                SelectClosestPatrolPoint();
                 MoveTo(_patrolPoints[_patrolIndex].position);
-                break;       
+                break;
             case EnemyState.Investigate:
                 _agent.speed = _investigateSpeed;
                 MoveTo(_noisePosition);
@@ -254,7 +269,7 @@ public class EnemyFSM : MonoBehaviour
         //마지막 지점 다음에는 첫 번째 지점으로 돌아감
         _patrolIndex = (_patrolIndex +1 ) % _patrolPoints.Length;
 
-        MoveTo(_patrolPoints[_patrolIndex].position);
+        MoveTo(_patrolPoints[_patrolIndex].position,true);
     }
 
     void UpdateInvestigate()
@@ -368,7 +383,7 @@ public class EnemyFSM : MonoBehaviour
         }
     }
 
-    void MoveTo(Vector3 position)
+    void MoveTo(Vector3 position, bool turnBeforeMove = false)
     {
         //현재 Agent의 종류와 이동 가능한 영역에 맞춰 검색
         NavMeshQueryFilter filter = new NavMeshQueryFilter
@@ -389,7 +404,12 @@ public class EnemyFSM : MonoBehaviour
         _agent.isStopped = false;
         _hasDestination = _agent.SetPath(_path);
 
-        if (!_hasDestination) { StopMoving(); }
+        if (!_hasDestination) { StopMoving(); return; }
+
+        _turningBeforeMove = turnBeforeMove;
+
+        _agent.updateRotation = !turnBeforeMove;
+        _agent.isStopped = turnBeforeMove;
     }
 
     bool HasArrived()
@@ -402,6 +422,9 @@ public class EnemyFSM : MonoBehaviour
 
     void StopMoving()
     {
+        _turningBeforeMove = false;
+        _agent.updateRotation = true;
+
         _agent.ResetPath();
         _agent.isStopped = true;
         _hasDestination = false;
@@ -433,5 +456,87 @@ public class EnemyFSM : MonoBehaviour
         {
             ChangeState(EnemyState.Investigate);
         }
+    }
+
+    bool UpdateTurnBeforeMove()
+    {
+        if(!_turningBeforeMove) return false;
+        if (_agent.pathPending) return true;
+
+        if(!_hasDestination || !_agent.hasPath || _agent.pathStatus != NavMeshPathStatus.PathComplete)
+        {
+            StopMoving();
+            return false;
+        }
+
+        Vector3 direction = _agent.steeringTarget - transform.position;
+        direction.y = 0f;
+
+        if(HasArrived() || direction.sqrMagnitude < 0.0001f)
+        {
+            _turningBeforeMove = false;
+            _agent.updateRotation = true;
+            _agent.isStopped = false;
+            return false;
+        }
+
+        float signedAngle = Vector3.SignedAngle(transform.forward, direction, Vector3.up);
+        TurnDirection = signedAngle < 0f ? -1f : 1f;
+
+        float turnAmount = Mathf.Clamp(signedAngle, -_turnSpeed * Time.deltaTime, _turnSpeed * Time.deltaTime);
+
+        transform.Rotate(Vector3.up, turnAmount, Space.World);
+
+        float angle = Mathf.Abs(signedAngle - turnAmount);
+
+        if(angle <= _startMoveAngle)
+        {
+            _turningBeforeMove = false;
+            _agent.updateRotation = true;
+            _agent.isStopped = false;
+        }
+
+        return true;
+    }
+
+    void SelectClosestPatrolPoint()
+    {
+        float shortestDistance = Mathf.Infinity;
+        int closestIndex = _patrolIndex;
+
+        NavMeshQueryFilter filter = new NavMeshQueryFilter
+        {
+            agentTypeID = _agent.agentTypeID,
+            areaMask = _agent.areaMask
+        };
+
+        for(int i = 0; i< _patrolPoints.Length; i++)
+        {
+            if (!NavMesh.SamplePosition(_patrolPoints[i].position,out NavMeshHit hit, _sampleRadius, filter))
+            {
+                continue;
+            }
+
+            if (!_agent.CalculatePath(hit.position, _path)) continue;
+
+            if(_path.status != NavMeshPathStatus.PathComplete) continue;
+
+            Vector3[] corners = _path.corners;
+            if (corners.Length == 0) continue;
+            float distance = 0f;
+
+            for(int j = 1; j < corners.Length; j++)
+            {
+                distance += Vector3.Distance(corners[j - 1], corners[j]);
+            }
+
+            if(distance < shortestDistance)
+            {
+                shortestDistance = distance;
+                closestIndex = i;
+            }
+        }
+
+        _patrolIndex = closestIndex;    
     }
 }

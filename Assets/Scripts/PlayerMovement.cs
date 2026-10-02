@@ -6,11 +6,11 @@ public class PlayerMovement : MonoBehaviour
    
     [SerializeField] Transform _camerTransform;
 
-    [SerializeField] float _walkSpeed = 3f;
-    [SerializeField] float _runSpeed = 6f;
+    [SerializeField] float _walkSpeed = 2f;
+    [SerializeField] float _runSpeed = 3.2f;
     [SerializeField] float _rotationSpeed = 540f;
 
-    [SerializeField] float _crouchSpeed = 1.5f;
+    [SerializeField] float _crouchSpeed = 1.2f;
     [SerializeField] float _crouchHeight = 1f;
 
     //벽 등의 레이러
