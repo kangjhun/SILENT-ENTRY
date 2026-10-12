@@ -48,6 +48,10 @@ public class EnemyFSM : MonoBehaviour
     [SerializeField] GameManager _gameManger;
     [SerializeField, Min(0.1f)] float _catchDistance = 1.2f;
 
+    [Header("문 통과")]
+    [SerializeField] DoorController[] _doors;
+    [SerializeField, Min(0.1f)] float _doorLookAhead = 1.5f;
+
     NavMeshAgent _agent;
     EnemyVision _vision;
     NavMeshPath _path;
@@ -62,6 +66,7 @@ public class EnemyFSM : MonoBehaviour
     bool _hasDestination; //이동 경로 설정에 성공했는지
     bool _searchingAround; //수색 위치에 도착해 주변을 살피는 중인지
     bool _initialized; //초기 설정을 마쳤는지
+    bool _waitingForDoor;
 
     Vector3 _noisePosition;
     Vector3 _lastSeenPosition;
@@ -73,7 +78,7 @@ public class EnemyFSM : MonoBehaviour
     const float ReturnRetryInterval = 1f;
 
     public EnemyState CurrentState => _currentState;
-    public bool IsTurning => _turningBeforeMove;
+    public bool IsTurning => _turningBeforeMove && !_waitingForDoor;
     public float TurnDirection {  get; private set; }   
 
     //Agent가 실제 NavMesh 이동을 수행할 수 있는 상태인지 확인
@@ -153,7 +158,7 @@ public class EnemyFSM : MonoBehaviour
 
         //어떤 상태에서든 플레이어 발견을 최우선으로 처리
         UpdatePlayerDetection();
-
+        if (UpdateDoorBeforeMove()) return;
         if (UpdateTurnBeforeMove()) return;
 
         switch(_currentState)
@@ -173,6 +178,10 @@ public class EnemyFSM : MonoBehaviour
             case EnemyState.Return:
                 UpdateReturn();
                 break;
+        }
+        if (!GameEnded)
+        {
+            UpdateDoorBeforeMove();
         }
     }
 
@@ -205,6 +214,7 @@ public class EnemyFSM : MonoBehaviour
 
     void EnterState()
     {
+        _waitingForDoor = false;
         _turningBeforeMove = false;
 
         //이전 상태의 이동 경로와 타이머 초기화
@@ -422,6 +432,7 @@ public class EnemyFSM : MonoBehaviour
 
     void StopMoving()
     {
+        _waitingForDoor = false;
         _turningBeforeMove = false;
         _agent.updateRotation = true;
 
@@ -497,6 +508,89 @@ public class EnemyFSM : MonoBehaviour
         }
 
         return true;
+    }
+    bool UpdateDoorBeforeMove()
+    {
+        DoorController door = FindDoorOnPath();
+        if(door != null)
+        {
+            door.RequestOpen();
+            if (!door.IsPassable)
+            {
+                _agent.isStopped = true;
+                _waitingForDoor = true;
+                return true;
+            }
+        }
+
+        if (_waitingForDoor)
+        {
+            _waitingForDoor = false;
+
+            if (_hasDestination && !_turningBeforeMove)
+                _agent.isStopped = false;
+        }
+        return false;
+    }
+
+    DoorController FindDoorOnPath()
+    {
+        if(!_hasDestination || !_agent.hasPath || _agent.pathPending || HasArrived()||_doors == null)
+            return null;
+
+        Vector3[] corners = _agent.path.corners;
+
+        if(corners.Length < 2) return null;
+
+        Vector3 start = _agent.nextPosition;
+
+        Vector3 heightOffset = Vector3.up * (_agent.height * 0.5f);
+
+        float remaining = Mathf.Max(_doorLookAhead, _agent.radius + _agent.speed * Time.deltaTime + 0.2f);
+
+        for(int i=1; i<corners.Length && remaining > 0f; i++)
+        {
+            Vector3 direction = corners[i] -start;
+            float length = direction.magnitude;
+
+            if(length < 0.0001f)
+            {
+                start = corners[i];
+                continue;
+            }
+
+            float segmentLength = Mathf.Min(length,remaining);
+            Vector3 end = start + direction / length * segmentLength;
+
+            DoorController nearest = null;
+            float nearestFraction = float.PositiveInfinity;
+
+            foreach(DoorController door in _doors)
+            {
+                if (door == null) continue;
+
+                bool intersects = door.IntersectsSegment(start + heightOffset, end + heightOffset, _agent.radius, out float fraction);
+                if(!intersects) continue;
+
+                if (door.IsPassable)
+                {
+                    door.RequestOpen();
+                    continue;
+                }
+
+                if(fraction < nearestFraction)
+                {
+                    nearestFraction = fraction;
+                    nearest = door;
+                }
+            }
+
+            if(nearest != null) return nearest;
+
+            remaining -= segmentLength;
+            start = end;
+        }
+        return null;
     }
 
     void SelectClosestPatrolPoint()
