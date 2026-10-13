@@ -50,6 +50,7 @@ public class PlayerInteraction : MonoBehaviour
         //대상이 있고 현재 상호작용 가능한 경우에만 실행
         if(Input.GetKeyDown(KeyCode.E) && _currentTarget != null && _currentTarget.CanInteract)
         {
+            
             _currentTarget.Interact();
         }
     }
@@ -88,6 +89,7 @@ public class PlayerInteraction : MonoBehaviour
 
         IInteractable bestTarget= null;
         float bestScore = float.PositiveInfinity;
+        bool bestIsDoor = false;
 
         foreach(Collider col in colliders)
         {
@@ -99,7 +101,8 @@ public class PlayerInteraction : MonoBehaviour
             //이미 검사한 대상이면 건너뜀
             if (!_checkedTargets.Add(target)) continue;
 
-            if(!target.CanInteract) continue;
+           
+            if (!target.CanInteract) continue;
 
             Vector3 point = target.InteractionPosition;
 
@@ -129,10 +132,12 @@ public class PlayerInteraction : MonoBehaviour
             float y = viewport.y - 0.5f;
             float score = x * x + y * y;
 
-            if(score < bestScore)
+            bool isDoor = target is DoorController;
+            if(bestTarget == null || (isDoor && !bestIsDoor) || (isDoor == bestIsDoor && score < bestScore))
             {
                 bestScore = score;
                 bestTarget = target;
+                bestIsDoor = isDoor;
             }
         }
         return bestTarget;

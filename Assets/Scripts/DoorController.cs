@@ -35,9 +35,12 @@ public class DoorController : MonoBehaviour,IInteractable
 
     void Awake()
     {
-        if(_hinge == null || _leafCollider == null || _passage == null || _clearanceZone == null || _characterMask.value == 0)
-            enabled = false; return;
-
+        if (_hinge == null || _leafCollider == null || _passage == null || _clearanceZone == null || _characterMask.value == 0)
+        {
+            Debug.LogError("문의 필수 연결과 Character Mask를 확인하세요.", this);
+            enabled = false; 
+            return;
+        }
         _closedRotation = _hinge.localRotation;
 
         _passage.isTrigger = true;
@@ -59,7 +62,7 @@ public class DoorController : MonoBehaviour,IInteractable
 
         _hinge.localRotation = _closedRotation * Quaternion.AngleAxis(_angle, Vector3.up);
 
-        if (_autoClose && IsPassable && Time.deltaTime - _lastOpenRequestTime >= _autoCloseDelay)
+        if (_autoClose && IsPassable && Time.time - _lastOpenRequestTime >= _autoCloseDelay)
             TryClose();
     }
 

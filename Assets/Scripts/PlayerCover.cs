@@ -39,6 +39,7 @@ public class PlayerCover : MonoBehaviour
     {
         if(!CanEnter || wall == null) return;
 
+        if (wall.GetComponentInParent<DoorController>() != null) return;
         Vector3 origin = ProbePosition;
         Vector3 direction = wall.ClosestPoint(origin) - origin;
 
