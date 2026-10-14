@@ -27,7 +27,15 @@ public class PlayerInteraction : MonoBehaviour
     readonly HashSet<IInteractable> _checkedTargets = new HashSet<IInteractable>();
     void Update()
     {
-        if(Time.timeScale == 0f || Cursor.lockState != CursorLockMode.Locked)
+        if (Input.GetKeyDown(KeyCode.E))
+        {
+            Debug.Log(
+                $"[E 입력] timeScale={Time.timeScale}, " +
+                $"커서={Cursor.lockState}, " +
+                $"엄폐={(_playerCover != null && _playerCover.IsInCover)}",
+                this);
+        }
+        if (Time.timeScale == 0f || Cursor.lockState != CursorLockMode.Locked)
         {
             UpdateCurrentTarget(null);
             return;
@@ -74,6 +82,12 @@ public class PlayerInteraction : MonoBehaviour
 
     IInteractable FindTarget()
     {
+        int GetInteractionPriority(IInteractable target)
+        {
+            if (target is ThrowableCoin) return 2;
+            if(target is DoorController) return 1;
+            return 0;
+        }
         if (_playerCamera == null || _interactionOrigin == null) return null;
 
         Vector3 origin = _interactionOrigin.position;
@@ -89,7 +103,7 @@ public class PlayerInteraction : MonoBehaviour
 
         IInteractable bestTarget= null;
         float bestScore = float.PositiveInfinity;
-        bool bestIsDoor = false;
+        int bestPriority = -1;
 
         foreach(Collider col in colliders)
         {
@@ -132,12 +146,12 @@ public class PlayerInteraction : MonoBehaviour
             float y = viewport.y - 0.5f;
             float score = x * x + y * y;
 
-            bool isDoor = target is DoorController;
-            if(bestTarget == null || (isDoor && !bestIsDoor) || (isDoor == bestIsDoor && score < bestScore))
+            int priority = GetInteractionPriority(target);
+            if(bestTarget == null || priority > bestPriority || (priority == bestPriority && score < bestScore))
             {
                 bestScore = score;
                 bestTarget = target;
-                bestIsDoor = isDoor;
+                bestPriority = priority;
             }
         }
         return bestTarget;
