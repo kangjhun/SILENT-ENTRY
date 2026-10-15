@@ -52,4 +52,6 @@ public class PlayerAnimation : MonoBehaviour
         _animator.SetFloat(CrouchSpeedHash, crouchSpeed, _blendTime, Time.deltaTime);
         _animator.SetFloat(CoverMoveHash, _playerMovement.CoverMove, _blendTime, Time.deltaTime);
     }
+
+    
 }

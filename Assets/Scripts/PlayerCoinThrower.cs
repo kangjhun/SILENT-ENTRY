@@ -6,6 +6,7 @@ public class PlayerCoinThrower : MonoBehaviour
 {
     [SerializeField] Camera _playerCamera;
     [SerializeField] Transform _throwOrigin;
+    [SerializeField] Transform _throwSatfetyOrigin;
     [SerializeField] ThrowableCoin _coinPrefab;
     [SerializeField] PlayerCover _playerCover;
     [SerializeField] Animator _animator;
@@ -170,6 +171,11 @@ public class PlayerCoinThrower : MonoBehaviour
         }
 
         Vector3 origin = _throwOrigin.position;
+
+        if (_throwSatfetyOrigin != null && Physics.Linecast(_throwSatfetyOrigin.position, origin, _environmentMask, QueryTriggerInteraction.Ignore))
+        {
+            return;
+        }
 
         if (Physics.CheckSphere(origin, _spawnCheckRadius, _environmentMask, QueryTriggerInteraction.Ignore))
         {
