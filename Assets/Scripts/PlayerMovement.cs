@@ -38,10 +38,41 @@ public class PlayerMovement : MonoBehaviour
         _standingHeight = _controller.height;
         _standingCenter = _controller.center;
     }
+
+     void Start()
+    {
+        SetCursorLocked(true);
+    }
+
+    void SetCursorLocked(bool locked)
+    {
+        Cursor.lockState = locked ? CursorLockMode.Locked : CursorLockMode.None;
+        Cursor.visible = !locked;
+    }
+
+     void OnDisable()
+    {
+        SetCursorLocked (false);
+
+        IsRunning = false;
+        MoveSpeed = 0f;
+        AnimationMove = Vector2.zero;
+        CoverMove = 0f;
+    }
     void Update()
     {
 
-        if (Time.timeScale == 0f || _camerTransform == null) return;
+        if (Time.timeScale == 0f) return;
+
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            SetCursorLocked(false);
+        }else if(Input.GetMouseButtonDown(0) && Cursor.lockState != CursorLockMode.Locked)
+        {
+            SetCursorLocked(true);
+        }
+
+        if(_camerTransform == null) return; 
 
         bool isInCover = _cover != null && _cover.IsInCover;
 
@@ -91,9 +122,9 @@ public class PlayerMovement : MonoBehaviour
 
         //일반 상태에서만 카메라 방향으로 회전
         //엄폐 중 회전은 PlayerCover가 처리
-        if (!isInCover&&Cursor.lockState == CursorLockMode.Locked && forward.sqrMagnitude > 0.001f)
+        if (!isInCover&&Cursor.lockState == CursorLockMode.Locked && hasInput && moveDirection.sqrMagnitude > 0.001f)
         {
-            Quaternion targetRotation = Quaternion.LookRotation(forward);
+            Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
             transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, _rotationSpeed * Time.deltaTime);
         } 
 

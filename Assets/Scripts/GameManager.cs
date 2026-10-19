@@ -14,7 +14,6 @@ public class GameManager : MonoBehaviour
 
     [Header("게임 종료 시 중단할 플레이어 조작")]
     [SerializeField] PlayerMovement _playerMovement;
-    [SerializeField] PlayerLook _playerLook;
     [SerializeField] PlayerInteraction _playerInteraction;
 
     bool _hasObjective;
@@ -88,7 +87,6 @@ public class GameManager : MonoBehaviour
     void DisablePlayerControls()
     {
      if(_playerMovement != null) _playerMovement.enabled = false;
-     if(_playerLook != null) _playerLook.enabled = false;
      if(_playerInteraction !=  null) _playerInteraction.enabled = false;
     }
 }

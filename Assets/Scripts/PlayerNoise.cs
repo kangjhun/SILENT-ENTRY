@@ -14,11 +14,11 @@ public class PlayerNoise : MonoBehaviour
     [SerializeField, Min(0.05f)] float _runInterval = 0.35f;
 
     [SerializeField, Min(0.01f)] float _minimumMoveSpeed = 0.1f;
-    [SerializeField, Min(0.1f)] float _runSpeedThreshold = 4.5f;
 
     [SerializeField] bool _showDebug;
 
     CharacterController _controller;
+    PlayerMovement _movement;
 
     Vector3 _previousPosition;
     float _stepTimer;
@@ -26,6 +26,7 @@ public class PlayerNoise : MonoBehaviour
      void Awake()
     {
         _controller = GetComponent<CharacterController>();
+        _movement = GetComponent<PlayerMovement>();
     }
 
      void OnEnable()
@@ -59,7 +60,7 @@ public class PlayerNoise : MonoBehaviour
         }
 
         //실제 속도를 기준으로 걷기, 달리기 소음 설정
-        bool isRunning = speed >= _runSpeedThreshold;
+        bool isRunning = _movement != null && _movement.IsRunning;
 
         float interval = isRunning ? _runInterval : _walkInterval;
         float radius = isRunning ? _runNoiseRadius : _walkNoiseRadius;

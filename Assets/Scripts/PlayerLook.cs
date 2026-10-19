@@ -93,4 +93,6 @@ public class PlayerLook : MonoBehaviour
         //게임 종료 등으로 카메라 조작이 중단되면 커서를 해제
         SetCursorLocked(false);
     }
-}
+}//이 코드를 없애고, 지금 시네머신에 followCamera를 사용하니까 여기서 카메라를 followCamera로 옮기고,
+// 이동은 playerMove에서 하게 바꾸기
+
