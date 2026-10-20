@@ -154,6 +154,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1ac87e718eb87c54c8367d43124e60e5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ThrowableCoin
-  _noiseRadius: 6
+  _noiseRadius: 8
   _pickupDelay: 0.4
   _pickupMaxSpeed: 0.2
