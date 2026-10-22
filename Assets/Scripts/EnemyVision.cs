@@ -56,7 +56,7 @@ public class EnemyVision : MonoBehaviour
         //발견, 놓침 상태가 바뀔 때만 로그 출력
         if (detected != _canSeePlayer)
         {
-            Debug.Log(detected ? "플레이어 발견!" : "플레이어 놓침!", this);
+            Debug.Log(detected ? "플레이어 시야에 들어옴" : "플레이어 시야에서 벗어남", this);
 
         }
         _canSeePlayer = detected;

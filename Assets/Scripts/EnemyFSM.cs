@@ -1,3 +1,4 @@
+using Unity.Cinemachine;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -11,7 +12,8 @@ public class EnemyFSM : MonoBehaviour
         Investigate,//소리가 발생한 위치로 이동
         Chase,//보이는 플레이어를 추격
         Search,//마지막 확인 위치로 이동한 뒤 주변 수색
-        Return//순찰 지점을 복귀
+        Return,//순찰 지점을 복귀
+        Suspicious //플레이어를 발견하기 전 감지 중
     }
 
     [Header("현재 상태")]
@@ -29,14 +31,14 @@ public class EnemyFSM : MonoBehaviour
     bool _turningBeforeMove;
 
     [Header("조사")]
-    [SerializeField, Min(0.1f)] float _investigateSpeed = 1.5f;
+    [SerializeField, Min(0.1f)] float _investigateSpeed = 2.8f;
 
     [Header("추격")]
     [SerializeField] float _chaseSpeed = 4f;
     [SerializeField] float _repathInterval = 0.2f;
 
     [Header("수색")]
-    [SerializeField] float _searchDuration = 4f;
+    [SerializeField] float _searchDuration = 6.5f;
     [SerializeField] float _searchLookAngle = 60f;
 
     [Header("이동 판정")]
@@ -52,6 +54,11 @@ public class EnemyFSM : MonoBehaviour
     [SerializeField] DoorController[] _doors;
     [SerializeField, Min(0.1f)] float _doorLookAhead = 1.5f;
 
+    [Header("플레이어 감지")]
+    [SerializeField, Min(0.1f)] float _detectionTime = 0.8f;
+    [SerializeField, Min(0.1f)] float _detectionDecayTime = 1f;
+
+
     NavMeshAgent _agent;
     EnemyVision _vision;
     NavMeshPath _path;
@@ -62,11 +69,19 @@ public class EnemyFSM : MonoBehaviour
     float _moveTimer; //목적지로 이동한 시간
     float _searchTimer; //제자리에서 주변을 살핀 시간
     float _nextMoveTime; //다음 경로 갱신이 가능한 시각
+    float _detectionAmount;
 
     bool _hasDestination; //이동 경로 설정에 성공했는지
     bool _searchingAround; //수색 위치에 도착해 주변을 살피는 중인지
+    public bool IsSearchingAround => _searchingAround;
     bool _initialized; //초기 설정을 마쳤는지
     bool _waitingForDoor;
+
+    bool _hasConfirmedPlayer; //이미 발견이 확정된 플레이어를 수색 중인지
+    public float DetectionAmount => _detectionAmount;
+
+    EnemyState _stateBeforeSuspicion; //감지를 시작하기 전에 하던 행동
+
 
     Vector3 _noisePosition;
     Vector3 _lastSeenPosition;
@@ -78,7 +93,8 @@ public class EnemyFSM : MonoBehaviour
     const float ReturnRetryInterval = 1f;
 
     public EnemyState CurrentState => _currentState;
-    public bool IsTurning => _turningBeforeMove && !_waitingForDoor;
+    public bool IsTurning => !_waitingForDoor && (_turningBeforeMove || (_currentState == EnemyState.Suspicious && Mathf.Abs(TurnDirection) > 0.01f));
+
     public float TurnDirection {  get; private set; }   
 
     //Agent가 실제 NavMesh 이동을 수행할 수 있는 상태인지 확인
@@ -144,7 +160,7 @@ public class EnemyFSM : MonoBehaviour
 
     void Update()
     {
-        if (!_initialized || !AgentReady) return;
+        if (!_initialized || !AgentReady || Time.timeScale <=0f) return;
 
         //상태 처리 중단뿐 아니라 Agent의 이동도 정지
         if (GameEnded)
@@ -178,6 +194,9 @@ public class EnemyFSM : MonoBehaviour
             case EnemyState.Return:
                 UpdateReturn();
                 break;
+            case EnemyState.Suspicious:
+                UpdateSuspicious();
+                break;
         }
         if (!GameEnded)
         {
@@ -187,19 +206,54 @@ public class EnemyFSM : MonoBehaviour
 
     void UpdatePlayerDetection()
     {
-        bool seesPlayer = _vision.CanSeePlayer && _vision.PlayerTarget != null;
+        bool seesPlayer = _vision.isActiveAndEnabled && _vision.CanSeePlayer && _vision.PlayerTarget != null;
 
+        if(_currentState == EnemyState.Chase)
+        {
+            if(seesPlayer)
+            {
+                _lastSeenPosition = _vision.PlayerTarget.position;
+            }
+            else
+            {
+                _searchPosition = _lastSeenPosition;
+                ChangeState(EnemyState.Search);
+            }
+            return;
+        }
         if (seesPlayer)
         {
             //보이는 동안만 플레이어 위치를 기억
             _lastSeenPosition = _vision.PlayerTarget.position;
-            ChangeState(EnemyState.Chase);
+            if (_hasConfirmedPlayer)
+            {
+                _detectionAmount = 1f;
+                ChangeState(EnemyState.Chase);
+                return;
+            }
+
+            if (_currentState != EnemyState.Suspicious)
+            {
+                _stateBeforeSuspicion = _currentState;
+                ChangeState(EnemyState.Suspicious); 
+            }
+
+            _detectionAmount = Mathf.MoveTowards(_detectionAmount, 1f, Time.deltaTime / Mathf.Max(_detectionTime, 0.1f));
+
+            if(_detectionAmount >= 1f)
+            {
+                ChangeState(EnemyState.Chase);
+            }
+
         }
-        else if (_currentState == EnemyState.Chase)
+        else
         {
-            //놓친 뒤에는 현재 플레이어 위치를 따라가지 않고 마지막으로 목격한 위치를 수색
-            _searchPosition = _lastSeenPosition;
-            ChangeState(EnemyState.Search);
+            _detectionAmount = Mathf.MoveTowards(_detectionAmount, 0f, Time.deltaTime / Mathf.Max(_detectionDecayTime, 0.1f));
+
+            if(_currentState == EnemyState.Suspicious && _detectionAmount <= 0f)
+            {
+                ChangeState(_stateBeforeSuspicion);
+            }
         }
     }
 
@@ -207,6 +261,12 @@ public class EnemyFSM : MonoBehaviour
     {
         //같은 상태를 다시 초기화하지 않도록 방지
         if(_currentState == nextState) return;
+        if (_searchingAround)
+        {
+            _searchingAround = false;
+            _searchTimer = 0f;
+            _agent.updateRotation = true;
+        }
         Debug.Log($"{_currentState}-> {nextState}", this);
         _currentState = nextState;
         EnterState();
@@ -216,6 +276,13 @@ public class EnemyFSM : MonoBehaviour
     {
         _waitingForDoor = false;
         _turningBeforeMove = false;
+
+        TurnDirection = 0f;
+        if(_currentState == EnemyState.Patrol || _currentState == EnemyState.Return)
+        {
+            _hasConfirmedPlayer = false;
+            _detectionAmount = 0f;
+        }
 
         //이전 상태의 이동 경로와 타이머 초기화
         _agent.updateRotation = true;
@@ -247,12 +314,18 @@ public class EnemyFSM : MonoBehaviour
                 MoveTo(_noisePosition);
                 break;
             case EnemyState.Chase:
+                _hasConfirmedPlayer = true;
+                _detectionAmount = 1f;
                 _agent.speed = _chaseSpeed;
                 //목적지는 UpdateChase에서 주기적으로 갱신
                 break;
             case EnemyState.Search:
                 MoveTo(_searchPosition);
-                break;    
+                break;
+            case EnemyState.Suspicious:
+                StopMoving();
+                _agent.updateRotation = false;
+                break;
             
         }
     }
@@ -343,25 +416,19 @@ public class EnemyFSM : MonoBehaviour
             //수색 중에는 코드가 직접 회전하므로 Agent 회전 중단
             _agent.updateRotation = false;
 
-            _searchStartRotation = transform.rotation;
+            
             _searchTimer = 0f;
-            _searchingAround = true;    
+            _searchingAround = true; 
+
         }
 
         _searchTimer += Time.deltaTime;
 
-        float duration = Mathf.Max(_searchDuration, 0.01f);
-        float progress = Mathf.Clamp01(_searchTimer / duration);
-
-        //정면 -> 한쪽 -> 반대쪽 -> 정면 순서로 주변을 살핌
-        float angle = Mathf.Sin(progress * Mathf.PI * 2f) * _searchLookAngle;
-
-        transform.rotation = Quaternion.AngleAxis(angle, Vector3.up) * _searchStartRotation;
-
-        if(progress >=1f)
+        if(_searchTimer >= Mathf.Max(_searchDuration, 0.01f))
         {
             ChangeState(EnemyState.Return);
         }
+        
     }
 
     void UpdateReturn()
@@ -391,6 +458,25 @@ public class EnemyFSM : MonoBehaviour
 
             MoveTo(_patrolPoints[_patrolIndex].position);
         }
+    }
+
+    void UpdateSuspicious()
+    {
+        Vector3 direction = _lastSeenPosition - transform.position;
+        direction.y = 0f;
+
+        if(direction.sqrMagnitude < 0.001f)
+        {
+            TurnDirection = 0f;
+            return;
+        }
+
+        float angle = Vector3.SignedAngle(transform.forward, direction, Vector3.up);
+        TurnDirection = Mathf.Abs(angle) > 2f ? (angle < 0f ? -1f : 1f) : 0f;
+
+        Quaternion targetRotation = Quaternion.LookRotation(direction);
+        transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, _turnSpeed * Time.deltaTime);
+
     }
 
     void MoveTo(Vector3 position, bool turnBeforeMove = false)
@@ -447,10 +533,13 @@ public class EnemyFSM : MonoBehaviour
         if(!_initialized || !isActiveAndEnabled || !AgentReady) return;
         if(GameEnded) return;
         //플레이어 추격이나 시각 탐지를 소음보다 우선
-        if (_currentState == EnemyState.Chase || _vision.CanSeePlayer) return;
+        if (_currentState == EnemyState.Chase || _vision.CanSeePlayer || _currentState == EnemyState.Suspicious) return;
         if (hearingRadius <= 0f) return;
 
-        float sqrDistance = (position - _vision.EyePosition).sqrMagnitude;
+
+        Vector3 toNoise = position - transform.position;
+        toNoise.y = 0f;
+        float sqrDistance = toNoise.sqrMagnitude;
         if (sqrDistance > hearingRadius * hearingRadius)
         {
             return;

@@ -265,6 +265,9 @@ MonoBehaviour:
   - {fileID: 0}
   _walkSpeed: 2
   _patrolWaitTime: 1
+  _turnSpeed: 240
+  _startMoveAngle: 15
+  _investigateSpeed: 1.5
   _chaseSpeed: 4
   _repathInterval: 0.2
   _searchDuration: 4
@@ -272,6 +275,12 @@ MonoBehaviour:
   _stoppingDistance: 0.3
   _sampleRadius: 2
   _moveTimeout: 12
+  _gameManger: {fileID: 0}
+  _catchDistance: 1.2
+  _doors: []
+  _doorLookAhead: 1.5
+  _detectionTime: 0.8
+  _detectionDecayTime: 1
 --- !u!195 &3016412314916268393
 NavMeshAgent:
   m_ObjectHideFlags: 0

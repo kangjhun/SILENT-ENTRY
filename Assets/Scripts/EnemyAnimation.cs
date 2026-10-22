@@ -16,7 +16,7 @@ public class EnemyAnimation : MonoBehaviour
     static readonly int SpeedHash = Animator.StringToHash("Speed");
     static readonly int isTurningHash = Animator.StringToHash("IsTurning");
     static readonly int TurnDirectionHash = Animator.StringToHash("TurnDirection");
-
+    static readonly int IsSearchingHash = Animator.StringToHash("IsSearching");
     //아주 작은 움직임은 정지로 처리
     const float StopThreshole = 0.05f;
      void Awake()
@@ -44,13 +44,16 @@ public class EnemyAnimation : MonoBehaviour
         //게임이 일시정지된 동안 파라미터 갱신 중단
         if (Time.timeScale == 0f) return;
 
-        bool isTurning = _fsm.isActiveAndEnabled && _fsm.IsTurning;
+        bool fsmActive = _fsm.isActiveAndEnabled;
+        bool isSearching = fsmActive && _fsm.IsSearchingAround;
+        bool isTurning = fsmActive && !isSearching && _fsm.IsTurning;
 
-        _animator.SetFloat(TurnDirectionHash, isTurning ? _fsm.TurnDirection : 0f);
+        _animator.SetBool(IsSearchingHash, isSearching);
 
         _animator.SetBool(isTurningHash,isTurning);
 
-        if (isTurning)
+        _animator.SetFloat(TurnDirectionHash, isTurning ? _fsm.TurnDirection : 0f);
+        if (isSearching || isTurning)
         {
             _animator.SetFloat(SpeedHash, 0f);
         }

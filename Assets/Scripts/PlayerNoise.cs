@@ -1,17 +1,21 @@
 using UnityEngine;
 
-[RequireComponent (typeof(CharacterController))]
+[RequireComponent (typeof(CharacterController),typeof(PlayerMovement))]
 public class PlayerNoise : MonoBehaviour
 {
     [SerializeField] EnemyFSM[] _enemies;
 
+    //웅크리기 소음의 범위와 발생 간격
+    [SerializeField, Min(0f)] float _crouchNoiseRadius = 0.8f;
+    [SerializeField, Min(0.05f)] float _crouchInterval = 0.8f;
+
     //걷기 소음의 범위와 발생 간격
     [SerializeField, Min(0f)] float _walkNoiseRadius = 2f;
-    [SerializeField, Min(0.05f)] float _walkInterval = 0.6f;
+    [SerializeField, Min(0.05f)] float _walkInterval = 0.3f;
 
     //달리기 소음의 범위와 발생 간격
     [SerializeField, Min(0f)] float _runNoiseRadius = 6f;
-    [SerializeField, Min(0.05f)] float _runInterval = 0.35f;
+    [SerializeField, Min(0.05f)] float _runInterval = 0.2f;
 
     [SerializeField, Min(0.01f)] float _minimumMoveSpeed = 0.1f;
 
@@ -59,21 +63,40 @@ public class PlayerNoise : MonoBehaviour
             _stepTimer = 0f; return;
         }
 
+        bool isCrouching = _movement != null && _movement.IsCrouching;
         //실제 속도를 기준으로 걷기, 달리기 소음 설정
-        bool isRunning = _movement != null && _movement.IsRunning;
+        bool isRunning = !isCrouching && _movement != null && _movement.IsRunning;
 
-        float interval = isRunning ? _runInterval : _walkInterval;
-        float radius = isRunning ? _runNoiseRadius : _walkNoiseRadius;
+        float interval;
+        float radius;
+        string movementType;
 
-        _stepTimer += Time.deltaTime;
+        if (isCrouching)
+        {
+            interval = _crouchInterval;
+            radius = _crouchNoiseRadius;
+            movementType = "웅크리기";
+        }else if (isRunning)
+        {
+            interval = _runInterval;
+            radius = _runNoiseRadius;
+            movementType = "달리기";
+        }
+        else
+        {
+            interval = _walkInterval;
+            radius = _walkNoiseRadius;
+            movementType = "걷기";
+        }
+            _stepTimer += Time.deltaTime;
 
         if (_stepTimer < interval) return;
 
         _stepTimer = 0f;
-        EmitNoise(radius, isRunning);
+        EmitNoise(radius, movementType);
     }
 
-    void EmitNoise(float radius, bool isRunning)
+    void EmitNoise(float radius, string movementType)
     {
         if (radius <= 0f) return;
 
@@ -92,7 +115,6 @@ public class PlayerNoise : MonoBehaviour
 
         if (_showDebug)
         {
-            string movementType = isRunning ? "달리기" : "걷기";
 
             Debug.Log($"{movementType} 소음 발생 / 반경 : {radius}", this);
         }
