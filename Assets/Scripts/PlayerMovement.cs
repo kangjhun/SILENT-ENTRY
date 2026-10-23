@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 [RequireComponent (typeof(CharacterController))]
@@ -18,6 +19,21 @@ public class PlayerMovement : MonoBehaviour
 
     [SerializeField] float _gravity = -20f;
 
+    [Header("스태미나")]
+    [SerializeField, Min(1f)] float _maxStamina = 100f;
+    [SerializeField, Min(0.1f)] float _staminaDrainPerSecond = 25f;
+    [SerializeField, Min(0.1f)] float _staminaRecoveryPerSecond = 20f;
+    [SerializeField, Min(0f)] float _staminaRecoveryDelay = 1f;
+
+    [SerializeField, Range(0.01f, 1f)] float _runResumeRatio = 0.5f;
+
+    float _curretStamina;
+    float _staminaRecoveryTimer;
+
+    public bool IsExhausted { get; private set; }
+    public float StaminaRatio => Mathf.Clamp01(_curretStamina / MathF.Max(_maxStamina, 1f));
+    public bool CanRun => !IsExhausted && _curretStamina > 0f;
+
     float _standingHeight;
     Vector3 _standingCenter;
 
@@ -37,6 +53,9 @@ public class PlayerMovement : MonoBehaviour
         _cover = GetComponent<PlayerCover> ();
         _standingHeight = _controller.height;
         _standingCenter = _controller.center;
+        _curretStamina = _maxStamina;
+        _staminaRecoveryTimer = 0f;
+        IsExhausted = false;
     }
 
      void Start()
@@ -117,7 +136,7 @@ public class PlayerMovement : MonoBehaviour
         bool hasInput = input.sqrMagnitude > 0.001f;
 
         //웅크린 상태거나 엄폐 중이면 달리기 불가
-        bool wantsRun = runPressed && !IsCrouching && !isInCover; 
+        bool wantsRun = runPressed && hasInput && !IsCrouching && !isInCover && CanRun; 
         float speed = IsCrouching ? _crouchSpeed  : wantsRun ? _runSpeed : _walkSpeed;
 
         //일반 상태에서만 카메라 방향으로 회전
@@ -172,6 +191,7 @@ public class PlayerMovement : MonoBehaviour
         MoveSpeed = Time.deltaTime > 0f ? moved.magnitude / Time.deltaTime : 0f;
 
         IsRunning = wantsRun && hasInput && MoveSpeed > 0.1f;
+        UpdateStamina(IsRunning && _controller.isGrounded);
 
         //실제 이동 속도를 캐릭터 기준 방향으로 변환하여 애니메이션에 사용
         Vector3 worldVelocity = Time.deltaTime > 0f ? moved / Time.deltaTime : Vector3.zero;
@@ -183,6 +203,34 @@ public class PlayerMovement : MonoBehaviour
         float animationBaseSpeed = IsCrouching ? _crouchSpeed : _walkSpeed;
         AnimationMove = Vector2.ClampMagnitude(new Vector2(localVelocity.x, localVelocity.z) / Mathf.Max(animationBaseSpeed, 0.01f), 1f);
 
+    }
+
+    void UpdateStamina(bool isActuallyRunning)
+    {
+        float deltaTime = Time.deltaTime;
+        if (isActuallyRunning)
+        {
+            _curretStamina = MathF.Max(0f, _curretStamina - _staminaDrainPerSecond * deltaTime);
+            _staminaRecoveryTimer = _staminaRecoveryDelay;
+            if(_curretStamina <= 0f)
+                IsExhausted = true;
+            return;
+        }
+        float recoveryTime = deltaTime;
+        if(_staminaRecoveryTimer > 0f)
+        {
+            float waitTime = Mathf.Min(_staminaRecoveryTimer,recoveryTime);
+            _staminaRecoveryTimer -= waitTime;
+            recoveryTime -= waitTime;
+        }
+        if(recoveryTime > 0f)
+        {
+            _curretStamina = Mathf.Min(_maxStamina, _curretStamina + _staminaRecoveryPerSecond * recoveryTime);
+        }
+        if(IsExhausted && StaminaRatio >= _runResumeRatio)
+        {
+            IsExhausted =false;
+        }
     }
 
     void SetCrouching(bool crouching)
