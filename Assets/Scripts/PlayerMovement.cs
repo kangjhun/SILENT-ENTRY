@@ -83,14 +83,6 @@ public class PlayerMovement : MonoBehaviour
 
         if (Time.timeScale == 0f) return;
 
-        if (Input.GetKeyDown(KeyCode.Escape))
-        {
-            SetCursorLocked(false);
-        }else if(Input.GetMouseButtonDown(0) && Cursor.lockState != CursorLockMode.Locked)
-        {
-            SetCursorLocked(true);
-        }
-
         if(_camerTransform == null) return; 
 
         bool isInCover = _cover != null && _cover.IsInCover;

@@ -27,14 +27,6 @@ public class PlayerInteraction : MonoBehaviour
     readonly HashSet<IInteractable> _checkedTargets = new HashSet<IInteractable>();
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.E))
-        {
-            Debug.Log(
-                $"[E 입력] timeScale={Time.timeScale}, " +
-                $"커서={Cursor.lockState}, " +
-                $"엄폐={(_playerCover != null && _playerCover.IsInCover)}",
-                this);
-        }
         if (Time.timeScale == 0f || Cursor.lockState != CursorLockMode.Locked)
         {
             UpdateCurrentTarget(null);
@@ -63,21 +55,30 @@ public class PlayerInteraction : MonoBehaviour
         }
     }
 
+    public string GetInteractionPrompt()
+    {
+        if(!isActiveAndEnabled || Time.timeScale == 0f || Cursor.lockState != CursorLockMode.Locked)
+        {
+            return string.Empty;
+        }
+
+        if(_playerCover != null && _playerCover.IsInCover)
+        {
+            return "[E] 엄폐 해제";
+        }
+
+        Component targetComponent = _currentTarget as Component;
+
+        if(targetComponent == null || !_currentTarget.CanInteract)
+        {
+            return string.Empty;
+        }
+
+        return $"<color=#C7AA70>[E]</color>  {_currentTarget.DisplayName}"; 
+    }
     void UpdateCurrentTarget(IInteractable target)
     {
-        //같은 대상이면 안내 로그를 반복하지 않음
-        if (ReferenceEquals(target, _currentTarget)) return;
-
         _currentTarget = target;
-
-        if(_currentTarget != null)
-        {
-            Debug.Log($"E : {_currentTarget.DisplayName}작동", this);
-        }
-        else
-        {
-            Debug.Log("상호작용 대상 없음", this);
-        }
     }
 
     IInteractable FindTarget()
