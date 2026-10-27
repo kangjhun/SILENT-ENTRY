@@ -1,7 +1,7 @@
-using Unity.VisualScripting;
+
 using UnityEngine;
 using UnityEngine.UI;
-
+        
 public class PlayerCoinThrower : MonoBehaviour
 {
     [SerializeField] Camera _playerCamera;
@@ -29,6 +29,9 @@ public class PlayerCoinThrower : MonoBehaviour
     [SerializeField] LayerMask _environmentMask;
     [SerializeField, Min(0.01f)] float _spawnCheckRadius = 0.09f;
 
+    [Header("화면 안내")]
+    [SerializeField] GameUIManager _gameUIManager;  
+
     bool _isCharging;
     bool _isThrowing;
     bool _releasePending;
@@ -46,6 +49,12 @@ public class PlayerCoinThrower : MonoBehaviour
     public bool CanRecoverCoin => CoinCount < _maxCoins;
     public float ChargeRatio => Mathf.Clamp01(_chargeTime / Mathf.Max(_fullChargeTime, 0.01f));
 
+
+    void ShowNotice(string message)
+    {
+        if (_gameUIManager != null)
+            _gameUIManager.ShowNotice(message);
+    }
     void Awake()
     {
         CoinCount = _maxCoins;
@@ -87,7 +96,7 @@ public class PlayerCoinThrower : MonoBehaviour
 
             if(CoinCount <= 0)
             {
-                Debug.Log("던질 동전이 없습니다.", this);
+                ShowNotice("던질 동전이 없습니다.");
                 return;
             }
             if(_playerCamera == null || _throwOrigin == null || _coinPrefab == null)
@@ -166,7 +175,7 @@ public class PlayerCoinThrower : MonoBehaviour
 
         if (CoinCount <= 0)
         {
-            Debug.Log("던질 동전이 없습니다.", this);
+            ShowNotice("던질 동전이 없습니다.");
             return;
         }
 
@@ -174,12 +183,13 @@ public class PlayerCoinThrower : MonoBehaviour
 
         if (_throwSatfetyOrigin != null && Physics.Linecast(_throwSatfetyOrigin.position, origin, _environmentMask, QueryTriggerInteraction.Ignore))
         {
+            ShowNotice("장애물에 너무 가까워 던질 수 없습니다.");
             return;
         }
 
         if (Physics.CheckSphere(origin, _spawnCheckRadius, _environmentMask, QueryTriggerInteraction.Ignore))
         {
-            Debug.Log("장애물에 너무 가까워 던질 수 없습니다.", this);
+            ShowNotice("장애물에 너무 가까워 던질 수 없습니다.");
             return;
         }
 

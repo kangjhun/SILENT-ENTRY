@@ -85,9 +85,10 @@ public class PlayerInteraction : MonoBehaviour
     {
         int GetInteractionPriority(IInteractable target)
         {
-            if (target is ThrowableCoin) return 2;
-            if(target is DoorController) return 1;
-            return 0;
+            if (target is ThrowableCoin) return 3;
+            if(target is DoorController || target is NoiseDevice) return 2;
+            if (target is CoverWall) return 0;
+            return 1;
         }
         if (_playerCamera == null || _interactionOrigin == null) return null;
 

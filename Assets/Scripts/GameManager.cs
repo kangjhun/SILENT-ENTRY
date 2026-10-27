@@ -16,6 +16,9 @@ public class GameManager : MonoBehaviour
     [SerializeField] PlayerMovement _playerMovement;
     [SerializeField] PlayerInteraction _playerInteraction;
 
+    [Header("화면 안내")]
+    [SerializeField] GameUIManager _gameUIManager;
+
     bool _hasObjective;
 
     public GameState CurrentState => _currentState;
@@ -51,7 +54,8 @@ public class GameManager : MonoBehaviour
         //목표물이 없으면 탈출하지 못하고 게임을 계속 진행
         if (!_hasObjective)
         {
-            Debug.Log("목표물을 먼저 확보하세요.", this);
+            if (_gameUIManager != null)
+                _gameUIManager.ShowNotice("목표물을 먼저 확보하세요.");
             return false;
         }
 

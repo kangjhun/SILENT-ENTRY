@@ -20,13 +20,31 @@ public class GameUIManager : MonoBehaviour
     [SerializeField] Image _coinBackground;
     [SerializeField] Image _objectiveAccent;
 
+    [Header("일시적인 안내 메시지")]
+    [SerializeField] GameObject _noticePanel;
+    [SerializeField] TMP_Text _noticeText;
+    [SerializeField, Min(0.1f)] float _noticeDuration = 2f;
+    
+
     [Header("일시정지 메뉴")]
     [SerializeField] GameObject _pausePanel;
     [SerializeField] Behaviour _cameraInputController;
 
+    [Header("조작법 화면")]
+    [SerializeField] GameObject _pauseMenuBox;
+    [SerializeField] GameObject _controlsBox;
+
+    [Header("게임 결과")]
+    [SerializeField] GameObject _resultPanel;
+    [SerializeField] TMP_Text _resultTitle;
+    [SerializeField] TMP_Text _resultMessage;
+
+    bool _resultShown;
     bool _isPaused;
     bool _cameraInputWasEnable;
+
     float _timeScaleBeforePause = 1f;
+    float _noticeTimer;
     void Awake()
     {
         PrepareText(_interactionText);
@@ -37,18 +55,48 @@ public class GameUIManager : MonoBehaviour
         _isPaused = false;
         if(_pausePanel != null)
             _pausePanel.SetActive(false);
+
+        _resultShown = false;
+        if(_resultPanel != null)
+            _resultPanel.SetActive(false);
+        HideNotice();
+        ShowPauseMenu();
     }
 
     void Update()
     {
         if (_gameManagr == null || !_gameManagr.IsPlaying) return;
-        if (Input.GetKeyDown(KeyCode.Escape))
-        {
-            if (_isPaused)
-                ResumeGame();
-            else
-                PauseGame();
-        }
+
+        if(!Input.GetKeyDown(KeyCode.Escape)) return;
+
+        if (!_isPaused)
+            PauseGame();
+        else if (_controlsBox != null && _controlsBox.activeSelf)
+            CloseControls();
+        else
+            ResumeGame();
+    }
+
+    void ShowPauseMenu()
+    {
+        if(_pauseMenuBox != null)
+            _pauseMenuBox.SetActive(true);
+        if(_controlsBox != null)    
+            _controlsBox.SetActive(false);
+    }
+
+    public void OpenControls()
+    {
+        if(!_isPaused || _controlsBox == null) return;
+        if(_pauseMenuBox != null)
+            _pauseMenuBox.SetActive(false);
+        _controlsBox.SetActive(true);
+    }
+
+    public void CloseControls()
+    {
+        if (!_isPaused) return;
+        ShowPauseMenu();
     }
     public void PauseGame()
     {
@@ -62,7 +110,7 @@ public class GameUIManager : MonoBehaviour
             _cameraInputWasEnable = _cameraInputController.enabled;
             _cameraInputController.enabled = false; 
         }
-
+        ShowPauseMenu() ;   
         _pausePanel.SetActive(true);
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
@@ -97,12 +145,14 @@ public class GameUIManager : MonoBehaviour
 
     void LateUpdate()
     {
+        UpdateResultUI();
         bool isPlaying = _gameManagr != null && _gameManagr.IsPlaying && !_isPaused;
 
         UpdateInteractionUI(isPlaying);
         UpdateObjectiveUI(isPlaying);
         UpdateCoinUI(isPlaying);
         UpdateBackgrounds();
+        UpdateNoticeUI();
     }
 
     void PrepareText(TMP_Text text)
@@ -118,6 +168,7 @@ public class GameUIManager : MonoBehaviour
         SetText(_interactionText,message);
     }
     
+
     void UpdateObjectiveUI(bool isPlaying)
     {
         if (!isPlaying)
@@ -128,6 +179,36 @@ public class GameUIManager : MonoBehaviour
 
         string message = _gameManagr.HasObjective ? "<size=22><color=#D5DBE3>현재 목표</color></size>\n현관으로 이동해 탈출하세요." : "<size=22><color=#D5DBE3>현재 목표</color></size>\n목표물을 확보하세요.";
         SetText(_objectiveText,message);    
+    }
+
+    void UpdateResultUI()
+    {
+        if(_gameManagr == null || _gameManagr.IsPlaying || _resultShown || _resultPanel == null) return;
+        _resultShown = true;
+        _isPaused = false;
+        if(_pausePanel != null)
+            _pausePanel.SetActive(false);
+        bool success = _gameManagr.CurrentState == GameManager.GameState.Success;
+
+        if(_resultTitle != null)
+        {
+            _resultTitle.text = success ? "임무 완료" : "임무 실패";
+            _resultTitle.color = success ? new Color32(199, 170, 112, 255) : new Color32(220, 110, 110, 255);
+        }
+
+        if(_resultMessage != null)
+            _resultMessage.text = success ? "목표물을 확보하고 탈출했습니다." : "경비에게 붙잡혔습니다.";
+
+        if(_cameraInputController != null)
+            _cameraInputController.enabled = false;
+
+        Time.timeScale = 0f;
+
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+        
+        _resultPanel.SetActive(true);
+        _resultPanel.transform.SetAsLastSibling();
     }
 
     void UpdateCoinUI(bool isPlaying)
@@ -162,11 +243,63 @@ public class GameUIManager : MonoBehaviour
         if(background.enabled != show) background.enabled=show;
     }
 
+    public void ShowNotice(string message)
+    {
+        if (_gameManagr == null || !_gameManagr.IsPlaying || _isPaused || _noticePanel == null || _noticeText == null || string.IsNullOrWhiteSpace(message))
+            return;
+        if (_noticeTimer > 0f && _noticeText.text == message)
+            return;
+        _noticeText.text = message;
+        _noticeTimer = _noticeDuration;
+        _noticePanel.SetActive(true);   
+    }
+
+    void UpdateNoticeUI()
+    {
+        if(_gameManagr == null || !_gameManagr.IsPlaying)
+        {
+            HideNotice();
+            return;
+        }
+
+        if (_isPaused)
+        {
+            if(_noticePanel != null)
+                _noticePanel.SetActive(false);
+
+            return;
+        }
+
+        if (_noticeTimer <= 0f)
+        {
+            HideNotice();
+            return;
+        }
+        _noticeTimer = Mathf.Max(0f,_noticeTimer - Time.deltaTime);
+        if(_noticeTimer <=0f)
+        {
+            HideNotice();
+            return;
+        }
+        if(_noticePanel != null && !_noticePanel.activeSelf)
+            _noticePanel.SetActive(true) ;
+    }
+
+    void HideNotice()
+    {
+        _noticeTimer = 0f;
+        if(_noticeText != null)
+            _noticeText.text = string.Empty;
+        if(_noticePanel != null)
+            _noticePanel.SetActive(false);
+    }
+
     void OnDisable()
     {
         SetText(_interactionText,string.Empty);
         SetText(_objectiveText,string.Empty);   
         SetText(_coinText,string.Empty);    
         UpdateBackgrounds();
+        HideNotice() ;
     }
 }

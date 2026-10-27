@@ -17,7 +17,7 @@ public class NoiseDevice : MonoBehaviour,IInteractable
     float _nextUseTime;
 
     //상호작용 안내에 표시할 이름
-    public string DisplayName => _displayName;
+    public string DisplayName => $"{_displayName} 켜기";
 
     //거리, 방향, 가림 판정에 사용할 월드 좌표
     public Vector3 InteractionPosition => _interactionPoint != null ? _interactionPoint.position : transform.position;
