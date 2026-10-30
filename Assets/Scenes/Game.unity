@@ -17562,6 +17562,8 @@ MonoBehaviour:
   _moveTimeout: 12
   _gameManger: {fileID: 989068843}
   _catchDistance: 1.2
+  _contactPadding: 0.05
+  _contactCatchDelay: 0.35
   _doors:
   - {fileID: 40460221}
   - {fileID: 1789013767}
@@ -19041,6 +19043,8 @@ MonoBehaviour:
   _moveTimeout: 12
   _gameManger: {fileID: 989068843}
   _catchDistance: 1.2
+  _contactPadding: 0.05
+  _contactCatchDelay: 0.35
   _doors:
   - {fileID: 40460221}
   - {fileID: 1789013767}
@@ -25507,6 +25511,8 @@ MonoBehaviour:
   _moveTimeout: 12
   _gameManger: {fileID: 989068843}
   _catchDistance: 1.2
+  _contactPadding: 0.05
+  _contactCatchDelay: 0.35
   _doors:
   - {fileID: 40460221}
   - {fileID: 1789013767}
@@ -26472,10 +26478,13 @@ MonoBehaviour:
   _interactionPoint: {fileID: 1142459361}
   _enemies:
   - {fileID: 1253206443}
+  - {fileID: 1746823316}
+  - {fileID: 1338962357}
   _hearingRadius: 10
   _cooldown: 2
   _audioSource: {fileID: 4265502872986924722}
   _playDuration: 8
+  _noiseInterval: 0.5
 --- !u!1001 &1789013760
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -50,6 +50,11 @@ public class EnemyFSM : MonoBehaviour
     [SerializeField] GameManager _gameManger;
     [SerializeField, Min(0.1f)] float _catchDistance = 1.2f;
 
+    [Header("접촉 감지")]
+    [SerializeField, Min(0f)] float _contactPadding = 0.05f;
+    [SerializeField, Min(0.1f)] float _contactCatchDelay = 0.35f;
+
+
     [Header("문 통과")]
     [SerializeField] DoorController[] _doors;
     [SerializeField, Min(0.1f)] float _doorLookAhead = 1.5f;
@@ -64,18 +69,22 @@ public class EnemyFSM : MonoBehaviour
     NavMeshPath _path;
 
     int _patrolIndex;
+    int _activeNoisePriority;
 
     float _waitTimer; //순찰 지점 대기 시간
     float _moveTimer; //목적지로 이동한 시간
     float _searchTimer; //제자리에서 주변을 살핀 시간
     float _nextMoveTime; //다음 경로 갱신이 가능한 시각
     float _detectionAmount;
+    float _lastNoiseHeardTime = float.NegativeInfinity; //마지막으로 유효한 소음을 들은 시간
+    float _contactStartedAt;
 
     bool _hasDestination; //이동 경로 설정에 성공했는지
     bool _searchingAround; //수색 위치에 도착해 주변을 살피는 중인지
     public bool IsSearchingAround => _searchingAround;
     bool _initialized; //초기 설정을 마쳤는지
     bool _waitingForDoor;
+    bool _touchingPlayer;
 
     bool _hasConfirmedPlayer; //이미 발견이 확정된 플레이어를 수색 중인지
     public float DetectionAmount => _detectionAmount;
@@ -91,6 +100,8 @@ public class EnemyFSM : MonoBehaviour
 
     const float ArrivalTolerance = 0.1f;
     const float ReturnRetryInterval = 1f;
+    const float NoiseMemoryTime = 1f; //라디오 전달 간격(0.5초보다) 여유 있게 설정
+    CharacterController _playerController;
 
     public EnemyState CurrentState => _currentState;
     public bool IsTurning => !_waitingForDoor && (_turningBeforeMove || (_currentState == EnemyState.Suspicious && Mathf.Abs(TurnDirection) > 0.01f));
@@ -122,6 +133,15 @@ public class EnemyFSM : MonoBehaviour
         _agent.stoppingDistance = _stoppingDistance;
         _agent.updateRotation = true;
 
+        if(_vision.PlayerTarget != null)
+        {
+            _playerController = _vision.PlayerTarget.GetComponentInParent<CharacterController>();
+        }
+
+        if(_playerController == null)
+        {
+            Debug.LogWarning("접촉 감지 : PlayerTarget을 플레이어 CharacterController의 " + "오브젝트 또는 자식에 연결하세요.", this);
+        }
         _initialized = true;
         _currentState = EnemyState.Patrol;
         //최초 상태는 ChangeState를 거치지 않고 직접 시작
@@ -206,6 +226,20 @@ public class EnemyFSM : MonoBehaviour
 
     void UpdatePlayerDetection()
     {
+        bool touchingNow = IsTouchingPlayer();
+        if (touchingNow && !_touchingPlayer)
+            _contactStartedAt = Time.time;
+        _touchingPlayer = touchingNow;
+        if (_touchingPlayer)
+        {
+            _lastSeenPosition = _playerController.transform.position;
+            _hasConfirmedPlayer = true;
+            _detectionAmount = 1f;
+
+            ChangeState(EnemyState.Chase);
+            return;
+        }
+
         bool seesPlayer = _vision.isActiveAndEnabled && _vision.CanSeePlayer && _vision.PlayerTarget != null;
 
         if(_currentState == EnemyState.Chase)
@@ -282,6 +316,9 @@ public class EnemyFSM : MonoBehaviour
         {
             _hasConfirmedPlayer = false;
             _detectionAmount = 0f;
+
+            _activeNoisePriority = 0;
+            _lastNoiseHeardTime = float.NegativeInfinity;
         }
 
         //이전 상태의 이동 경로와 타이머 초기화
@@ -320,6 +357,7 @@ public class EnemyFSM : MonoBehaviour
                 //목적지는 UpdateChase에서 주기적으로 갱신
                 break;
             case EnemyState.Search:
+                _agent.speed = _hasConfirmedPlayer ? _chaseSpeed : _walkSpeed;
                 MoveTo(_searchPosition);
                 break;
             case EnemyState.Suspicious:
@@ -382,6 +420,14 @@ public class EnemyFSM : MonoBehaviour
     bool CheckCatchPlayer()
     {
         if(_gameManger == null || !_gameManger.IsPlaying) return false;
+        if (_touchingPlayer)
+        {
+            if(Time.time - _contactStartedAt < _contactCatchDelay) return false;
+
+            StopMoving();
+            _gameManger.FailMission();
+            return true;
+        }
         if(!_vision.CanSeePlayer || _vision.PlayerTarget == null) return false;
         
         //눈 위치에서 플레이어 탐지 기준점까지의 거리
@@ -424,10 +470,13 @@ public class EnemyFSM : MonoBehaviour
 
         _searchTimer += Time.deltaTime;
 
-        if(_searchTimer >= Mathf.Max(_searchDuration, 0.01f))
-        {
-            ChangeState(EnemyState.Return);
-        }
+        if (_searchTimer < Mathf.Max(_searchDuration, 0.01f)) return;
+        //소음 조사 중이고 아직 소리가 들리면 현장에서 대기
+        bool stillHearingNoise = !_hasConfirmedPlayer && Time.time - _lastNoiseHeardTime < NoiseMemoryTime;
+
+        if (stillHearingNoise) return;
+
+        ChangeState(EnemyState.Return);
         
     }
 
@@ -528,27 +577,38 @@ public class EnemyFSM : MonoBehaviour
     }
 
     //라디오나 PlayerNoise에서 소음 발생 시 호출
-    public void HearNoise(Vector3 position, float hearingRadius)
+    public void HearNoise(Vector3 position, float hearingRadius,int priority =2)
     {
-        if(!_initialized || !isActiveAndEnabled || !AgentReady) return;
-        if(GameEnded) return;
+        if (!_initialized || !isActiveAndEnabled || !AgentReady) return;
+        if (GameEnded || Time.timeScale < -0f) return;
         //플레이어 추격이나 시각 탐지를 소음보다 우선
-        if (_currentState == EnemyState.Chase || _vision.CanSeePlayer || _currentState == EnemyState.Suspicious) return;
+        if (_currentState == EnemyState.Chase || _vision.CanSeePlayer || _currentState == EnemyState.Suspicious || _vision.CanSeePlayer) return;
+        if (_currentState == EnemyState.Search && _hasConfirmedPlayer) return;
         if (hearingRadius <= 0f) return;
-
 
         Vector3 toNoise = position - transform.position;
         toNoise.y = 0f;
-        float sqrDistance = toNoise.sqrMagnitude;
-        if (sqrDistance > hearingRadius * hearingRadius)
-        {
-            return;
-        }
+        if (toNoise.sqrMagnitude > hearingRadius * hearingRadius) return;
 
-        _noisePosition = position;  
+        bool investingating = _currentState == EnemyState.Investigate || _currentState == EnemyState.Search;
+
+        if (investingating && priority < _activeNoisePriority) return;
+
+        Vector3 difference = position - _noisePosition;
+        difference.y = 0f;
+
+        bool samePosition = difference.sqrMagnitude <= 0.5f * 0.5f;
+
+        _activeNoisePriority = priority;
+        _lastNoiseHeardTime = Time.time;//이동하거나 수색 중이어도 소음이 계속 들리는 정보는 갱신
+        if (investingating && samePosition) return;
+
+        _noisePosition = position;
+        _hasConfirmedPlayer = false;
+
 
         if(_currentState == EnemyState.Investigate)
-        { //조사 중 새로운 소리를 들으면 목적지를 새 위치로 변경
+        {
             _moveTimer = 0f;
             MoveTo(_noisePosition);
         }
@@ -721,5 +781,28 @@ public class EnemyFSM : MonoBehaviour
         }
 
         _patrolIndex = closestIndex;    
+    }
+
+    bool IsTouchingPlayer()
+    {
+        if (_playerController == null || !_playerController.enabled || !_playerController.gameObject.activeInHierarchy) return false;
+        Bounds playerBounds = _playerController.bounds;
+        float enemyBottom = transform.position.y + _agent.baseOffset;
+        float enemyTop = enemyBottom + _agent.height;
+
+        if (playerBounds.max.y < enemyBottom || playerBounds.min.y > enemyTop) return false;
+        Vector3 toPlayer = playerBounds.center - transform.position;
+        toPlayer.y = 0f;
+
+        float playerRadius = Mathf.Max(playerBounds.extents.x, playerBounds.extents.z);
+        float contactDistance = _agent.radius + playerRadius + _contactPadding;
+
+        if (toPlayer.sqrMagnitude > contactDistance * contactDistance) return false;
+
+        Vector3 direction = playerBounds.center - _vision.EyePosition;
+        float distance = direction.magnitude;
+
+        if (distance > 0.001f && _vision.CheckObstacle(_vision.EyePosition, direction / distance, distance, out _)) return false;
+        return true;
     }
 }
