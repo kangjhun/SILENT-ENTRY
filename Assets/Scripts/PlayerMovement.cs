@@ -88,10 +88,6 @@ public class PlayerMovement : MonoBehaviour
         bool isInCover = _cover != null && _cover.IsInCover;
 
 
-        if (Input.GetKeyDown(KeyCode.C))
-        {
-            Debug.Log($"C 입력 감지 / 커서: {Cursor.lockState}");
-        }
         //엄폐 중에는 웅크리기 전환 금지
         if (Cursor.lockState == CursorLockMode.Locked && Input.GetKeyDown(KeyCode.C) && !isInCover)
         {
@@ -131,7 +127,7 @@ public class PlayerMovement : MonoBehaviour
         bool wantsRun = runPressed && hasInput && !IsCrouching && !isInCover && CanRun; 
         float speed = IsCrouching ? _crouchSpeed  : wantsRun ? _runSpeed : _walkSpeed;
 
-        //일반 상태에서만 카메라 방향으로 회전
+        //이동 방향으로 캐릭터 회전
         //엄폐 중 회전은 PlayerCover가 처리
         if (!isInCover&&Cursor.lockState == CursorLockMode.Locked && hasInput && moveDirection.sqrMagnitude > 0.001f)
         {
@@ -200,6 +196,7 @@ public class PlayerMovement : MonoBehaviour
     void UpdateStamina(bool isActuallyRunning)
     {
         float deltaTime = Time.deltaTime;
+        //실제로 달리는 동안 스태미나 소모
         if (isActuallyRunning)
         {
             _curretStamina = MathF.Max(0f, _curretStamina - _staminaDrainPerSecond * deltaTime);
@@ -208,6 +205,7 @@ public class PlayerMovement : MonoBehaviour
                 IsExhausted = true;
             return;
         }
+        //달리기를 멈춘 뒤 회복 대기 시간 적용
         float recoveryTime = deltaTime;
         if(_staminaRecoveryTimer > 0f)
         {
@@ -215,10 +213,12 @@ public class PlayerMovement : MonoBehaviour
             _staminaRecoveryTimer -= waitTime;
             recoveryTime -= waitTime;
         }
+        //대기 시간이 끝나면 스태미나 회복
         if(recoveryTime > 0f)
         {
             _curretStamina = Mathf.Min(_maxStamina, _curretStamina + _staminaRecoveryPerSecond * recoveryTime);
         }
+        //탈진 후 일정량 이상 회복하면 다시 달리기 허용
         if(IsExhausted && StaminaRatio >= _runResumeRatio)
         {
             IsExhausted =false;
@@ -240,7 +240,7 @@ public class PlayerMovement : MonoBehaviour
         _controller.height = height;
         _controller.center = center;
     }
-
+    //현재 머리 위치부터 일어섰을 때의 머리 위치까지 장애물 확인
     bool CanStand()
     {
         Vector3 up = transform.up;

@@ -1,5 +1,5 @@
 using UnityEngine;
-
+//상호작용으로 탈출을 시도하는 구역
 [RequireComponent(typeof(BoxCollider))]
 public class EscapeZone : MonoBehaviour, IInteractable
 {
@@ -12,9 +12,9 @@ public class EscapeZone : MonoBehaviour, IInteractable
     BoxCollider _doorCollider;
 
     public string DisplayName => "탈출하기";
-
+    //지정된 기준점이 없으면 콜라이더 중심 사용
     public Vector3 InteractionPosition => _interactionPoint != null ? _interactionPoint.position : _doorCollider.bounds.center;
-
+    //필수 연결과 활성 상태 확인
     public bool CanInteract => isActiveAndEnabled && _gameManager != null && _doorCollider != null && _doorCollider.enabled;
     
 
@@ -34,6 +34,7 @@ public class EscapeZone : MonoBehaviour, IInteractable
      public void Interact()
     {
         if (!CanInteract) return;
+        //GameManager에서 탈출 조건 확인 및 결과 처리
         _gameManager.TryEscape();
     }
 }

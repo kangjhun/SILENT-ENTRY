@@ -1,5 +1,5 @@
 using UnityEngine;
-
+//플레이어의 이동 상태에 따라 적에게 발소리 전달
 [RequireComponent (typeof(CharacterController),typeof(PlayerMovement))]
 public class PlayerNoise : MonoBehaviour
 {
@@ -9,7 +9,7 @@ public class PlayerNoise : MonoBehaviour
     [SerializeField, Min(0f)] float _crouchNoiseRadius = 0.8f;
     [SerializeField, Min(0.05f)] float _crouchInterval = 0.8f;
 
-    //걷기 소음의 범위와 발생 간격
+    //걷기 소음 범위와 발생 간격
     [SerializeField, Min(0f)] float _walkNoiseRadius = 2f;
     [SerializeField, Min(0.05f)] float _walkInterval = 0.3f;
 
@@ -18,8 +18,6 @@ public class PlayerNoise : MonoBehaviour
     [SerializeField, Min(0.05f)] float _runInterval = 0.2f;
 
     [SerializeField, Min(0.01f)] float _minimumMoveSpeed = 0.1f;
-
-    [SerializeField] bool _showDebug;
 
     CharacterController _controller;
     PlayerMovement _movement;
@@ -35,7 +33,7 @@ public class PlayerNoise : MonoBehaviour
 
      void OnEnable()
     {
-        //다시 활성화될 때 이전 위치와 소음 타이머 초기화
+        //다시 활성화되면 위치와 소음 타이머 초기화
         _previousPosition = transform.position;
         _stepTimer = 0f;
     }
@@ -53,24 +51,24 @@ public class PlayerNoise : MonoBehaviour
             return;
         }
 
-        //수직 이동을 제외한 실제 수평 속도 계산
+        //높이 변화를 제외한 실제 이동 속도 계산
         movement.y = 0f;
         float speed = movement.magnitude / Time.deltaTime;
 
-        //공중에 있거나 거의 움직이지 않으면 소음 발생 중단
+        //공중에 있거나 거의 움직이지 않으면 소음 중단
         if(!_controller.isGrounded || speed < _minimumMoveSpeed)
         {
             _stepTimer = 0f; return;
         }
 
         bool isCrouching = _movement != null && _movement.IsCrouching;
-        //실제 속도를 기준으로 걷기, 달리기 소음 설정
         bool isRunning = !isCrouching && _movement != null && _movement.IsRunning;
 
         float interval;
         float radius;
         string movementType;
 
+        //이동 상태에 맞는 소음 범위와 간격 선택
         if (isCrouching)
         {
             interval = _crouchInterval;
@@ -88,7 +86,8 @@ public class PlayerNoise : MonoBehaviour
             radius = _walkNoiseRadius;
             movementType = "걷기";
         }
-            _stepTimer += Time.deltaTime;
+        //설정된 간격마다 소음 발생
+        _stepTimer += Time.deltaTime;
 
         if (_stepTimer < interval) return;
 
@@ -102,7 +101,7 @@ public class PlayerNoise : MonoBehaviour
 
         Vector3 noisePosition = transform.position;
 
-        //등록된 적에게 소음 위치와 반경 전달
+        //연결된 적에게 소리가 난 위치와 들리는 범위 전달
         if(_enemies != null)
         {
             foreach(EnemyFSM enemy in _enemies)
@@ -113,10 +112,5 @@ public class PlayerNoise : MonoBehaviour
             }
         }
 
-        if (_showDebug)
-        {
-
-            Debug.Log($"{movementType} 소음 발생 / 반경 : {radius}", this);
-        }
     }
 }

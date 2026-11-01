@@ -1,7 +1,7 @@
 
 using UnityEngine;
 using UnityEngine.UI;
-        
+//동전 충전, 투척 애니메이션, 생성과 회수 처리
 public class PlayerCoinThrower : MonoBehaviour
 {
     [SerializeField] Camera _playerCamera;
@@ -34,7 +34,7 @@ public class PlayerCoinThrower : MonoBehaviour
 
     bool _isCharging;
     bool _isThrowing;
-    bool _releasePending;
+    bool _releasePending;//애니메이션에서 동전을 놓을 시점을 기다리는 중
 
     float _pendingPower;
     float _throwTimeoutAt;
@@ -47,6 +47,7 @@ public class PlayerCoinThrower : MonoBehaviour
     public int CoinCount { get; private set; }
     public int MaxCoins => _maxCoins;
     public bool CanRecoverCoin => CoinCount < _maxCoins;
+    //충전 시간을 0~1 범위의 값으로 변환
     public float ChargeRatio => Mathf.Clamp01(_chargeTime / Mathf.Max(_fullChargeTime, 0.01f));
 
 
@@ -60,7 +61,7 @@ public class PlayerCoinThrower : MonoBehaviour
         CoinCount = _maxCoins;
         _playerColliders = GetComponentsInChildren<Collider>();
         PrintCount();
-
+        //충전 게이지를 표시용으로 설정
         if(_chargeSlider != null)
         {
             _chargeSlider.minValue = 0f;
@@ -73,13 +74,14 @@ public class PlayerCoinThrower : MonoBehaviour
 
      void Update()
     {
+        //일시정지, 메뉴 사용, 엄폐 중에는 충전과 투척 취소
         if (Time.timeScale == 0f || Cursor.lockState != CursorLockMode.Locked || (_playerCover != null && _playerCover.IsInCover))
         {
             CancelCharge();
             CancelThrowAnimation();
             return; 
         }
-
+        //투척 중에는 추가 입력을 막고, 종료되지 않으면 시간 초과 처리
         if (_isThrowing)
         {
             if(Time.time >= _throwTimeoutAt)
@@ -89,7 +91,7 @@ public class PlayerCoinThrower : MonoBehaviour
             }
             return;
         }
-  
+        //G키를 누르면 투척 조건을 확인하고 충전 시작
         if (Input.GetKeyDown(KeyCode.G) && !_isCharging)
         {
             if (Time.time < _nextThrowTime) return;
@@ -115,12 +117,13 @@ public class PlayerCoinThrower : MonoBehaviour
         }
 
         if(!_isCharging) { return; }
+        //G키를 누르고 있는 동안 투척 힘 충전
         if (Input.GetKey(KeyCode.G))
         {
             _chargeTime = Mathf.Min(_chargeTime + Time.deltaTime, _fullChargeTime);
             UpdateChargeGauge();
         }
-
+        //G키를 놓으면 충전량을 저장하고 투척 애니메이션 시작
         if (Input.GetKeyUp(KeyCode.G))
         {
             float power = ChargeRatio;
@@ -136,7 +139,7 @@ public class PlayerCoinThrower : MonoBehaviour
         if (_chargeSlider != null)
             _chargeSlider.value = ChargeRatio;
     }
-
+    //충전 상태를 초기화하고 게이지 숨기기
     void CancelCharge()
     {
         _isCharging = false;
@@ -154,7 +157,7 @@ public class PlayerCoinThrower : MonoBehaviour
         CancelCharge() ;
         CancelThrowAnimation();
     }
-
+    //다른 창으로 전환하면 진행 중인 충전과 투척 취소
      void OnApplicationFocus(bool hasFocus)
     {
         if (!hasFocus)
@@ -180,21 +183,20 @@ public class PlayerCoinThrower : MonoBehaviour
         }
 
         Vector3 origin = _throwOrigin.position;
-
+        //안전 기준점과 생성 위치 사이에 장애물이 있으면 투척 차단
         if (_throwSatfetyOrigin != null && Physics.Linecast(_throwSatfetyOrigin.position, origin, _environmentMask, QueryTriggerInteraction.Ignore))
         {
             ShowNotice("장애물에 너무 가까워 던질 수 없습니다.");
             return;
         }
-
+        //동전이 장애물 안에서 생성되는 것 방지
         if (Physics.CheckSphere(origin, _spawnCheckRadius, _environmentMask, QueryTriggerInteraction.Ignore))
         {
             ShowNotice("장애물에 너무 가까워 던질 수 없습니다.");
             return;
         }
-
+        //화면 중앙에서 최대 15m 앞의 조준 위치 계산
         Ray aimRay = _playerCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
-
         Vector3 aimPoint = aimRay.GetPoint(15f);
 
         if(Physics.Raycast(aimRay,out RaycastHit hit, 15f, _environmentMask, QueryTriggerInteraction.Ignore))
@@ -203,13 +205,12 @@ public class PlayerCoinThrower : MonoBehaviour
         }
 
         Vector3 direction = (aimPoint - origin).normalized;
-
+        //충전량에 따라 속도를 정하고 위쪽 힘 추가
         float throwSpeed = Mathf.Lerp(_minThrowSpeed, _maxThrowSpeed, Mathf.Clamp01(chargeRatio));
 
         Vector3 launchVelocity = direction * throwSpeed + Vector3.up * _upwardSpeed;
-
+        //동전을 생성하고 초기 속도와 플레이어 콜라이더 전달
         ThrowableCoin coin = Instantiate(_coinPrefab, origin, Quaternion.identity);
-
         coin.Initialize(this,launchVelocity,_playerColliders);
 
         CoinCount--;
@@ -217,7 +218,7 @@ public class PlayerCoinThrower : MonoBehaviour
 
         PrintCount();
     }
-
+    //최대 개수를 넘지 않을 때만 동전 회수
     public bool TryRecoverCoin()
     {
         if(!CanRecoverCoin) return false;
@@ -241,7 +242,7 @@ public class PlayerCoinThrower : MonoBehaviour
             Debug.LogWarning("투척에 사용할 Animator를 연결하세요", this);
             return;
         }
-
+        //충전량을 저장하고 애니메이션의 동전 발사 신호 대기
         _pendingPower = power;
         _releasePending = true;
         _isThrowing = true;
@@ -251,18 +252,18 @@ public class PlayerCoinThrower : MonoBehaviour
         _animator.ResetTrigger(ThrowCoinHash);
         _animator.SetTrigger(ThrowCoinHash);
     }
-
+    //애니메이션에서 동전이 손을 떠나는 시점에 호출
     public void ReleaseCoin()
     {
         if(!isActiveAndEnabled || !_isThrowing || !_releasePending) return;
-
+        //같은 투척에서 동전이 여러 번 생성되지 않도록 처리
         _releasePending = false;
 
         if (Time.timeScale == 0f || Cursor.lockState != CursorLockMode.Locked || (_playerCover != null && _playerCover.IsInCover))
             return;
         TryThrow(_pendingPower);
     }
-
+    //투척 애니메이션이 끝나면 다음 투척 허용
     public void FinishCoinThrow()
     {
         _isThrowing = false;
@@ -277,7 +278,7 @@ public class PlayerCoinThrower : MonoBehaviour
 
         if (_animator == null) return;
         _animator.ResetTrigger(ThrowCoinHash);
-
+        //투척 중이었다면 해당 애니메이션을 빈 상태로 전환
         if(wasThrowing && _animator.isActiveAndEnabled)
         {
             int layerIndex = _animator.GetLayerIndex("CoinThrow");

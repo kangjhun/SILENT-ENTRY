@@ -7,12 +7,12 @@ public class EnemyAnimation : MonoBehaviour
     [SerializeField] Animator _animator;
 
     [SerializeField, Min(0f)]
-    float _blendTime = 0.15f;
+    float _blendTime = 0.15f;//이동 애니메이션 전환 시간
 
     NavMeshAgent _agent;
     EnemyFSM _fsm;
 
-    //매번 문자열을 반환하지 않도록 파마미터 ID를 저장
+    //문자열을 매번 해시로 변환하지 않도록 파라미터 ID 저장
     static readonly int SpeedHash = Animator.StringToHash("Speed");
     static readonly int isTurningHash = Animator.StringToHash("IsTurning");
     static readonly int TurnDirectionHash = Animator.StringToHash("TurnDirection");
@@ -35,15 +35,15 @@ public class EnemyAnimation : MonoBehaviour
             return;
         }
 
-        //애니메이션이 루트 모션으로 위치를 변경하지 않도록 설정
+        //위치 이동은 NavMeshAgent가 담당
         _animator.applyRootMotion = false;
     }
 
      void LateUpdate()
     {
-        //게임이 일시정지된 동안 파라미터 갱신 중단
+        //일시정지 중에는 파라미터 갱신 중단
         if (Time.timeScale == 0f) return;
-
+        //FSM에서 탐색과 회전 상태 확인
         bool fsmActive = _fsm.isActiveAndEnabled;
         bool isSearching = fsmActive && _fsm.IsSearchingAround;
         bool isTurning = fsmActive && !isSearching && _fsm.IsTurning;
@@ -53,6 +53,7 @@ public class EnemyAnimation : MonoBehaviour
         _animator.SetBool(isTurningHash,isTurning);
 
         _animator.SetFloat(TurnDirectionHash, isTurning ? _fsm.TurnDirection : 0f);
+        //탐색하거나 제자리 회전 중이면 이동 애니메이션 정지
         if (isSearching || isTurning)
         {
             _animator.SetFloat(SpeedHash, 0f);
@@ -65,8 +66,9 @@ public class EnemyAnimation : MonoBehaviour
 
     float GetMovementSpeed()
     {
+        //이동할 수 없는 상태이면 속도 0 반환
         if (!_agent.enabled || !_agent.isOnNavMesh || _agent.isStopped) return 0f;
-
+        //수직 이동을 제외한 실제 이동 속도 계산
         Vector3 velocity = _agent.velocity;
 
         velocity.y = 0f;

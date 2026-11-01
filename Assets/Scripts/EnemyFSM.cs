@@ -113,13 +113,15 @@ public class EnemyFSM : MonoBehaviour
 
     //GameManager를 연결하지 않은 AI 단독 테스트는 허용
     bool GameEnded => _gameManger != null && !_gameManger.IsPlaying;
+
+    //이동과 시야 감지에 필요한 컴포넌트 준비
      void Awake()
     {
         _agent = GetComponent<NavMeshAgent>();  
         _vision = GetComponent<EnemyVision>();  
         _path = new NavMeshPath();  
     }
-
+    //설정을 확인하고 순찰 시작
     void Start()
     {
 
@@ -147,7 +149,7 @@ public class EnemyFSM : MonoBehaviour
         //최초 상태는 ChangeState를 거치지 않고 직접 시작
         EnterState();
     }
-
+    //적 AI 실행에 필요한 설정이 되어 있는지 확인
     bool ValidateSetup()
     {
         if (!AgentReady)
@@ -177,7 +179,7 @@ public class EnemyFSM : MonoBehaviour
         }
         return true;
     }
-
+    //플레이어 감지, 문 학인 후 상태에 맞는 행동을 실행
     void Update()
     {
         if (!_initialized || !AgentReady || Time.timeScale <=0f) return;
@@ -223,7 +225,7 @@ public class EnemyFSM : MonoBehaviour
             UpdateDoorBeforeMove();
         }
     }
-
+    //플레이어를 보면 감지량을 올리고, 놓치면 수색으로 전환
     void UpdatePlayerDetection()
     {
         bool touchingNow = IsTouchingPlayer();
@@ -290,7 +292,7 @@ public class EnemyFSM : MonoBehaviour
             }
         }
     }
-
+    //현재 행동을 다른 상태로 변경
     void ChangeState(EnemyState nextState)
     {
         //같은 상태를 다시 초기화하지 않도록 방지
@@ -305,7 +307,7 @@ public class EnemyFSM : MonoBehaviour
         _currentState = nextState;
         EnterState();
     }
-
+    //새로운 상태에 맞게 이동 속도와 목적지 설정
     void EnterState()
     {
         _waitingForDoor = false;
@@ -367,7 +369,7 @@ public class EnemyFSM : MonoBehaviour
             
         }
     }
-
+    //순찰 지점에 도착하면 잠시 기다렸다가 다음 지점으로 이동
     void UpdatePatrol()
     {
         _moveTimer += Time.deltaTime;
@@ -392,7 +394,7 @@ public class EnemyFSM : MonoBehaviour
 
         MoveTo(_patrolPoints[_patrolIndex].position,true);
     }
-
+    //소리가 난 곳으로 이동한 뒤 주변 수색
     void UpdateInvestigate()
     {
         _moveTimer += Time.deltaTime;
@@ -405,7 +407,7 @@ public class EnemyFSM : MonoBehaviour
         _searchPosition = arrived ? _noisePosition : transform.position;   
         ChangeState(EnemyState.Search);
     }
-
+    //플레이어를 붙잡을 수 있는지 확인하고 추격 경로 갱신
     void UpdateChase()
     {
         //붙잡기 판정은 경로 갱신 간격과 관계없이 매 프레임 실행
@@ -416,7 +418,7 @@ public class EnemyFSM : MonoBehaviour
         _nextMoveTime = Time.time + _repathInterval;
         MoveTo(_lastSeenPosition);
     }
-
+    //플레이어와 접촉하거나 가까이 있으면 미션 실패 처리
     bool CheckCatchPlayer()
     {
         if(_gameManger == null || !_gameManger.IsPlaying) return false;
@@ -449,6 +451,7 @@ public class EnemyFSM : MonoBehaviour
 
         return true;
     }
+    //수색 위치로 이동한 뒤 일정 시간 주변을 살핌
     void UpdateSearch()
     {
         if (!_searchingAround)
@@ -479,7 +482,7 @@ public class EnemyFSM : MonoBehaviour
         ChangeState(EnemyState.Return);
         
     }
-
+    //순찰 지점으로 복귀하고, 이동에 실패하면 다시 시도
     void UpdateReturn()
     {
         if (HasArrived())
@@ -508,7 +511,7 @@ public class EnemyFSM : MonoBehaviour
             MoveTo(_patrolPoints[_patrolIndex].position);
         }
     }
-
+    //감지 중인 플레이어 쪽으로 몸을 회전
     void UpdateSuspicious()
     {
         Vector3 direction = _lastSeenPosition - transform.position;
@@ -527,7 +530,7 @@ public class EnemyFSM : MonoBehaviour
         transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, _turnSpeed * Time.deltaTime);
 
     }
-
+    //목적지까지 이동 가능한 경로를 찾아 이동 시작
     void MoveTo(Vector3 position, bool turnBeforeMove = false)
     {
         //현재 Agent의 종류와 이동 가능한 영역에 맞춰 검색
@@ -556,7 +559,7 @@ public class EnemyFSM : MonoBehaviour
         _agent.updateRotation = !turnBeforeMove;
         _agent.isStopped = turnBeforeMove;
     }
-
+    //목적지에 도착했는지 확인
     bool HasArrived()
     {
         if(!_hasDestination || _agent.pathPending) return false;
@@ -564,7 +567,7 @@ public class EnemyFSM : MonoBehaviour
         //정지 거리와 작은 오차 범위 안이면 도착으로 판단
         return _agent.remainingDistance <= _agent.stoppingDistance + ArrivalTolerance;
     }
-
+    //이동을 멈추고 기존 경로 제거
     void StopMoving()
     {
         _waitingForDoor = false;
@@ -576,9 +579,10 @@ public class EnemyFSM : MonoBehaviour
         _hasDestination = false;
     }
 
-    //라디오나 PlayerNoise에서 소음 발생 시 호출
+    //들리는 범위와 소음 우선순위를 확인하고 소음 조사 시작
     public void HearNoise(Vector3 position, float hearingRadius,int priority =2)
     {
+        
         if (!_initialized || !isActiveAndEnabled || !AgentReady) return;
         if (GameEnded || Time.timeScale < -0f) return;
         //플레이어 추격이나 시각 탐지를 소음보다 우선
@@ -591,7 +595,7 @@ public class EnemyFSM : MonoBehaviour
         if (toNoise.sqrMagnitude > hearingRadius * hearingRadius) return;
 
         bool investingating = _currentState == EnemyState.Investigate || _currentState == EnemyState.Search;
-
+        //이미 조사 중인 소리보다 우선순위가 낮으면 무시
         if (investingating && priority < _activeNoisePriority) return;
 
         Vector3 difference = position - _noisePosition;
@@ -601,6 +605,7 @@ public class EnemyFSM : MonoBehaviour
 
         _activeNoisePriority = priority;
         _lastNoiseHeardTime = Time.time;//이동하거나 수색 중이어도 소음이 계속 들리는 정보는 갱신
+        //같은 위치의 소리는 들린 시간만 갱신하고 이동은 다시 시작하지 않음
         if (investingating && samePosition) return;
 
         _noisePosition = position;
@@ -617,7 +622,7 @@ public class EnemyFSM : MonoBehaviour
             ChangeState(EnemyState.Investigate);
         }
     }
-
+    //출발 전에 이동할 방향을 바라보도록 회전
     bool UpdateTurnBeforeMove()
     {
         if(!_turningBeforeMove) return false;
@@ -658,6 +663,7 @@ public class EnemyFSM : MonoBehaviour
 
         return true;
     }
+    //앞에 문이 있으면 열고, 완전히 열릴 때까지 대기
     bool UpdateDoorBeforeMove()
     {
         DoorController door = FindDoorOnPath();
@@ -681,7 +687,7 @@ public class EnemyFSM : MonoBehaviour
         }
         return false;
     }
-
+    //앞으로 이동할 경롱에서 통과해야 할 문을 찾음
     DoorController FindDoorOnPath()
     {
         if(!_hasDestination || !_agent.hasPath || _agent.pathPending || HasArrived()||_doors == null)
@@ -741,7 +747,7 @@ public class EnemyFSM : MonoBehaviour
         }
         return null;
     }
-
+    //실제 이동 경로가 가장 짧은 순찰 지점을 복귀 위치로 선택
     void SelectClosestPatrolPoint()
     {
         float shortestDistance = Mathf.Infinity;
@@ -782,7 +788,7 @@ public class EnemyFSM : MonoBehaviour
 
         _patrolIndex = closestIndex;    
     }
-
+    //플레이어와 몸이 닿을 만큼 가까운지 확인하고 벽 너머는 제외
     bool IsTouchingPlayer()
     {
         if (_playerController == null || !_playerController.enabled || !_playerController.gameObject.activeInHierarchy) return false;

@@ -1,11 +1,11 @@
 using UnityEngine;
-
+//목표물 획득, 탈출, 실패 등 게임 진행 관리
 public class GameManager : MonoBehaviour
 {
     public enum GameState
     {
         Playing, //게임 진행 중
-        Success, //목표물 확보 후 탈출 성공
+        Success, //탈출 성공
         Failure//적에게 붙잡혀 실패
     }
 
@@ -27,17 +27,16 @@ public class GameManager : MonoBehaviour
 
      void Awake()
     {
-        //씬을 새로 시작할 때 정지된 게임 시간을 복구
+        //게임 시간과 진행 상태 초기화
         Time.timeScale = 1f;
-        //게임 진행 상태와 목표물 보유 여부 초기화
         _currentState = GameState.Playing;
         _hasObjective = false;
     }
 
-    //목표물 획득 처리에 성공했는지 반환 
+    //목표물 획득 처리에 성공하면 true 반환 
     public bool AcquiredObjective()
     {
-        //게임이 끝났거나 이미 획득했다면 중복 처리 방지
+        //게임 종료 후 획득하거나 중복 획득하는 것 방지
         if (!IsPlaying || _hasObjective) return false;
 
         _hasObjective = true;
@@ -46,12 +45,12 @@ public class GameManager : MonoBehaviour
         return true;
     }
 
-    //탈출 조건을 만족했는지 반환
+   
     public bool TryEscape()
     {
         if (!IsPlaying) return false;
 
-        //목표물이 없으면 탈출하지 못하고 게임을 계속 진행
+        //목표물이 없으면 안내 문구를 띄우고 탈출 차단
         if (!_hasObjective)
         {
             if (_gameUIManager != null)
@@ -64,7 +63,7 @@ public class GameManager : MonoBehaviour
         return true;
     }
 
-    //EnemyFSM에서 플레이어를 붙잡았을 때 호출
+    //적에게 붙잡혔을 때 실패 처리
     public void FailMission()
     { 
         EndGame(GameState.Failure);
@@ -72,6 +71,7 @@ public class GameManager : MonoBehaviour
 
     void EndGame(GameState state)
     {
+        //게임 종료가 중복 처리되지 않도록 확인
         if (!IsPlaying) return;
 
         _currentState = state;
@@ -80,7 +80,7 @@ public class GameManager : MonoBehaviour
 
         DisablePlayerControls();
        
-        //결과 화면에서 마우스를 사용할 수 있도록 커서 해제
+        //결과 화면에서 마우스를 사용할 수 있도록 커서 표시
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
 
@@ -90,6 +90,7 @@ public class GameManager : MonoBehaviour
 
     void DisablePlayerControls()
     {
+        //플레이어 이동과 상호작용 중단
      if(_playerMovement != null) _playerMovement.enabled = false;
      if(_playerInteraction !=  null) _playerInteraction.enabled = false;
     }

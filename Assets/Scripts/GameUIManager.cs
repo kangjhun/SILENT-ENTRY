@@ -3,6 +3,7 @@ using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+//게임 안내, 일시정지 메뉴, 결과 화면 관리
 public class GameUIManager : MonoBehaviour
 {
     [Header("게임 정보")]
@@ -65,6 +66,7 @@ public class GameUIManager : MonoBehaviour
     float _noticeTimer;
     void Awake()
     {
+        //텍스트와 각 화면의 초기 표시 상태 설정
         PrepareText(_interactionText);
         PrepareText(_objectiveText);
         PrepareText(_coinText);
@@ -84,6 +86,7 @@ public class GameUIManager : MonoBehaviour
 
      void Start()
     {
+        //게임 시작 시 목표와 조작법 안내
         if (!_showStartNotice) return;
         ShowNotice("목표물을 확보하고 현관으로 탈출하세요.\n" + "조작법은 ESC 메뉴에서 확인할 수 있습니다.");
         if (_noticeTimer > 0f)
@@ -95,7 +98,7 @@ public class GameUIManager : MonoBehaviour
         if (_gameManagr == null || !_gameManagr.IsPlaying) return;
 
         if(!Input.GetKeyDown(KeyCode.Escape)) return;
-
+        //ESC로 일시정지, 조작법 닫기, 게임 재개
         if (!_isPaused)
             PauseGame();
         else if (_controlsBox != null && _controlsBox.activeSelf)
@@ -103,7 +106,7 @@ public class GameUIManager : MonoBehaviour
         else
             ResumeGame();
     }
-
+    //조작법 화면을 닫고 기본 일시정지 메뉴 표시
     void ShowPauseMenu()
     {
         if(_pauseMenuBox != null)
@@ -128,10 +131,11 @@ public class GameUIManager : MonoBehaviour
     public void PauseGame()
     {
         if (_isPaused || _pausePanel == null || _gameManagr == null || !_gameManagr.IsPlaying) return;
+        //기존 게임 속도를 저장하고 시간 정지
         _isPaused = true;
         _timeScaleBeforePause = Time.timeScale;
         Time.timeScale = 0f;
-
+        //메뉴 사용 중 카메라 조작 중단
         if(_cameraInputController != null)
         {
             _cameraInputWasEnable = _cameraInputController.enabled;
@@ -145,6 +149,7 @@ public class GameUIManager : MonoBehaviour
     public void ResumeGame()
     {
         if (!_isPaused || _gameManagr == null || !_gameManagr.IsPlaying) return;
+        //일시정지 전 게임 속도와 카메라 조작 상태 복구
         _isPaused = false;
         _pausePanel.SetActive(false);
         Time.timeScale = _timeScaleBeforePause;
@@ -153,7 +158,7 @@ public class GameUIManager : MonoBehaviour
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false; 
     }
-
+    //현재 씬을 다시 불러와 게임 재시작
     public void RestartGame()
     {
         Scene currentScene = SceneManager.GetActiveScene();
@@ -164,6 +169,7 @@ public class GameUIManager : MonoBehaviour
     public void QuitGame()
     {
     #if UNITY_EDITOR
+        //에딭터에서는 플레이 모드 종료
             UnityEditor.EditorApplication.isPlaying = false;
     #else
             Application.Quit();
@@ -174,7 +180,7 @@ public class GameUIManager : MonoBehaviour
     {
         UpdateResultUI();
         bool isPlaying = _gameManagr != null && _gameManagr.IsPlaying && !_isPaused;
-
+        //게임 상태에 맞춰 화면 정보 갱신
         UpdateInteractionUI(isPlaying);
         UpdateObjectiveUI(isPlaying);
         UpdateCoinUI(isPlaying);
@@ -186,10 +192,11 @@ public class GameUIManager : MonoBehaviour
     void PrepareText(TMP_Text text)
     {
         if(text == null) return;
+        //텍스트가 마우스 클릭을 가로막지 않도록 설정
         text.raycastTarget = false;
         text.enabled = false;
     }
-
+    //현재 상호작용할 수 있는 대상의 안내 표시
     void UpdateInteractionUI(bool isPlaying)
     {
         string message = isPlaying && _playerInteraction != null ? _playerInteraction.GetInteractionPrompt() : string.Empty;
@@ -204,7 +211,7 @@ public class GameUIManager : MonoBehaviour
             SetText(_objectiveText,string.Empty);
             return;
         }
-
+        //목표물 획득 여부에 따라 현재 목표 변경
         string message = _gameManagr.HasObjective ? "<size=22><color=#D5DBE3>현재 목표</color></size>\n현관으로 이동해 탈출하세요." : "<size=22><color=#D5DBE3>현재 목표</color></size>\n목표물을 확보하세요.";
         SetText(_objectiveText,message);    
     }
@@ -217,7 +224,7 @@ public class GameUIManager : MonoBehaviour
             SetText(_objectiveMarkerText,string.Empty);
             return;
         }
-
+        //목표물을 얻으면 표시 대상을 탈출 지점으로 변경
         bool hasObjective = _gameManagr.HasObjective;
         Transform targetPoint = hasObjective ? _escapeMarkerPoint : _objectiveMarkerPoint;
         if(targetPoint == null || !targetPoint.gameObject.activeInHierarchy)
@@ -225,7 +232,7 @@ public class GameUIManager : MonoBehaviour
             SetText(_objectiveMarkerText, string.Empty);
             return;
         }
-
+        //월드 위치를 화면 위치로 변환하고 카메라 앞뒤 범위 확인
         Vector3 screenPoint = _markerCamera.WorldToScreenPoint(targetPoint.position);
         if(screenPoint.z < _markerCamera.nearClipPlane || screenPoint.z > _markerCamera.farClipPlane)
         {
@@ -240,14 +247,14 @@ public class GameUIManager : MonoBehaviour
         float marginY = _markerScreenMargin.y * canvasScale;
 
         Rect cameraRect = _markerCamera.pixelRect;
-
+        //화면 가장자리 여백을 벗어나면 표시 숨기기
         bool outsideScreen = screenPoint.x < cameraRect.xMin + marginX || screenPoint.x > cameraRect.xMax - marginX || screenPoint.y < cameraRect.yMin + marginY || screenPoint.y > cameraRect.yMax - marginY;
         if (outsideScreen)
         {
             SetText(_objectiveMarkerText,string.Empty);
             return;
         }
-
+        //화면 위치를 캔버스 안의 위치로 변환
         if(!RectTransformUtility.ScreenPointToLocalPointInRectangle(_markerCanvasRect, new Vector2(screenPoint.x,screenPoint.y),null,out Vector2 localPoint))
         {
             SetText(_objectiveMarkerText, string.Empty);
@@ -261,19 +268,20 @@ public class GameUIManager : MonoBehaviour
 
     void UpdateResultUI()
     {
+        //게임 종료 후 결과 화면을 한 번만 표시
         if(_gameManagr == null || _gameManagr.IsPlaying || _resultShown || _resultPanel == null) return;
         _resultShown = true;
         _isPaused = false;
         if(_pausePanel != null)
             _pausePanel.SetActive(false);
         bool success = _gameManagr.CurrentState == GameManager.GameState.Success;
-
+        //성공 여부에 따라 제목, 색상, 설명 변경
         if(_resultTitle != null)
         {
             _resultTitle.text = success ? "임무 완료" : "임무 실패";
             _resultTitle.color = success ? new Color32(199, 170, 112, 255) : new Color32(220, 110, 110, 255);
         }
-
+        
         if(_resultMessage != null)
             _resultMessage.text = success ? "목표물을 확보하고 탈출했습니다." : "경비에게 붙잡혔습니다.";
 
@@ -284,17 +292,17 @@ public class GameUIManager : MonoBehaviour
 
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
-        
+        //결과 화면이 다른 UI보다 앞에 표시되도록 설정
         _resultPanel.SetActive(true);
         _resultPanel.transform.SetAsLastSibling();
     }
-
+    //남은 동전 수와 최대 개수 표시
     void UpdateCoinUI(bool isPlaying)
     { 
         string message = isPlaying && _coinThrower != null ? $"<color=#C7AA70>동전</color>  {_coinThrower.CoinCount}/{_coinThrower.MaxCoins}" : string.Empty;
         SetText(_coinText,message);
     }
-
+    //내용이 비어 있으면 숨기고, 달라진 내용만 갱신
     void SetText(TMP_Text text, string message)
     {
         if(text == null) { return; }
@@ -313,7 +321,7 @@ public class GameUIManager : MonoBehaviour
         SetBackground(_coinBackground, _coinText);
         SetBackground(_objectiveAccent, _objectiveText); 
     }
-
+    //텍스트 표시 상태에 맞춰 배경도 표시하거나 숨기기
     void SetBackground(Image background, TMP_Text text)
     {
         if(background == null) { return; }
@@ -325,6 +333,7 @@ public class GameUIManager : MonoBehaviour
     {
         if (_gameManagr == null || !_gameManagr.IsPlaying || _isPaused || _noticePanel == null || _noticeText == null || string.IsNullOrWhiteSpace(message))
             return;
+        //같은 안내가 표시 중이면 표시 시간을 다시 시작하지 않음
         if (_noticeTimer > 0f && _noticeText.text == message)
             return;
         _noticeText.text = message;
@@ -339,7 +348,7 @@ public class GameUIManager : MonoBehaviour
             HideNotice();
             return;
         }
-
+        //일시정지 중에는 남은 안내 시간을 유지하고 숨기기
         if (_isPaused)
         {
             if(_noticePanel != null)
@@ -353,6 +362,7 @@ public class GameUIManager : MonoBehaviour
             HideNotice();
             return;
         }
+        //안내 시간이 끝나면 메시지 숨기기
         _noticeTimer = Mathf.Max(0f,_noticeTimer - Time.deltaTime);
         if(_noticeTimer <=0f)
         {
@@ -375,6 +385,7 @@ public class GameUIManager : MonoBehaviour
     public void ReturnToMainMenu()
     {
         if(_isReturningToMenu) return;
+        //시작 화면 씬을 불러올 수 있는지 확인
         if(string.IsNullOrWhiteSpace(_mainMenuSceneName) || !Application.CanStreamedLevelBeLoaded(_mainMenuSceneName))
         {
             Debug.LogError("시작 화면 씬 이름과 빌드 씬 목록을 확인하세요.", this);
@@ -389,6 +400,7 @@ public class GameUIManager : MonoBehaviour
     }
     void OnDisable()
     {
+        //비활성화되면 게임 안내와 배경 숨기기
         SetText(_interactionText,string.Empty);
         SetText(_objectiveText,string.Empty);   
         SetText(_coinText,string.Empty);    
