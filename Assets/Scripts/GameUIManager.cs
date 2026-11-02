@@ -1,5 +1,4 @@
 using TMPro;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -61,6 +60,10 @@ public class GameUIManager : MonoBehaviour
     bool _isPaused;
     bool _cameraInputWasEnable;
     bool _isReturningToMenu;
+    bool _coinUIVisible;
+
+    int _lastCoinCount = -1;
+    int _lastMaxCoins = -1;
 
     float _timeScaleBeforePause = 1f;
     float _noticeTimer;
@@ -298,9 +301,26 @@ public class GameUIManager : MonoBehaviour
     }
     //남은 동전 수와 최대 개수 표시
     void UpdateCoinUI(bool isPlaying)
-    { 
-        string message = isPlaying && _coinThrower != null ? $"<color=#C7AA70>동전</color>  {_coinThrower.CoinCount}/{_coinThrower.MaxCoins}" : string.Empty;
-        SetText(_coinText,message);
+    {
+        bool show = isPlaying && _coinThrower != null;
+
+        if (!show)
+        {
+            SetText(_coinText, string.Empty);
+            _coinUIVisible = false;
+            return;
+        }
+
+        int count = _coinThrower.CoinCount;
+        int max = _coinThrower.MaxCoins;
+        //표시 상태나 개수가 바뀌었을 때만 문자열 생성
+        if (_coinUIVisible && count == _lastCoinCount && max == _lastMaxCoins) return;
+        
+        _coinUIVisible = true;
+        _lastCoinCount = count;
+        _lastMaxCoins = max;
+
+        SetText(_coinText,$"<color=#C7AA70>동전</color> {count}/{max}");
     }
     //내용이 비어 있으면 숨기고, 달라진 내용만 갱신
     void SetText(TMP_Text text, string message)
@@ -408,5 +428,6 @@ public class GameUIManager : MonoBehaviour
 
         UpdateBackgrounds();
         HideNotice() ;
+        _coinUIVisible = false;
     }
 }

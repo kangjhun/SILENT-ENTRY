@@ -21,7 +21,7 @@ public class PlayerMovement : MonoBehaviour
 
     [Header("스태미나")]
     [SerializeField, Min(1f)] float _maxStamina = 100f;
-    [SerializeField, Min(0.1f)] float _staminaDrainPerSecond = 25f;
+    [SerializeField, Min(0.1f)] float _staminaDrainPerSecond = 40f;
     [SerializeField, Min(0.1f)] float _staminaRecoveryPerSecond = 20f;
     [SerializeField, Min(0f)] float _staminaRecoveryDelay = 1f;
 

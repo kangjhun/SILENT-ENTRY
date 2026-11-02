@@ -15,26 +15,33 @@ public class NoiseDevice : MonoBehaviour,IInteractable
 
     [Header("라디오 사운드")]
     [SerializeField] AudioSource _audioSource;
-    [SerializeField, Min(0.1f)] float _playDuration = 8f;
+    [SerializeField, Min(0.1f)] float _playDuration = 4f;
     [SerializeField, Min(0.1f)] float _noiseInterval = 0.5f;
-    
-
-
     
     float _nextUseTime;//다시 켤 수 있는 시간
     float _soundEndTime;//재생이 끝나는 시간
     float _nextNoiseTIme;//적에게 소음을 다시 알릴 시간
 
+    string _playPrompt;
+    string _playingPrompt;
+
     bool _soundActive;
+    bool _audioPaused;
 
     //재생상태에 따라 상호작용 안내 변경
-    public string DisplayName => _soundActive ? $"{_displayName} 재생 중" : $"{_displayName} 켜기";
+    public string DisplayName => _soundActive ? _playingPrompt : _playPrompt;
 
 
     public Vector3 InteractionPosition => _interactionPoint != null ? _interactionPoint.position : transform.position;
 
     //재생 중이나 쿨타임 중에도 안내를 표시할 수 있도록 유지
     public bool CanInteract => isActiveAndEnabled;
+
+    void Awake()
+    {
+        _playPrompt = $"{_displayName} 켜기";
+        _playingPrompt = $"{_displayName} 재생 중";
+    }
     public void Interact()
     {
         if (!CanInteract) return;
@@ -49,6 +56,7 @@ public class NoiseDevice : MonoBehaviour,IInteractable
         
         _nextUseTime = Time.time + _cooldown;
         //정해진 재생 시간 동안 음악 반복
+        _audioPaused = false;
         _audioSource.loop = true;
         _audioSource.Play();
 
@@ -73,16 +81,34 @@ public class NoiseDevice : MonoBehaviour,IInteractable
 
     void Update()
     {
-        if (Time.timeScale == 0f || !_soundActive) return;
-        //재생 시간이 끝나면 라디오 끄기
-        if (Time.time >= _soundEndTime)
+        if(!_soundActive) return;
+        //게임이 멈추면 음악도 현재 위치에서 일시정지
+        if(Time.timeScale <= 0f)
+        {
+            if(!_audioPaused && _audioSource != null)
+            {
+                _audioSource.Pause();
+                _audioPaused = true;
+            }
+            return;
+        }
+
+        //게임을 재개하면 멈췄던 음악 이어서 재생
+        if (_audioPaused)
         {
             if (_audioSource != null)
+                _audioSource.UnPause();
+            _audioPaused = false;
+        }
+        
+        if(Time.time >= _soundEndTime)
+        {
+            if(_audioSource != null)
                 _audioSource.Stop();
             _soundActive = false;
             return;
         }
-        //재생 중에는 일정 간격으로 적에게 소음을 알림
+
         if (Time.time < _nextNoiseTIme) return;
         _nextNoiseTIme = Time.time + _noiseInterval;
         EmitNoise();
@@ -94,5 +120,6 @@ public class NoiseDevice : MonoBehaviour,IInteractable
         if(_audioSource != null) 
             _audioSource.Stop();
         _soundActive = false;
+        _audioPaused = false ;
     }
 }

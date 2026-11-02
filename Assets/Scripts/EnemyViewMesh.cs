@@ -8,7 +8,7 @@ public class EnemyViewMesh : MonoBehaviour
 
     [Header("부채꼴 정밀도")]
     [SerializeField, Range(3, 360)]
-    int _segmentCount = 120;
+    int _segmentCount = 60;
 
 
     [Header("플레이어 탐지 테스트")]
@@ -38,7 +38,7 @@ public class EnemyViewMesh : MonoBehaviour
 
      void LateUpdate()
     {
-        if(_vision == null) return;
+        if(_vision == null || Time.timeScale <= 0f) return;
         //분할 수가 바뀌면 메쉬 구성도 다시 생성
         if(_vertices.Length != _segmentCount + 2)
         {

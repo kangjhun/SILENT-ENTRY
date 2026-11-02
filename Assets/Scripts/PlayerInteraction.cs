@@ -22,8 +22,14 @@ public class PlayerInteraction : MonoBehaviour
     [Header("엄폐")]
     [SerializeField] PlayerCover _playerCover;
 
-    IInteractable _currentTarget;
+    [SerializeField, Min(0.01f)] float _targetCheckInterval = 0.05f;
+    float _nextTargetCheckTime;
 
+    IInteractable _currentTarget;
+    string _cachedDisplayName;
+    string _cachedPrompt;
+
+    readonly Collider[] _overlapBuffer = new Collider[32];
     //콜라이더가 여러 개여도 같은 대상은 한 번만 검사
     readonly HashSet<IInteractable> _checkedTargets = new HashSet<IInteractable>();
     void Update()
@@ -32,12 +38,14 @@ public class PlayerInteraction : MonoBehaviour
         if (Time.timeScale == 0f || Cursor.lockState != CursorLockMode.Locked)
         {
             UpdateCurrentTarget(null);
+            _nextTargetCheckTime = 0f;
             return;
         }
         //엄폐 중에는 E키로 엄폐 해제만 가능
         if(_playerCover != null && _playerCover.IsInCover)
         {
             UpdateCurrentTarget(null);
+            _nextTargetCheckTime = 0f;
             if (Input.GetKeyDown(KeyCode.E))
             {
                 _playerCover.ExitCover();
@@ -45,13 +53,18 @@ public class PlayerInteraction : MonoBehaviour
             return;
         }
 
-        IInteractable target = FindTarget();
-        UpdateCurrentTarget(target);
-
-        //선택한 대상과 상호작용
-        if(Input.GetKeyDown(KeyCode.E) && _currentTarget != null && _currentTarget.CanInteract)
+        bool interactPressed = Input.GetKeyDown(KeyCode.E);
+        //일정 간격으로 탐색하고, E키를 누른 순간에는 즉시 재검사
+        if(interactPressed || Time.time >= _nextTargetCheckTime)
         {
-            
+            UpdateCurrentTarget(FindTarget());
+            _nextTargetCheckTime = Time.time + _targetCheckInterval;
+        }
+        
+        Component targetComponent = _currentTarget as Component;
+
+        if (interactPressed && targetComponent != null && _currentTarget.CanInteract)
+        { 
             _currentTarget.Interact();
         }
     }
@@ -75,7 +88,15 @@ public class PlayerInteraction : MonoBehaviour
             return string.Empty;
         }
 
-        return $"<color=#C7AA70>[E]</color>  {_currentTarget.DisplayName}"; 
+        string displayName = _currentTarget.DisplayName;
+        
+        if(_cachedPrompt == null || _cachedDisplayName != displayName)
+        {
+            _cachedDisplayName = displayName;
+            _cachedPrompt = $"<color=#C7AA70>[E]</color> {displayName}";
+        }
+
+        return _cachedPrompt;
     }
     void UpdateCurrentTarget(IInteractable target)
     {
@@ -98,16 +119,25 @@ public class PlayerInteraction : MonoBehaviour
         Vector3 flatForward = Vector3.ProjectOnPlane(transform.forward, Vector3.up);
         float sqrInteractionDistance = _interactionDistance * _interactionDistance;
 
-        //주변 콜라이더 검색, Trigger는 제외
-        Collider[] colliders = Physics.OverlapSphere(origin, _interactionDistance, _rayMask, QueryTriggerInteraction.Ignore);
+        int count = Physics.OverlapSphereNonAlloc(origin, _interactionDistance, _overlapBuffer, _rayMask, QueryTriggerInteraction.Ignore);
+        Collider[] colliders = _overlapBuffer;
+
+        //배열이 가득 차면 일반 검색으로 다시 확인해 대상 누락 방지
+        if(count == _overlapBuffer.Length)
+        {
+            colliders = Physics.OverlapSphere(origin, _interactionDistance, _rayMask, QueryTriggerInteraction.Ignore);
+            count = colliders.Length;
+        }
+
         _checkedTargets.Clear();
 
         IInteractable bestTarget= null;
         float bestScore = float.PositiveInfinity;
         int bestPriority = -1;
 
-        foreach(Collider col in colliders)
+        for(int i = 0; i < count; i++) 
         {
+            Collider col = colliders[i];
             //콜라이더 자신이나 부모에서 상호작용 기능 찾기
             IInteractable target = col.GetComponentInParent<IInteractable>();
             
@@ -187,6 +217,7 @@ public class PlayerInteraction : MonoBehaviour
         //비활성화되면 이전 대상 정보 초기화
         _currentTarget = null;
         _checkedTargets.Clear();
+        _nextTargetCheckTime = 0f;
     }
 
 }

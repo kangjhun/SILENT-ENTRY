@@ -33,7 +33,7 @@ public class DoorController : MonoBehaviour,IInteractable
     public bool CanInteract => _ready && isActiveAndEnabled && !IsMoving;
    //문이 완전히 열린 상태에서 통과 가능
     public bool IsPassable => _ready && isActiveAndEnabled && _targetOpen && !IsMoving;
-
+    readonly Collider[] _occupancyBuffer = new Collider[16];
     void Awake()
     {
         //필수 참조와 캐릭터 레이어 설정 확인
@@ -53,7 +53,7 @@ public class DoorController : MonoBehaviour,IInteractable
 
     void Update()
     {
-        if(!_ready) return;
+        if(!_ready || Time.timeScale <= 0f) return;
         //닫히는 중 캐릭터가 감지되면 다시 열기
         if (!_targetOpen && _angle != 0f && IsOccupied())
             RequestOpen();
@@ -107,20 +107,28 @@ public class DoorController : MonoBehaviour,IInteractable
     bool IsOccupied()
     {
         Transform zone = _clearanceZone.transform;
-        //월드 스케일을 반영해 감지 영역 크기 계산
+
         Vector3 scale = zone.lossyScale;
         Vector3 absoluteScale = new Vector3(Mathf.Abs(scale.x), Mathf.Abs(scale.y), Mathf.Abs(scale.z));
-
         Vector3 halfSize = Vector3.Scale(_clearanceZone.size * 0.5f, absoluteScale);
 
-        Collider[] hits = Physics.OverlapBox(zone.TransformPoint(_clearanceZone.center), halfSize, zone.rotation, _characterMask, QueryTriggerInteraction.Ignore);
+        Vector3 center = zone.TransformPoint(_clearanceZone.center);
 
-        foreach(Collider hit in hits)
-        {//문 자체의 자식 오브젝트는 감지에서 제외
-            if (hit != null && !hit.transform.IsChildOf(transform)) return true;
-
+        int count = Physics.OverlapBoxNonAlloc(center, halfSize, _occupancyBuffer, zone.rotation, _characterMask, QueryTriggerInteraction.Ignore);
+        Collider[] hits = _occupancyBuffer;
+        //감지 대상이 많으면 다시 검색해 누락 방지
+        if(count == _occupancyBuffer.Length)
+        {
+            hits = Physics.OverlapBox(center, halfSize, zone.rotation, _characterMask, QueryTriggerInteraction.Ignore);
+            count = hits.Length;
         }
 
+        for(int i = 0; i< count; i++)
+        {
+            Collider hit = hits[i];
+            if (hit != null && !hit.transform.IsChildOf(transform))
+                return true;
+        }
         return false;
     }
     //이동 경로가 문 통로를 지나는지 확인하고 교차 위치 비율 반환

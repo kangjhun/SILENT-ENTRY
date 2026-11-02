@@ -30,7 +30,16 @@ public class PlayerCoinThrower : MonoBehaviour
     [SerializeField, Min(0.01f)] float _spawnCheckRadius = 0.09f;
 
     [Header("화면 안내")]
-    [SerializeField] GameUIManager _gameUIManager;  
+    [SerializeField] GameUIManager _gameUIManager;
+
+    [Header("투척 예상 경로")]
+    [SerializeField] LineRenderer _trajectoryLine;
+    [SerializeField] Transform _impactMarker;
+    //예측에 사용하는 동전의 대략적인 반경
+    [SerializeField, Min(0.001f)] float _predictionRadius = 0.025f;
+
+    [SerializeField, Min(0.5f)] float _predictionDuration = 3f;
+    [SerializeField, Min(0.02f)] float _previewInterval = 0.05f;
 
     bool _isCharging;
     bool _isThrowing;
@@ -39,6 +48,7 @@ public class PlayerCoinThrower : MonoBehaviour
     float _pendingPower;
     float _throwTimeoutAt;
     float _chargeTime;
+    float _nextPreviewTime;
 
     Collider[] _playerColliders;
     float _nextThrowTime;
@@ -68,6 +78,17 @@ public class PlayerCoinThrower : MonoBehaviour
             _chargeSlider.maxValue = 1f;
             _chargeSlider.wholeNumbers = false;
             _chargeSlider.interactable = false;
+        }
+        if(_trajectoryLine != null)
+        {
+            _trajectoryLine.useWorldSpace = true;
+            _trajectoryLine.loop = false;
+
+            _trajectoryLine.widthCurve = AnimationCurve.Linear(0f, 1f, 1f, 1f);
+            _trajectoryLine.widthMultiplier = 0.025f;
+
+            _trajectoryLine.positionCount = 0;
+            _trajectoryLine.enabled = false;
         }
         CancelCharge();
     }
@@ -144,12 +165,15 @@ public class PlayerCoinThrower : MonoBehaviour
     {
         _isCharging = false;
         _chargeTime = 0f;
+        _nextPreviewTime = 0f;
 
         if(_chargeSlider !=  null)
             _chargeSlider.value = 0f;
 
         if(_chargeGaugeRoot != null)
             _chargeGaugeRoot.SetActive(false);
+
+        HideTrajectory();
     }
 
      void OnDisable()
@@ -183,40 +207,23 @@ public class PlayerCoinThrower : MonoBehaviour
         }
 
         Vector3 origin = _throwOrigin.position;
-        //안전 기준점과 생성 위치 사이에 장애물이 있으면 투척 차단
-        if (_throwSatfetyOrigin != null && Physics.Linecast(_throwSatfetyOrigin.position, origin, _environmentMask, QueryTriggerInteraction.Ignore))
+
+        if (IsThrowBlocked(origin))
         {
             ShowNotice("장애물에 너무 가까워 던질 수 없습니다.");
             return;
         }
-        //동전이 장애물 안에서 생성되는 것 방지
-        if (Physics.CheckSphere(origin, _spawnCheckRadius, _environmentMask, QueryTriggerInteraction.Ignore))
-        {
-            ShowNotice("장애물에 너무 가까워 던질 수 없습니다.");
-            return;
-        }
-        //화면 중앙에서 최대 15m 앞의 조준 위치 계산
-        Ray aimRay = _playerCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
-        Vector3 aimPoint = aimRay.GetPoint(15f);
 
-        if(Physics.Raycast(aimRay,out RaycastHit hit, 15f, _environmentMask, QueryTriggerInteraction.Ignore))
-        {
-            aimPoint = hit.point;
-        }
-
-        Vector3 direction = (aimPoint - origin).normalized;
-        //충전량에 따라 속도를 정하고 위쪽 힘 추가
-        float throwSpeed = Mathf.Lerp(_minThrowSpeed, _maxThrowSpeed, Mathf.Clamp01(chargeRatio));
-
-        Vector3 launchVelocity = direction * throwSpeed + Vector3.up * _upwardSpeed;
-        //동전을 생성하고 초기 속도와 플레이어 콜라이더 전달
+        Vector3 launchVelocity = CalculateLaunchVelocity(origin, chargeRatio);
         ThrowableCoin coin = Instantiate(_coinPrefab, origin, Quaternion.identity);
-        coin.Initialize(this,launchVelocity,_playerColliders);
+
+        coin.Initialize(this, launchVelocity,_playerColliders);
 
         CoinCount--;
         _nextThrowTime = Time.time + _throwCooldown;
 
         PrintCount();
+        
     }
     //최대 개수를 넘지 않을 때만 동전 회수
     public bool TryRecoverCoin()
@@ -287,5 +294,98 @@ public class PlayerCoinThrower : MonoBehaviour
                 _animator.Play("CoinThrow.Empty", layerIndex, 0f);
             }
         }
+    }
+
+     void LateUpdate()
+    {
+        if(!_isCharging || Time.timeScale <=0f || Cursor.lockState != CursorLockMode.Locked || (_playerCover != null && _playerCover.IsInCover))
+        {
+            HideTrajectory();
+            return;
+        }
+
+        if (Time.time < _nextPreviewTime) return;
+        _nextPreviewTime = Time.time + _previewInterval;
+        DrawTrajectory();
+    }
+
+    Vector3 CalculateLaunchVelocity(Vector3 origin, float chargeRatio)
+    {
+        Ray aimRay = _playerCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
+        Vector3 aimPoint = aimRay.GetPoint(15f);
+
+        if(Physics.Raycast(aimRay,out RaycastHit hit, 15f, _environmentMask, QueryTriggerInteraction.Ignore))
+            aimPoint = hit.point;
+        Vector3 direction = (aimPoint - origin).normalized;
+        float speed = Mathf.Lerp(_minThrowSpeed, _maxThrowSpeed, Mathf.Clamp01(chargeRatio));
+
+        return direction * speed + Vector3.up * _upwardSpeed;
+    }
+
+    bool IsThrowBlocked(Vector3 origin)
+    {
+        if (_throwSatfetyOrigin != null && Physics.Linecast(_throwSatfetyOrigin.position, origin, _environmentMask, QueryTriggerInteraction.Ignore)) return true;
+        return Physics.CheckSphere(origin, Mathf.Max(_spawnCheckRadius, _predictionRadius), _environmentMask, QueryTriggerInteraction.Ignore);
+    }
+
+    void DrawTrajectory()
+    {
+        if(_trajectoryLine == null || _playerCamera == null || _throwOrigin == null || _coinPrefab == null)
+        {
+            HideTrajectory();
+            return;
+        }
+        Vector3 position = _throwOrigin.position;
+        //던질 공간이 없으면 예측 표시도 숨기기
+        if (IsThrowBlocked(position))
+        {
+            HideTrajectory();
+            return;
+        }
+
+        Vector3 velocity = CalculateLaunchVelocity(position, ChargeRatio);
+
+        float stepTime = Mathf.Max(Time.fixedDeltaTime, 0.001f);
+        int steps = Mathf.Clamp(Mathf.CeilToInt(_predictionDuration / stepTime), 1, 500);
+
+        _trajectoryLine.enabled = true;
+        _trajectoryLine.positionCount = steps + 1;
+        _trajectoryLine.SetPosition(0,position);
+
+        if(_impactMarker != null)
+            _impactMarker.gameObject.SetActive(false);
+        for(int i = 1; i <= steps; i++)
+        {
+            velocity += Physics.gravity * stepTime;
+            Vector3 nextPosition = position + velocity * stepTime;
+
+            Vector3 segment = nextPosition - position;
+            float distance = segment.magnitude;
+
+            if(distance > 0.0001f && Physics.SphereCast(position,_predictionRadius,segment/distance,out RaycastHit hit, distance, _environmentMask, QueryTriggerInteraction.Ignore))
+            {
+                Vector3 endPoint = position + segment / distance * hit.distance;
+                _trajectoryLine.SetPosition(i,endPoint);
+                _trajectoryLine.positionCount = i +1;   
+
+                if(_impactMarker != null)
+                {
+                    _impactMarker.position = hit.point + hit.normal * 0.02f;
+                    _impactMarker.gameObject.SetActive(true);
+                }
+
+                return;
+            }
+            _trajectoryLine.SetPosition(i, nextPosition);
+            position = nextPosition;
+        }
+    }
+
+    void HideTrajectory()
+    {
+        if(_trajectoryLine != null)
+            _trajectoryLine.enabled = false;
+        if (_impactMarker != null)
+            _impactMarker.gameObject.SetActive(false);
     }
 }

@@ -11,10 +11,25 @@ public class PlayerStaminaUI : MonoBehaviour
     [SerializeField] Color _exhaustedColor = new Color(1f, 0.35f, 0.2f);
      void Awake()
     {
+        if(_movement == null || _slider == null)
+        {
+            Debug.LogError("PlayerMovement와 Slider를 연결하세요.", this);
+            enabled = false;
+            return;
+        }
+
+        _slider.minValue = 0f;
+        _slider.maxValue = 1f;
+        _slider.wholeNumbers = false;
+        _slider.interactable = false;
+    }
+
+     void Start()
+    {
         RefreshUI();
     }
 
-     void LateUpdate()
+    void LateUpdate()
     {
         RefreshUI();
     }

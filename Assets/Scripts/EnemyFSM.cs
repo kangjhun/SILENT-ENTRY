@@ -1,4 +1,3 @@
-using Unity.Cinemachine;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -39,7 +38,6 @@ public class EnemyFSM : MonoBehaviour
 
     [Header("수색")]
     [SerializeField] float _searchDuration = 6.5f;
-    [SerializeField] float _searchLookAngle = 60f;
 
     [Header("이동 판정")]
     [SerializeField] float _stoppingDistance = 0.3f;
@@ -62,7 +60,6 @@ public class EnemyFSM : MonoBehaviour
     [Header("플레이어 감지")]
     [SerializeField, Min(0.1f)] float _detectionTime = 0.8f;
     [SerializeField, Min(0.1f)] float _detectionDecayTime = 1f;
-
 
     NavMeshAgent _agent;
     EnemyVision _vision;
@@ -95,8 +92,6 @@ public class EnemyFSM : MonoBehaviour
     Vector3 _noisePosition;
     Vector3 _lastSeenPosition;
     Vector3 _searchPosition;
-    
-    Quaternion _searchStartRotation;
 
     const float ArrivalTolerance = 0.1f;
     const float ReturnRetryInterval = 1f;
@@ -182,7 +177,7 @@ public class EnemyFSM : MonoBehaviour
     //플레이어 감지, 문 학인 후 상태에 맞는 행동을 실행
     void Update()
     {
-        if (!_initialized || !AgentReady || Time.timeScale <=0f) return;
+        if (!_initialized || !AgentReady) return;
 
         //상태 처리 중단뿐 아니라 Agent의 이동도 정지
         if (GameEnded)
@@ -193,6 +188,8 @@ public class EnemyFSM : MonoBehaviour
             }
             return;
         }
+
+        if(Time.timeScale <=0f) { return; }
 
         //어떤 상태에서든 플레이어 발견을 최우선으로 처리
         UpdatePlayerDetection();
@@ -303,7 +300,6 @@ public class EnemyFSM : MonoBehaviour
             _searchTimer = 0f;
             _agent.updateRotation = true;
         }
-        Debug.Log($"{_currentState}-> {nextState}", this);
         _currentState = nextState;
         EnterState();
     }
@@ -462,7 +458,7 @@ public class EnemyFSM : MonoBehaviour
             if (_hasDestination && !HasArrived() && _moveTimer < _moveTimeout) return;
             StopMoving();
 
-            //수색 중에는 코드가 직접 회전하므로 Agent 회전 중단
+            //제자리 수색 중에는 Agent의 자동 회전 중단
             _agent.updateRotation = false;
 
             
@@ -584,9 +580,9 @@ public class EnemyFSM : MonoBehaviour
     {
         
         if (!_initialized || !isActiveAndEnabled || !AgentReady) return;
-        if (GameEnded || Time.timeScale < -0f) return;
+        if (GameEnded || Time.timeScale <= 0f) return;
         //플레이어 추격이나 시각 탐지를 소음보다 우선
-        if (_currentState == EnemyState.Chase || _vision.CanSeePlayer || _currentState == EnemyState.Suspicious || _vision.CanSeePlayer) return;
+        if (_currentState == EnemyState.Chase || _vision.CanSeePlayer || _currentState == EnemyState.Suspicious ) return;
         if (_currentState == EnemyState.Search && _hasConfirmedPlayer) return;
         if (hearingRadius <= 0f) return;
 
