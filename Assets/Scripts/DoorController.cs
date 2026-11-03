@@ -1,13 +1,13 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
 public class DoorController : MonoBehaviour,IInteractable
 {
-    [SerializeField] Transform _hinge;//¹® È¸ÀüÃà
-    [SerializeField] Collider _leafCollider;//¹®Â¦ Äİ¶óÀÌ´õ
+    [SerializeField] Transform _hinge;//ë¬¸ íšŒì „ì¶•
+    [SerializeField] Collider _leafCollider;//ë¬¸ì§ ì½œë¼ì´ë”
     [SerializeField] Transform _interactionPoint;
 
-    [SerializeField] BoxCollider _passage;//¹® Åë·Î ¿µ¿ª
-    [SerializeField] BoxCollider _clearanceZone;//¹® ÁÖº¯ Ä³¸¯ÅÍ °¨Áö ¿µ¿ª
+    [SerializeField] BoxCollider _passage;//ë¬¸ í†µë¡œ ì˜ì—­
+    [SerializeField] BoxCollider _clearanceZone;//ë¬¸ ì£¼ë³€ ìºë¦­í„° ê°ì§€ ì˜ì—­
     [SerializeField] LayerMask _characterMask;
 
     [SerializeField] float _openAngle = 90f;
@@ -24,22 +24,22 @@ public class DoorController : MonoBehaviour,IInteractable
     bool _targetOpen;
     bool _ready;
 
-    public string DisplayName => _targetOpen ? "¹® ´İ±â" : "¹® ¿­±â";
-    //ÁöÁ¤µÈ »óÈ£ÀÛ¿ë À§Ä¡°¡ ¾øÀ¸¸é ¹®Â¦ Áß½ÉÀ» »ç¿ë
+    public string DisplayName => _targetOpen ? "ë¬¸ ë‹«ê¸°" : "ë¬¸ ì—´ê¸°";
+    //ì§€ì •ëœ ìƒí˜¸ì‘ìš© ìœ„ì¹˜ê°€ ì—†ìœ¼ë©´ ë¬¸ì§ ì¤‘ì‹¬ì„ ì‚¬ìš©
     public Vector3 InteractionPosition => _interactionPoint != null ? _interactionPoint.position : (_leafCollider != null ? _leafCollider.bounds.center : transform.position);
 
     public bool IsMoving => Mathf.Abs(_angle - (_targetOpen ? _openAngle : 0f)) > 0.01f;
 
     public bool CanInteract => _ready && isActiveAndEnabled && !IsMoving;
-   //¹®ÀÌ ¿ÏÀüÈ÷ ¿­¸° »óÅÂ¿¡¼­ Åë°ú °¡´É
+   //ë¬¸ì´ ì™„ì „íˆ ì—´ë¦° ìƒíƒœì—ì„œ í†µê³¼ ê°€ëŠ¥
     public bool IsPassable => _ready && isActiveAndEnabled && _targetOpen && !IsMoving;
     readonly Collider[] _occupancyBuffer = new Collider[16];
     void Awake()
     {
-        //ÇÊ¼ö ÂüÁ¶¿Í Ä³¸¯ÅÍ ·¹ÀÌ¾î ¼³Á¤ È®ÀÎ
+        //í•„ìˆ˜ ì°¸ì¡°ì™€ ìºë¦­í„° ë ˆì´ì–´ ì„¤ì • í™•ì¸
         if (_hinge == null || _leafCollider == null || _passage == null || _clearanceZone == null || _characterMask.value == 0)
         {
-            Debug.LogError("¹®ÀÇ ÇÊ¼ö ¿¬°á°ú Character Mask¸¦ È®ÀÎÇÏ¼¼¿ä.", this);
+            Debug.LogError("ë¬¸ì˜ í•„ìˆ˜ ì—°ê²°ê³¼ Character Maskë¥¼ í™•ì¸í•˜ì„¸ìš”.", this);
             enabled = false; 
             return;
         }
@@ -54,16 +54,16 @@ public class DoorController : MonoBehaviour,IInteractable
     void Update()
     {
         if(!_ready || Time.timeScale <= 0f) return;
-        //´İÈ÷´Â Áß Ä³¸¯ÅÍ°¡ °¨ÁöµÇ¸é ´Ù½Ã ¿­±â
+        //ë‹«íˆëŠ” ì¤‘ ìºë¦­í„°ê°€ ê°ì§€ë˜ë©´ ë‹¤ì‹œ ì—´ê¸°
         if (!_targetOpen && _angle != 0f && IsOccupied())
             RequestOpen();
 
         float targetAngle = _targetOpen ? _openAngle : 0f;
-        //¸ñÇ¥ °¢µµ¸¦ ÇâÇØ ¹® È¸Àü
+        //ëª©í‘œ ê°ë„ë¥¼ í–¥í•´ ë¬¸ íšŒì „
         _angle = Mathf.MoveTowards(_angle, targetAngle, _rotationSpeed * Time.deltaTime);
 
         _hinge.localRotation = _closedRotation * Quaternion.AngleAxis(_angle, Vector3.up);
-        //¿­±â ¿äÃ» ÀÌÈÄ ÀÏÁ¤ ½Ã°£ÀÌ Áö³ª¸é ÀÚµ¿ ´İ±â ½Ãµµ
+        //ì—´ê¸° ìš”ì²­ ì´í›„ ì¼ì • ì‹œê°„ì´ ì§€ë‚˜ë©´ ìë™ ë‹«ê¸° ì‹œë„
         if (_autoClose && IsPassable && Time.time - _lastOpenRequestTime >= _autoCloseDelay)
             TryClose();
     }
@@ -75,7 +75,7 @@ public class DoorController : MonoBehaviour,IInteractable
         {
             if (!TryClose())
             {
-                Debug.Log("¹® ÁÖº¯¿¡ Ä³¸¯ÅÍ°¡ ÀÖ¾î ´İÀ» ¼ö ¾ø½À´Ï´Ù.", this);
+                Debug.Log("ë¬¸ ì£¼ë³€ì— ìºë¦­í„°ê°€ ìˆì–´ ë‹«ì„ ìˆ˜ ì—†ìŠµë‹ˆë‹¤.", this);
             }
         }
         else
@@ -87,14 +87,14 @@ public class DoorController : MonoBehaviour,IInteractable
     public void RequestOpen()
     {
         if(!_ready || !isActiveAndEnabled) return;
-        //¿­±â ¿äÃ» ½Ã°£À» °»½ÅÇÏ°í ¸ñÇ¥ »óÅÂ º¯°æ
+        //ì—´ê¸° ìš”ì²­ ì‹œê°„ì„ ê°±ì‹ í•˜ê³  ëª©í‘œ ìƒíƒœ ë³€ê²½
         _lastOpenRequestTime = Time.time;
         _targetOpen = true;
     }
 
     bool TryClose()
     {
-        //ÁÖº¯¿¡ Ä³¸¯ÅÍ°¡ ÀÖÀ¸¸é ´İ±â Â÷´Ü
+        //ì£¼ë³€ì— ìºë¦­í„°ê°€ ìˆìœ¼ë©´ ë‹«ê¸° ì°¨ë‹¨
         if (IsOccupied())
         {
             return false;
@@ -116,7 +116,7 @@ public class DoorController : MonoBehaviour,IInteractable
 
         int count = Physics.OverlapBoxNonAlloc(center, halfSize, _occupancyBuffer, zone.rotation, _characterMask, QueryTriggerInteraction.Ignore);
         Collider[] hits = _occupancyBuffer;
-        //°¨Áö ´ë»óÀÌ ¸¹À¸¸é ´Ù½Ã °Ë»öÇØ ´©¶ô ¹æÁö
+        //ê°ì§€ ëŒ€ìƒì´ ë§ìœ¼ë©´ ë‹¤ì‹œ ê²€ìƒ‰í•´ ëˆ„ë½ ë°©ì§€
         if(count == _occupancyBuffer.Length)
         {
             hits = Physics.OverlapBox(center, halfSize, zone.rotation, _characterMask, QueryTriggerInteraction.Ignore);
@@ -131,19 +131,19 @@ public class DoorController : MonoBehaviour,IInteractable
         }
         return false;
     }
-    //ÀÌµ¿ °æ·Î°¡ ¹® Åë·Î¸¦ Áö³ª´ÂÁö È®ÀÎÇÏ°í ±³Â÷ À§Ä¡ ºñÀ² ¹İÈ¯
+    //ì´ë™ ê²½ë¡œê°€ ë¬¸ í†µë¡œë¥¼ ì§€ë‚˜ëŠ”ì§€ í™•ì¸í•˜ê³  êµì°¨ ìœ„ì¹˜ ë¹„ìœ¨ ë°˜í™˜
     public bool IntersectsSegment(Vector3 start, Vector3 end, float agentRadius, out float fraction)
     {
         fraction = 0f;
         if(!gameObject.activeInHierarchy || _passage == null) return false;
 
         Transform space = _passage.transform;
-        //°æ·Î¸¦ Åë·ÎÀÇ ·ÎÄÃ ÁÂÇ¥·Î º¯È¯
+        //ê²½ë¡œë¥¼ í†µë¡œì˜ ë¡œì»¬ ì¢Œí‘œë¡œ ë³€í™˜
         Vector3 localStart = space.InverseTransformPoint(start);
         Vector3 localEnd = space.InverseTransformPoint(end);
 
         Vector3 scale = space.lossyScale;
-        //¿¡ÀÌÀüÆ® ¹İ°æ¸¸Å­ Åë·Î °Ë»ç ¹üÀ§ È®Àå
+        //ì—ì´ì „íŠ¸ ë°˜ê²½ë§Œí¼ í†µë¡œ ê²€ì‚¬ ë²”ìœ„ í™•ì¥
         Vector3 padding = new Vector3(agentRadius / Mathf.Max(Mathf.Abs(scale.x), 0.0001f), 0f, agentRadius / Mathf.Max(Mathf.Abs(scale.z), 0.0001f));
 
         Bounds box = new Bounds(_passage.center, _passage.size + padding * 2f);
@@ -155,7 +155,7 @@ public class DoorController : MonoBehaviour,IInteractable
         float length = direction.magnitude;
 
         if(length < 0.0001f) return false;
-        //°æ·Î ±¸°£ ¾È¿¡¼­ Åë·Î¿Í ±³Â÷ÇÏ´ÂÁö È®ÀÎ
+        //ê²½ë¡œ êµ¬ê°„ ì•ˆì—ì„œ í†µë¡œì™€ êµì°¨í•˜ëŠ”ì§€ í™•ì¸
         Ray ray = new Ray(localStart, direction / length);
 
         if(!box.IntersectRay(ray,out float distance) || distance > length) return false;

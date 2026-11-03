@@ -1,20 +1,20 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
-//°Å¸®, ½Ã¾ß°¢, Àå¾Ö¹°À» È®ÀÎÇØ ÇÃ·¹ÀÌ¾î °¨Áö
+//ê±°ë¦¬, ì‹œì•¼ê°, ì¥ì• ë¬¼ì„ í™•ì¸í•´ í”Œë ˆì´ì–´ ê°ì§€
 public class EnemyVision : MonoBehaviour
 {
-    [Header("Å½Áö ±âÁØÁ¡")]
+    [Header("íƒì§€ ê¸°ì¤€ì ")]
     [SerializeField] Transform _eyePoint;
     [SerializeField] Transform _playerTarget;
 
-    [Header("½Ã¾ß ¹üÀ§")]
+    [Header("ì‹œì•¼ ë²”ìœ„")]
     [SerializeField, Min(0.1f)]
     float _viewRadius = 8f;
 
     [SerializeField, Range(1f, 360f)]
     float _viewAngle = 90f;
 
-    [Header("½Ã¾ß¸¦ °¡¸®´Â Àå¾Ö¹°")]
+    [Header("ì‹œì•¼ë¥¼ ê°€ë¦¬ëŠ” ì¥ì• ë¬¼")]
     [SerializeField] LayerMask _obstacleMask;
 
     bool _canSeePlayer;
@@ -23,7 +23,7 @@ public class EnemyVision : MonoBehaviour
     public float ViewRadius => _viewRadius;
     public float ViewAngle => _viewAngle;
     public LayerMask ObstacleMask => _obstacleMask;
-    //´« À§Ä¡°¡ ¾øÀ¸¸é ÇöÀç ¿ÀºêÁ§Æ® À§Ä¡ »ç¿ë
+    //ëˆˆ ìœ„ì¹˜ê°€ ì—†ìœ¼ë©´ í˜„ì¬ ì˜¤ë¸Œì íŠ¸ ìœ„ì¹˜ ì‚¬ìš©
     public Vector3 EyePosition => _eyePoint != null ? _eyePoint.position : transform.position;
     public Transform PlayerTarget => _playerTarget;
 
@@ -34,10 +34,10 @@ public class EnemyVision : MonoBehaviour
 
     public Vector3 GetFlatForward()
     {
-        //À§¾Æ·¡ ±â¿ï±â¸¦ Á¦¿ÜÇÑ ¼öÆò Á¤¸é ¹æÇâ °è»ê
+        //ìœ„ì•„ë˜ ê¸°ìš¸ê¸°ë¥¼ ì œì™¸í•œ ìˆ˜í‰ ì •ë©´ ë°©í–¥ ê³„ì‚°
         Vector3 forward = Vector3.ProjectOnPlane(transform.forward, Vector3.up);
         
-        //¼öÆò ¹æÇâÀ» ±¸ÇÒ ¼ö ¾øÀ¸¸é ¿ùµå ¾ÕÂÊ ¹æÇâ »ç¿ë
+        //ìˆ˜í‰ ë°©í–¥ì„ êµ¬í•  ìˆ˜ ì—†ìœ¼ë©´ ì›”ë“œ ì•ìª½ ë°©í–¥ ì‚¬ìš©
         if (forward.sqrMagnitude < 0.001f)
         {
             forward = Vector3.forward;
@@ -47,17 +47,17 @@ public class EnemyVision : MonoBehaviour
 
     public bool CheckObstacle(Vector3 origin, Vector3 direction, float distance, out RaycastHit hit)
     {
-        //ÁöÁ¤µÈ Àå¾Ö¹° ·¹ÀÌ¾î¸¸ °Ë»çÇÏ°í Trigger´Â Á¦¿Ü
+        //ì§€ì •ëœ ì¥ì• ë¬¼ ë ˆì´ì–´ë§Œ ê²€ì‚¬í•˜ê³  TriggerëŠ” ì œì™¸
         return Physics.Raycast(origin, direction, out hit, distance, _obstacleMask, QueryTriggerInteraction.Ignore);
     }
     void CheckPlayer(Vector3 eyePosition, Vector3 forward)
     {
         bool detected = IsPlayerVisible(eyePosition, forward);
 
-        //ÇÃ·¹ÀÌ¾î°¡ º¸ÀÌ°Å³ª ¾È º¸ÀÌ´Â »óÅÂ·Î ¹Ù²ğ ¶§¸¸ ·Î±× Ãâ·Â
+        //í”Œë ˆì´ì–´ê°€ ë³´ì´ê±°ë‚˜ ì•ˆ ë³´ì´ëŠ” ìƒíƒœë¡œ ë°”ë€” ë•Œë§Œ ë¡œê·¸ ì¶œë ¥
         if (detected != _canSeePlayer)
         {
-            Debug.Log(detected ? "ÇÃ·¹ÀÌ¾î ½Ã¾ß¿¡ µé¾î¿È" : "ÇÃ·¹ÀÌ¾î ½Ã¾ß¿¡¼­ ¹ş¾î³²", this);
+            Debug.Log(detected ? "í”Œë ˆì´ì–´ ì‹œì•¼ì— ë“¤ì–´ì˜´" : "í”Œë ˆì´ì–´ ì‹œì•¼ì—ì„œ ë²—ì–´ë‚¨", this);
 
         }
         _canSeePlayer = detected;
@@ -65,29 +65,29 @@ public class EnemyVision : MonoBehaviour
 
     bool IsPlayerVisible(Vector3 eyePosition, Vector3 forward)
     {
-        //´ë»óÀÌ ¾ø°Å³ª ºñÈ°¼º »óÅÂÀÌ¸é °¨ÁöÇÏÁö ¾ÊÀ½
+        //ëŒ€ìƒì´ ì—†ê±°ë‚˜ ë¹„í™œì„± ìƒíƒœì´ë©´ ê°ì§€í•˜ì§€ ì•ŠìŒ
         if (_playerTarget == null || !_playerTarget.gameObject.activeInHierarchy) return false;
         Vector3 toPlayer = _playerTarget.position - eyePosition;
         float distance = toPlayer.magnitude;
-        //½Ã¾ß °Å¸® ¹ÛÀÌ¸é °¨ÁöÇÏÁö ¾ÊÀ½
+        //ì‹œì•¼ ê±°ë¦¬ ë°–ì´ë©´ ê°ì§€í•˜ì§€ ì•ŠìŒ
         if (distance > _viewRadius) return false;
-        //µÎ ±âÁØÁ¡ÀÌ °ãÄ¡¸é °¨ÁöÇÏ°í ¹æÇâ °è»ê »ı·«
+        //ë‘ ê¸°ì¤€ì ì´ ê²¹ì¹˜ë©´ ê°ì§€í•˜ê³  ë°©í–¥ ê³„ì‚° ìƒëµ
         if (distance <= 0.001f) return true;
 
-        //³ôÀÌ Â÷ÀÌ¸¦ Á¦¿ÜÇÏ°í ÁÂ¿ì ½Ã¾ß°¢ È®ÀÎ
+        //ë†’ì´ ì°¨ì´ë¥¼ ì œì™¸í•˜ê³  ì¢Œìš° ì‹œì•¼ê° í™•ì¸
         Vector3 flatToPlayer = Vector3.ProjectOnPlane(toPlayer, Vector3.up);
         float angle = Vector3.Angle(forward, flatToPlayer);
 
         if (angle > _viewAngle * 0.5f) return false;
 
-        //´«°ú ÇÃ·¹ÀÌ¾î »çÀÌ¿¡ Àå¾Ö¹°ÀÌ ¾øÀ¸¸é °¨Áö
+        //ëˆˆê³¼ í”Œë ˆì´ì–´ ì‚¬ì´ì— ì¥ì• ë¬¼ì´ ì—†ìœ¼ë©´ ê°ì§€
         bool blocked = CheckObstacle(eyePosition, toPlayer / distance, distance, out _);
         return !blocked;
     }
 
      void OnDisable()
     {
-        //ºñÈ°¼ºÈ­µÇ¸é °¨Áö °á°ú ÃÊ±âÈ­
+        //ë¹„í™œì„±í™”ë˜ë©´ ê°ì§€ ê²°ê³¼ ì´ˆê¸°í™”
         _canSeePlayer = false;
     }
 }

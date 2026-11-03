@@ -1,4 +1,4 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using UnityEngine.AI;
 
 [RequireComponent(typeof(NavMeshAgent), typeof(EnemyFSM))]
@@ -7,17 +7,17 @@ public class EnemyAnimation : MonoBehaviour
     [SerializeField] Animator _animator;
 
     [SerializeField, Min(0f)]
-    float _blendTime = 0.15f;//ÀÌµ¿ ¾Ö´Ï¸ŞÀÌ¼Ç ÀüÈ¯ ½Ã°£
+    float _blendTime = 0.15f;//ì´ë™ ì• ë‹ˆë©”ì´ì…˜ ì „í™˜ ì‹œê°„
 
     NavMeshAgent _agent;
     EnemyFSM _fsm;
 
-    //¹®ÀÚ¿­À» ¸Å¹ø ÇØ½Ã·Î º¯È¯ÇÏÁö ¾Êµµ·Ï ÆÄ¶ó¹ÌÅÍ ID ÀúÀå
+    //ë¬¸ìì—´ì„ ë§¤ë²ˆ í•´ì‹œë¡œ ë³€í™˜í•˜ì§€ ì•Šë„ë¡ íŒŒë¼ë¯¸í„° ID ì €ì¥
     static readonly int SpeedHash = Animator.StringToHash("Speed");
     static readonly int isTurningHash = Animator.StringToHash("IsTurning");
     static readonly int TurnDirectionHash = Animator.StringToHash("TurnDirection");
     static readonly int IsSearchingHash = Animator.StringToHash("IsSearching");
-    //¾ÆÁÖ ÀÛÀº ¿òÁ÷ÀÓÀº Á¤Áö·Î Ã³¸®
+    //ì•„ì£¼ ì‘ì€ ì›€ì§ì„ì€ ì •ì§€ë¡œ ì²˜ë¦¬
     const float StopThreshole = 0.05f;
      void Awake()
     {
@@ -30,20 +30,20 @@ public class EnemyAnimation : MonoBehaviour
         }
         if(_animator == null)
         {
-            Debug.LogError("Animator¸¦ ¿¬°áÇÏ¼¼¿ä.", this);
+            Debug.LogError("Animatorë¥¼ ì—°ê²°í•˜ì„¸ìš”.", this);
             enabled = false;
             return;
         }
 
-        //À§Ä¡ ÀÌµ¿Àº NavMeshAgent°¡ ´ã´ç
+        //ìœ„ì¹˜ ì´ë™ì€ NavMeshAgentê°€ ë‹´ë‹¹
         _animator.applyRootMotion = false;
     }
 
      void LateUpdate()
     {
-        //ÀÏ½ÃÁ¤Áö Áß¿¡´Â ÆÄ¶ó¹ÌÅÍ °»½Å Áß´Ü
+        //ì¼ì‹œì •ì§€ ì¤‘ì—ëŠ” íŒŒë¼ë¯¸í„° ê°±ì‹  ì¤‘ë‹¨
         if (Time.timeScale == 0f) return;
-        //FSM¿¡¼­ Å½»ö°ú È¸Àü »óÅÂ È®ÀÎ
+        //FSMì—ì„œ íƒìƒ‰ê³¼ íšŒì „ ìƒíƒœ í™•ì¸
         bool fsmActive = _fsm.isActiveAndEnabled;
         bool isSearching = fsmActive && _fsm.IsSearchingAround;
         bool isTurning = fsmActive && !isSearching && _fsm.IsTurning;
@@ -53,7 +53,7 @@ public class EnemyAnimation : MonoBehaviour
         _animator.SetBool(isTurningHash,isTurning);
 
         _animator.SetFloat(TurnDirectionHash, isTurning ? _fsm.TurnDirection : 0f);
-        //Å½»öÇÏ°Å³ª Á¦ÀÚ¸® È¸Àü ÁßÀÌ¸é ÀÌµ¿ ¾Ö´Ï¸ŞÀÌ¼Ç Á¤Áö
+        //íƒìƒ‰í•˜ê±°ë‚˜ ì œìë¦¬ íšŒì „ ì¤‘ì´ë©´ ì´ë™ ì• ë‹ˆë©”ì´ì…˜ ì •ì§€
         if (isSearching || isTurning)
         {
             _animator.SetFloat(SpeedHash, 0f);
@@ -66,9 +66,9 @@ public class EnemyAnimation : MonoBehaviour
 
     float GetMovementSpeed()
     {
-        //ÀÌµ¿ÇÒ ¼ö ¾ø´Â »óÅÂÀÌ¸é ¼Óµµ 0 ¹İÈ¯
+        //ì´ë™í•  ìˆ˜ ì—†ëŠ” ìƒíƒœì´ë©´ ì†ë„ 0 ë°˜í™˜
         if (!_agent.enabled || !_agent.isOnNavMesh || _agent.isStopped) return 0f;
-        //¼öÁ÷ ÀÌµ¿À» Á¦¿ÜÇÑ ½ÇÁ¦ ÀÌµ¿ ¼Óµµ °è»ê
+        //ìˆ˜ì§ ì´ë™ì„ ì œì™¸í•œ ì‹¤ì œ ì´ë™ ì†ë„ ê³„ì‚°
         Vector3 velocity = _agent.velocity;
 
         velocity.y = 0f;

@@ -1,27 +1,27 @@
-using UnityEngine;
-//¸ñÇ¥¹° È¹µæ »óÈ£ÀÛ¿ë Ã³¸®
+ï»¿using UnityEngine;
+//ëª©í‘œë¬¼ íšë“ ìƒí˜¸ì‘ìš© ì²˜ë¦¬
 public class ObjectiveItem : MonoBehaviour,IInteractable
 {
     [SerializeField] GameManager _gameManager;
 
-    [Header("»óÈ£ÀÛ¿ë Á¤º¸")]
-    [SerializeField] string _displayName = "¸ñÇ¥¹° ³ëÆ®ºÏ";
+    [Header("ìƒí˜¸ì‘ìš© ì •ë³´")]
+    [SerializeField] string _displayName = "ëª©í‘œë¬¼ ë…¸íŠ¸ë¶";
     [SerializeField] Transform _interactionPoint;
 
-    //È­¸é ¾È³»¿¡ Ç¥½ÃÇÒ ÀÌ¸§
+    //í™”ë©´ ì•ˆë‚´ì— í‘œì‹œí•  ì´ë¦„
     public string DisplayName => _displayName;
 
-    //ÁöÁ¤µÈ ±âÁØÁ¡ÀÌ ¾øÀ¸¸é ¿ÀºêÁ§Æ® À§Ä¡ »ç¿ë
+    //ì§€ì •ëœ ê¸°ì¤€ì ì´ ì—†ìœ¼ë©´ ì˜¤ë¸Œì íŠ¸ ìœ„ì¹˜ ì‚¬ìš©
     public Vector3 InteractionPosition => _interactionPoint != null ? _interactionPoint.position : transform.position;
 
-    // °ÔÀÓ ÁøÇà ÁßÀÌ°í ¾ÆÁ÷ È¹µæÇÏÁö ¾ÊÀº ¸ñÇ¥¹°¸¸ »óÈ£ÀÛ¿ë °¡´É
+    // ê²Œì„ ì§„í–‰ ì¤‘ì´ê³  ì•„ì§ íšë“í•˜ì§€ ì•Šì€ ëª©í‘œë¬¼ë§Œ ìƒí˜¸ì‘ìš© ê°€ëŠ¥
     public bool CanInteract => isActiveAndEnabled && _gameManager != null && _gameManager.IsPlaying && !_gameManager.HasObjective;
 
     public void Interact()
     {
         if(!CanInteract) { return; }
 
-        //È¹µæ Ã³¸®¿¡ ¼º°øÇÏ¸é ¸ñÇ¥¹° ¼û±â±â
+        //íšë“ ì²˜ë¦¬ì— ì„±ê³µí•˜ë©´ ëª©í‘œë¬¼ ìˆ¨ê¸°ê¸°
         if (_gameManager.AcquiredObjective())
         {
             gameObject.SetActive(false);    

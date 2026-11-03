@@ -1,11 +1,11 @@
-using System;
+ï»¿using System;
 using UnityEngine;
-//´øÁø µ¿ÀüÀÇ Ãæµ¹ ¼ÒÀ½°ú È¸¼ö Ã³¸®
+//ë˜ì§„ ë™ì „ì˜ ì¶©ëŒ ì†ŒìŒê³¼ íšŒìˆ˜ ì²˜ë¦¬
 [RequireComponent(typeof(Rigidbody))]
 [RequireComponent(typeof(MeshCollider))]
 public class ThrowableCoin : MonoBehaviour,IInteractable
 {
-    //µ¿Àü ¼Ò¸®°¡ ¹ß»ıÇßÀ» ¶§ ¿¬°áµÈ ÇÔ¼ö¿¡ À§Ä¡¿Í ¹üÀ§ Àü´Ş
+    //ë™ì „ ì†Œë¦¬ê°€ ë°œìƒí–ˆì„ ë•Œ ì—°ê²°ëœ í•¨ìˆ˜ì— ìœ„ì¹˜ì™€ ë²”ìœ„ ì „ë‹¬
     public static event Action<Vector3, float> NoiseEmitted;
 
     [SerializeField, Min(0.1f)] float _noiseRadius = 6f;
@@ -21,13 +21,13 @@ public class ThrowableCoin : MonoBehaviour,IInteractable
     bool _collected;
     float _firstImpactTime;
 
-    public string DisplayName => "µ¿Àü È¸¼ö";
+    public string DisplayName => "ë™ì „ íšŒìˆ˜";
 
     public Vector3 InteractionPosition => _collider != null ? _collider.bounds.center : transform.position;
-    //Ã¹ Ãæµ¹ ÈÄ ÀÏÁ¤ ½Ã°£ÀÌ Áö³ª°í °ÅÀÇ ¸ØÃèÀ» ¶§ È¸¼ö °¡´É
+    //ì²« ì¶©ëŒ í›„ ì¼ì • ì‹œê°„ì´ ì§€ë‚˜ê³  ê±°ì˜ ë©ˆì·„ì„ ë•Œ íšŒìˆ˜ ê°€ëŠ¥
     public bool CanInteract => isActiveAndEnabled && !_collected && _owner != null && _owner.CanRecoverCoin && _hasImpacted &&
         Time.time >= _firstImpactTime + _pickupDelay && _rigidbody != null && _rigidbody.linearVelocity.sqrMagnitude <= _pickupMaxSpeed * _pickupMaxSpeed;
-    //°ÔÀÓ ½ÇÇà ½ÃÀÛ ½Ã ÀÌÀü ÀÌº¥Æ® ¿¬°á ÃÊ±âÈ­
+    //ê²Œì„ ì‹¤í–‰ ì‹œì‘ ì‹œ ì´ì „ ì´ë²¤íŠ¸ ì—°ê²° ì´ˆê¸°í™”
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     static void ResetEvents()
     {
@@ -43,7 +43,7 @@ public class ThrowableCoin : MonoBehaviour,IInteractable
     {
         
         _owner = owner;
-        //´øÁø µ¿ÀüÀÌ ÇÃ·¹ÀÌ¾î ¸ö¿¡ ºÎµúÈ÷Áö ¾Êµµ·Ï ¼³Á¤
+        //ë˜ì§„ ë™ì „ì´ í”Œë ˆì´ì–´ ëª¸ì— ë¶€ë”ªíˆì§€ ì•Šë„ë¡ ì„¤ì •
         if(playerColliders != null)
         {
             foreach(Collider playerCollider in playerColliders)
@@ -52,13 +52,13 @@ public class ThrowableCoin : MonoBehaviour,IInteractable
                 Physics.IgnoreCollision(_collider, playerCollider, true);
             }
         }
-        //Àü´Ş¹ŞÀº ¼Óµµ·Î µ¿Àü ¹ß»ç
+        //ì „ë‹¬ë°›ì€ ì†ë„ë¡œ ë™ì „ ë°œì‚¬
         _rigidbody.AddForce(launchVelocity, ForceMode.VelocityChange);
     }
 
     void OnCollisionEnter(Collision collision)
     {
-        //Ã¹ Ãæµ¹¿¡¼­¸¸ ¼ÒÀ½ ¹ß»ı
+        //ì²« ì¶©ëŒì—ì„œë§Œ ì†ŒìŒ ë°œìƒ
         if (_owner == null || _hasImpacted || _collected) return;
 
         _hasImpacted = true;
@@ -66,7 +66,7 @@ public class ThrowableCoin : MonoBehaviour,IInteractable
 
         Vector3 noisePosition = collision.contactCount > 0 ? collision.GetContact(0).point : transform.position;
 
-        //¼ÒÀ½ ÀÌº¥Æ®¿¡ ¿¬°áµÈ ÇÔ¼ö ½ÇÇà
+        //ì†ŒìŒ ì´ë²¤íŠ¸ì— ì—°ê²°ëœ í•¨ìˆ˜ ì‹¤í–‰
         NoiseEmitted?.Invoke(noisePosition, _noiseRadius);
     }
 
@@ -74,7 +74,7 @@ public class ThrowableCoin : MonoBehaviour,IInteractable
     {
         if(!CanInteract) return;
         if(!_owner.TryRecoverCoin()) return;
-        //È¸¼ö¿¡ ¼º°øÇÏ¸é Áßº¹ È¸¼ö¸¦ ¸·°í µ¿Àü Á¦°Å
+        //íšŒìˆ˜ì— ì„±ê³µí•˜ë©´ ì¤‘ë³µ íšŒìˆ˜ë¥¼ ë§‰ê³  ë™ì „ ì œê±°
         _collected = true;
         _collider.enabled = false;
         Destroy(gameObject);

@@ -1,20 +1,20 @@
-using UnityEngine;
-//»óÈ£ÀÛ¿ëÀ¸·Î Å»ÃâÀ» ½ÃµµÇÏ´Â ±¸¿ª
+ï»¿using UnityEngine;
+//ìƒí˜¸ì‘ìš©ìœ¼ë¡œ íƒˆì¶œì„ ì‹œë„í•˜ëŠ” êµ¬ì—­
 [RequireComponent(typeof(BoxCollider))]
 public class EscapeZone : MonoBehaviour, IInteractable
 {
-    [Header("°ÔÀÓ ÁøÇà °ü¸®")]
+    [Header("ê²Œì„ ì§„í–‰ ê´€ë¦¬")]
     [SerializeField] GameManager _gameManager;
 
-    [Header("»óÈ£ÀÛ¿ë ±âÁØÁ¡")]
+    [Header("ìƒí˜¸ì‘ìš© ê¸°ì¤€ì ")]
     [SerializeField] Transform _interactionPoint;
 
     BoxCollider _doorCollider;
 
-    public string DisplayName => "Å»ÃâÇÏ±â";
-    //ÁöÁ¤µÈ ±âÁØÁ¡ÀÌ ¾øÀ¸¸é Äİ¶óÀÌ´õ Áß½É »ç¿ë
+    public string DisplayName => "íƒˆì¶œí•˜ê¸°";
+    //ì§€ì •ëœ ê¸°ì¤€ì ì´ ì—†ìœ¼ë©´ ì½œë¼ì´ë” ì¤‘ì‹¬ ì‚¬ìš©
     public Vector3 InteractionPosition => _interactionPoint != null ? _interactionPoint.position : _doorCollider.bounds.center;
-    //ÇÊ¼ö ¿¬°á°ú È°¼º »óÅÂ È®ÀÎ
+    //í•„ìˆ˜ ì—°ê²°ê³¼ í™œì„± ìƒíƒœ í™•ì¸
     public bool CanInteract => isActiveAndEnabled && _gameManager != null && _doorCollider != null && _doorCollider.enabled;
     
 
@@ -25,7 +25,7 @@ public class EscapeZone : MonoBehaviour, IInteractable
 
         if(_gameManager == null)
         {
-            Debug.LogError("GameManager¸¦ ¿¬°áÇÏ¼¼¿ä.", this);
+            Debug.LogError("GameManagerë¥¼ ì—°ê²°í•˜ì„¸ìš”.", this);
             enabled = false;
         }
     }
@@ -34,7 +34,7 @@ public class EscapeZone : MonoBehaviour, IInteractable
      public void Interact()
     {
         if (!CanInteract) return;
-        //GameManager¿¡¼­ Å»Ãâ Á¶°Ç È®ÀÎ ¹× °á°ú Ã³¸®
+        //GameManagerì—ì„œ íƒˆì¶œ ì¡°ê±´ í™•ì¸ ë° ê²°ê³¼ ì²˜ë¦¬
         _gameManager.TryEscape();
     }
 }

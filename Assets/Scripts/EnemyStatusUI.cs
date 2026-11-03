@@ -1,19 +1,19 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
-//Àû AI°¡ °»½ÅµÈ µÚ UI Ã³¸®
+//ì  AIê°€ ê°±ì‹ ëœ ë’¤ UI ì²˜ë¦¬
 [DefaultExecutionOrder(200)]
 [RequireComponent(typeof(EnemyFSM))]
 public class EnemyStatusUI : MonoBehaviour
 {
-    [Header("¿¬°á")]
+    [Header("ì—°ê²°")]
     [SerializeField] EnemyFSM _fsm;
     [SerializeField] Canvas _statusCanvas;
     [SerializeField] TMP_Text _stateText;
     [SerializeField] Slider _detectionSlider;
     [SerializeField] Camera _playerCamera;
 
-    [Header("»ö»ó")]
+    [Header("ìƒ‰ìƒ")]
     [SerializeField] Color _suspiciousColor = new Color(1f, 0.8f, 0f);
     [SerializeField] Color _chaseColor = new Color(1f, 0.15f, 0.1f);
 
@@ -24,10 +24,10 @@ public class EnemyStatusUI : MonoBehaviour
 
         if (_playerCamera == null)
             _playerCamera = Camera.main;
-        //ÇÊ¼ö ¿¬°áÀÌ ¾øÀ¸¸é UI¸¦ ¼û±â°í ½ÇÇà Áß´Ü
+        //í•„ìˆ˜ ì—°ê²°ì´ ì—†ìœ¼ë©´ UIë¥¼ ìˆ¨ê¸°ê³  ì‹¤í–‰ ì¤‘ë‹¨
         if(_statusCanvas == null || _stateText == null || _detectionSlider == null || _playerCamera == null)
         {
-            Debug.LogError("EnemyStateUIÀÇ Canvas, Text, Slider, Camera¸¦ ¿¬°áÇÏ¼¼¿ä.", this);
+            Debug.LogError("EnemyStateUIì˜ Canvas, Text, Slider, Cameraë¥¼ ì—°ê²°í•˜ì„¸ìš”.", this);
             if(_statusCanvas != null)
             {
                 _statusCanvas.enabled = false;
@@ -35,7 +35,7 @@ public class EnemyStatusUI : MonoBehaviour
             enabled = false;
             return;
         }
-        //½ÃÀÛÇÒ ¶§ °¨Áö °ÔÀÌÁö¸¦ ºñ¿ì°í UI ¼û±â±â
+        //ì‹œì‘í•  ë•Œ ê°ì§€ ê²Œì´ì§€ë¥¼ ë¹„ìš°ê³  UI ìˆ¨ê¸°ê¸°
         _detectionSlider.SetValueWithoutNotify(0f);
         _statusCanvas.enabled = false;
     }
@@ -48,7 +48,7 @@ public class EnemyStatusUI : MonoBehaviour
             return;
         }
         EnemyFSM.EnemyState state = _fsm.CurrentState;
-        //°¨Áö, Ãß°İ, Á¶»ç, ¼ö»ö ÁßÀÏ ¶§¸¸ UI Ç¥½Ã
+        //ê°ì§€, ì¶”ê²©, ì¡°ì‚¬, ìˆ˜ìƒ‰ ì¤‘ì¼ ë•Œë§Œ UI í‘œì‹œ
         bool suspicious = state == EnemyFSM.EnemyState.Suspicious;
         bool chasing = state == EnemyFSM.EnemyState.Chase;
         bool invesigating = state == EnemyFSM.EnemyState.Investigate || state == EnemyFSM.EnemyState.Search;
@@ -57,12 +57,12 @@ public class EnemyStatusUI : MonoBehaviour
         _statusCanvas.enabled = show;
 
         if (!show) return;
-        //UI°¡ ÇÃ·¹ÀÌ¾î Ä«¸Ş¶ó¸¦ ÇâÇÏµµ·Ï È¸Àü
+        //UIê°€ í”Œë ˆì´ì–´ ì¹´ë©”ë¼ë¥¼ í–¥í•˜ë„ë¡ íšŒì „
         _statusCanvas.transform.rotation = _playerCamera.transform.rotation;
-        //Ãß°İ ÁßÀÌ¸é »¡°£ ´À³¦Ç¥, ±× ¿Ü¿¡´Â ³ë¶õ ¹°À½Ç¥ Ç¥½Ã
+        //ì¶”ê²© ì¤‘ì´ë©´ ë¹¨ê°„ ëŠë‚Œí‘œ, ê·¸ ì™¸ì—ëŠ” ë…¸ë€ ë¬¼ìŒí‘œ í‘œì‹œ
         _stateText.text = chasing ? "!" : "?";
         _stateText.color = chasing ? _chaseColor : _suspiciousColor;
-        //ÇÃ·¹ÀÌ¾î¸¦ °¨ÁöÇÏ´Â µ¿¾È¸¸ °ÔÀÌÁö Ç¥½Ã
+        //í”Œë ˆì´ì–´ë¥¼ ê°ì§€í•˜ëŠ” ë™ì•ˆë§Œ ê²Œì´ì§€ í‘œì‹œ
         _detectionSlider.gameObject.SetActive(suspicious);
 
         if (suspicious)
@@ -72,7 +72,7 @@ public class EnemyStatusUI : MonoBehaviour
     }
 
     void OnDisable()
-    {//ºñÈ°¼ºÈ­µÇ¸é UIµµ ¼û±â±â
+    {//ë¹„í™œì„±í™”ë˜ë©´ UIë„ ìˆ¨ê¸°ê¸°
         if(_statusCanvas != null )
             _statusCanvas.enabled = false;
     }

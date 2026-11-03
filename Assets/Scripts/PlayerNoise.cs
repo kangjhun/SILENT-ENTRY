@@ -1,19 +1,19 @@
-using UnityEngine;
-//ÇÃ·¹ÀÌ¾îÀÇ ÀÌµ¿ »óÅÂ¿¡ µû¶ó Àû¿¡°Ô ¹ß¼Ò¸® Àü´Ş
+ï»¿using UnityEngine;
+//í”Œë ˆì´ì–´ì˜ ì´ë™ ìƒíƒœì— ë”°ë¼ ì ì—ê²Œ ë°œì†Œë¦¬ ì „ë‹¬
 [RequireComponent (typeof(CharacterController),typeof(PlayerMovement))]
 public class PlayerNoise : MonoBehaviour
 {
     [SerializeField] EnemyFSM[] _enemies;
 
-    //¿õÅ©¸®±â ¼ÒÀ½ÀÇ ¹üÀ§¿Í ¹ß»ı °£°İ
+    //ì›…í¬ë¦¬ê¸° ì†ŒìŒì˜ ë²”ìœ„ì™€ ë°œìƒ ê°„ê²©
     [SerializeField, Min(0f)] float _crouchNoiseRadius = 0.8f;
     [SerializeField, Min(0.05f)] float _crouchInterval = 0.8f;
 
-    //°È±â ¼ÒÀ½ ¹üÀ§¿Í ¹ß»ı °£°İ
+    //ê±·ê¸° ì†ŒìŒ ë²”ìœ„ì™€ ë°œìƒ ê°„ê²©
     [SerializeField, Min(0f)] float _walkNoiseRadius = 2f;
     [SerializeField, Min(0.05f)] float _walkInterval = 0.3f;
 
-    //´Ş¸®±â ¼ÒÀ½ÀÇ ¹üÀ§¿Í ¹ß»ı °£°İ
+    //ë‹¬ë¦¬ê¸° ì†ŒìŒì˜ ë²”ìœ„ì™€ ë°œìƒ ê°„ê²©
     [SerializeField, Min(0f)] float _runNoiseRadius = 6f;
     [SerializeField, Min(0.05f)] float _runInterval = 0.2f;
 
@@ -33,14 +33,14 @@ public class PlayerNoise : MonoBehaviour
 
      void OnEnable()
     {
-        //´Ù½Ã È°¼ºÈ­µÇ¸é À§Ä¡¿Í ¼ÒÀ½ Å¸ÀÌ¸Ó ÃÊ±âÈ­
+        //ë‹¤ì‹œ í™œì„±í™”ë˜ë©´ ìœ„ì¹˜ì™€ ì†ŒìŒ íƒ€ì´ë¨¸ ì´ˆê¸°í™”
         _previousPosition = transform.position;
         _stepTimer = 0f;
     }
 
      void LateUpdate()
     {
-        //ÀÌµ¿ Ã³¸®°¡ ³¡³­ µÚ ½ÇÁ¦ ÀÌµ¿·® È®ÀÎ
+        //ì´ë™ ì²˜ë¦¬ê°€ ëë‚œ ë’¤ ì‹¤ì œ ì´ë™ëŸ‰ í™•ì¸
         Vector3 movement = transform.position - _previousPosition;
 
         _previousPosition = transform.position;
@@ -51,11 +51,11 @@ public class PlayerNoise : MonoBehaviour
             return;
         }
 
-        //³ôÀÌ º¯È­¸¦ Á¦¿ÜÇÑ ½ÇÁ¦ ÀÌµ¿ ¼Óµµ °è»ê
+        //ë†’ì´ ë³€í™”ë¥¼ ì œì™¸í•œ ì‹¤ì œ ì´ë™ ì†ë„ ê³„ì‚°
         movement.y = 0f;
         float speed = movement.magnitude / Time.deltaTime;
 
-        //°øÁß¿¡ ÀÖ°Å³ª °ÅÀÇ ¿òÁ÷ÀÌÁö ¾ÊÀ¸¸é ¼ÒÀ½ Áß´Ü
+        //ê³µì¤‘ì— ìˆê±°ë‚˜ ê±°ì˜ ì›€ì§ì´ì§€ ì•Šìœ¼ë©´ ì†ŒìŒ ì¤‘ë‹¨
         if(!_controller.isGrounded || speed < _minimumMoveSpeed)
         {
             _stepTimer = 0f; return;
@@ -68,25 +68,25 @@ public class PlayerNoise : MonoBehaviour
         float radius;
         string movementType;
 
-        //ÀÌµ¿ »óÅÂ¿¡ ¸Â´Â ¼ÒÀ½ ¹üÀ§¿Í °£°İ ¼±ÅÃ
+        //ì´ë™ ìƒíƒœì— ë§ëŠ” ì†ŒìŒ ë²”ìœ„ì™€ ê°„ê²© ì„ íƒ
         if (isCrouching)
         {
             interval = _crouchInterval;
             radius = _crouchNoiseRadius;
-            movementType = "¿õÅ©¸®±â";
+            movementType = "ì›…í¬ë¦¬ê¸°";
         }else if (isRunning)
         {
             interval = _runInterval;
             radius = _runNoiseRadius;
-            movementType = "´Ş¸®±â";
+            movementType = "ë‹¬ë¦¬ê¸°";
         }
         else
         {
             interval = _walkInterval;
             radius = _walkNoiseRadius;
-            movementType = "°È±â";
+            movementType = "ê±·ê¸°";
         }
-        //¼³Á¤µÈ °£°İ¸¶´Ù ¼ÒÀ½ ¹ß»ı
+        //ì„¤ì •ëœ ê°„ê²©ë§ˆë‹¤ ì†ŒìŒ ë°œìƒ
         _stepTimer += Time.deltaTime;
 
         if (_stepTimer < interval) return;
@@ -101,7 +101,7 @@ public class PlayerNoise : MonoBehaviour
 
         Vector3 noisePosition = transform.position;
 
-        //¿¬°áµÈ Àû¿¡°Ô ¼Ò¸®°¡ ³­ À§Ä¡¿Í µé¸®´Â ¹üÀ§ Àü´Ş
+        //ì—°ê²°ëœ ì ì—ê²Œ ì†Œë¦¬ê°€ ë‚œ ìœ„ì¹˜ì™€ ë“¤ë¦¬ëŠ” ë²”ìœ„ ì „ë‹¬
         if(_enemies != null)
         {
             foreach(EnemyFSM enemy in _enemies)

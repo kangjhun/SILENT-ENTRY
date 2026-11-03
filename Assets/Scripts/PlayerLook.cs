@@ -1,17 +1,17 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
 public class PlayerLook : MonoBehaviour
 {
-    [Header("ÂüÁ¶")]
+    [Header("ì°¸ì¡°")]
     [SerializeField] Transform _player;
     [SerializeField] Transform _cameraTransform;
 
-    [Header("Ä«¸Ş¶ó ¹èÄ¡")]
+    [Header("ì¹´ë©”ë¼ ë°°ì¹˜")]
     [SerializeField] float _pivotHeight = 1.5f;
     [SerializeField,Min(0.1f)] float _distance = 3f;
     [SerializeField] float _shoulderOffset = -0.5f;
 
-    [Header("¸¶¿ì½º È¸Àü")]
+    [Header("ë§ˆìš°ìŠ¤ íšŒì „")]
     [SerializeField,Min(0f)] float _mouseSensitivity = 1f;
     [SerializeField] float _minPitch = -10f;
     [SerializeField] float _maxPitch = 35f;
@@ -19,20 +19,20 @@ public class PlayerLook : MonoBehaviour
     [SerializeField, Min(0f)]
     float _verticlaSensitivity = 0.4f;
 
-    float _yaw; //ÁÂ¿ì È¸Àü °¢µµ
-    float _pitch = 20f; //À§¾Æ·¡ È¸Àü °¢µµ
+    float _yaw; //ì¢Œìš° íšŒì „ ê°ë„
+    float _pitch = 20f; //ìœ„ì•„ë˜ íšŒì „ ê°ë„
     void Start()
     {
         if(_player == null || _cameraTransform == null)
         {
-            Debug.LogError("player¿Í main camera¸¦ ¿¬°áÇÏ¼¼¿ä.", this);
+            Debug.LogError("playerì™€ main cameraë¥¼ ì—°ê²°í•˜ì„¸ìš”.", this);
             enabled = false;
             return;
         }
 
-        //½ÃÀÛÇÒ ¶§ ÇÃ·¹ÀÌ¾î°¡ ¹Ù¶óº¸´Â ¹æÇâ¿¡ Ä«¸Ş¶ó¸¦ ¸ÂÃã
+        //ì‹œì‘í•  ë•Œ í”Œë ˆì´ì–´ê°€ ë°”ë¼ë³´ëŠ” ë°©í–¥ì— ì¹´ë©”ë¼ë¥¼ ë§ì¶¤
         _yaw = _player.eulerAngles.y;
-        //ÃÊ±â °¢µµµµ ¼³Á¤µÈ »óÇÏ È¸Àü ¹üÀ§ ¾ÈÀ¸·Î Á¦ÇÑ
+        //ì´ˆê¸° ê°ë„ë„ ì„¤ì •ëœ ìƒí•˜ íšŒì „ ë²”ìœ„ ì•ˆìœ¼ë¡œ ì œí•œ
         _pitch = Mathf.Clamp( _pitch,_minPitch, _maxPitch); 
         SetCursorLocked(true);
         UpdateCamera();
@@ -40,59 +40,59 @@ public class PlayerLook : MonoBehaviour
 
     void Update()
     {
-        //ESC¸¦ ´©¸¥ ¼ø°£ Ä¿¼­¸¦ ÇØÁ¦
+        //ESCë¥¼ ëˆ„ë¥¸ ìˆœê°„ ì»¤ì„œë¥¼ í•´ì œ
         if (Input.GetKey(KeyCode.Escape))
         {
             SetCursorLocked(false);
         }else if(Input.GetMouseButtonDown(0) && Cursor.lockState != CursorLockMode.Locked)
         {
-            //¿ŞÂÊ Å¬¸¯À¸·Î Ä«¸Ş¶ó Á¶ÀÛ Àç°Ô
+            //ì™¼ìª½ í´ë¦­ìœ¼ë¡œ ì¹´ë©”ë¼ ì¡°ì‘ ì¬ê²Œ
             SetCursorLocked(true);
         }
 
-        //Ä¿¼­°¡ Ç®·È°Å³ª °ÔÀÓ ½Ã°£ÀÌ Á¤ÁöµÆÀ¸¸é È¸Àü ÀÔ·Â ¹«½Ã
+        //ì»¤ì„œê°€ í’€ë ¸ê±°ë‚˜ ê²Œì„ ì‹œê°„ì´ ì •ì§€ëìœ¼ë©´ íšŒì „ ì…ë ¥ ë¬´ì‹œ
         if (Cursor.lockState != CursorLockMode.Locked || Time.timeScale == 0f) return;
 
-        //¸¶¿ì½º ÀÌµ¿·®À¸·Î È¸Àü °¢µµ ´©Àû
+        //ë§ˆìš°ìŠ¤ ì´ë™ëŸ‰ìœ¼ë¡œ íšŒì „ ê°ë„ ëˆ„ì 
         _yaw += Input.GetAxis("Mouse X") * _mouseSensitivity;
         _pitch += Input.GetAxis("Mouse Y") * _verticlaSensitivity;
 
-        //Ä«¸Ş¶ó°¡ Áö³ªÄ¡°Ô À§¾Æ·¡·Î È¸ÀüÇÏÁö ¾Êµµ·Ï Á¦ÇÑ
+        //ì¹´ë©”ë¼ê°€ ì§€ë‚˜ì¹˜ê²Œ ìœ„ì•„ë˜ë¡œ íšŒì „í•˜ì§€ ì•Šë„ë¡ ì œí•œ
         _pitch = Mathf.Clamp(_pitch,_minPitch, _maxPitch);  
     }
 
      void LateUpdate()
     {
-        //ÇÃ·¹ÀÌ¾îÀÇ Update ÀÌµ¿ Ã³¸®°¡ ³¡³­ µÚ Ä«¸Ş¶ó ¹èÄ¡
+        //í”Œë ˆì´ì–´ì˜ Update ì´ë™ ì²˜ë¦¬ê°€ ëë‚œ ë’¤ ì¹´ë©”ë¼ ë°°ì¹˜
         UpdateCamera();
     }
 
     void UpdateCamera()
     {
         if (_player == null || _cameraTransform == null) return;
-        //CameraRig¸¦ ÇÃ·¹ÀÌ¾îÀÇ ÁöÁ¤ ³ôÀÌ·Î ÀÌµ¿
+        //CameraRigë¥¼ í”Œë ˆì´ì–´ì˜ ì§€ì • ë†’ì´ë¡œ ì´ë™
         transform.position = _player.position + Vector3.up * _pivotHeight;
-        //CameraRig¸¦ È¸Àü½ÃÄÑ ÀÚ½Ä Ä«¸Ş¶ó°¡ ÁÖº¯À» µ¹µµ·Ï Ã³¸®
+        //CameraRigë¥¼ íšŒì „ì‹œì¼œ ìì‹ ì¹´ë©”ë¼ê°€ ì£¼ë³€ì„ ëŒë„ë¡ ì²˜ë¦¬
         transform.rotation = Quaternion.Euler(_pitch, _yaw, 0f);
-        //CameraRig ±âÁØ ¿·À¸·Î ÀÌµ¿ÇÏ°í µÚ·Î ¶³¾îÁ® ¹èÄ¡
+        //CameraRig ê¸°ì¤€ ì˜†ìœ¼ë¡œ ì´ë™í•˜ê³  ë’¤ë¡œ ë–¨ì–´ì ¸ ë°°ì¹˜
         _cameraTransform.localPosition = new Vector3(_shoulderOffset, 0f, -_distance);
 
-        //Ä«¸Ş¶ó°¡ CameraRig¿Í °°Àº ¹æÇâÀ» ¹Ù¶óº¸°Ô ¼³Á¤
+        //ì¹´ë©”ë¼ê°€ CameraRigì™€ ê°™ì€ ë°©í–¥ì„ ë°”ë¼ë³´ê²Œ ì„¤ì •
         _cameraTransform.localRotation = Quaternion.identity;
     }
 
     void SetCursorLocked(bool locked)
     {
-        //Àá±×¸é Ä¿¼­¸¦ È­¸é Áß¾Ó¿¡ °íÁ¤ÇÏ°í ¼û±è
+        //ì ê·¸ë©´ ì»¤ì„œë¥¼ í™”ë©´ ì¤‘ì•™ì— ê³ ì •í•˜ê³  ìˆ¨ê¹€
         Cursor.lockState = locked ? CursorLockMode.Locked : CursorLockMode.None;
         Cursor.visible = !locked;
     }
 
     void OnDisable()
     {
-        //°ÔÀÓ Á¾·á µîÀ¸·Î Ä«¸Ş¶ó Á¶ÀÛÀÌ Áß´ÜµÇ¸é Ä¿¼­¸¦ ÇØÁ¦
+        //ê²Œì„ ì¢…ë£Œ ë“±ìœ¼ë¡œ ì¹´ë©”ë¼ ì¡°ì‘ì´ ì¤‘ë‹¨ë˜ë©´ ì»¤ì„œë¥¼ í•´ì œ
         SetCursorLocked(false);
     }
-}//ÀÌ ÄÚµå¸¦ ¾ø¾Ö°í, Áö±İ ½Ã³×¸Ó½Å¿¡ followCamera¸¦ »ç¿ëÇÏ´Ï±î ¿©±â¼­ Ä«¸Ş¶ó¸¦ followCamera·Î ¿Å±â°í,
-// ÀÌµ¿Àº playerMove¿¡¼­ ÇÏ°Ô ¹Ù²Ù±â
+}//ì´ ì½”ë“œë¥¼ ì—†ì• ê³ , ì§€ê¸ˆ ì‹œë„¤ë¨¸ì‹ ì— followCameraë¥¼ ì‚¬ìš©í•˜ë‹ˆê¹Œ ì—¬ê¸°ì„œ ì¹´ë©”ë¼ë¥¼ followCameraë¡œ ì˜®ê¸°ê³ ,
+// ì´ë™ì€ playerMoveì—ì„œ í•˜ê²Œ ë°”ê¾¸ê¸°
 

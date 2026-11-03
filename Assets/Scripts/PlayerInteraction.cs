@@ -1,25 +1,25 @@
-using System.Collections.Generic;
+ï»¿using System.Collections.Generic;
 using UnityEngine;
-//ÁÖº¯ »óÈ£ÀÛ¿ë ´ë»óÀ» ¼±ÅÃÇÏ°í EÅ° ÀÔ·Â Ã³¸®
+//ì£¼ë³€ ìƒí˜¸ì‘ìš© ëŒ€ìƒì„ ì„ íƒí•˜ê³  Eí‚¤ ì…ë ¥ ì²˜ë¦¬
 public class PlayerInteraction : MonoBehaviour
 {
-    [Header("ÇÃ·¹ÀÌ¾î Ä«¸Ş¶ó")]
+    [Header("í”Œë ˆì´ì–´ ì¹´ë©”ë¼")]
     [SerializeField] Camera _playerCamera;
 
-    [Header("ÇÃ·¹ÀÌ¾î °¡½¿ ³ôÀÌÀÇ ±âÁØÁ¡")]
+    [Header("í”Œë ˆì´ì–´ ê°€ìŠ´ ë†’ì´ì˜ ê¸°ì¤€ì ")]
     [SerializeField] Transform _interactionOrigin;
 
-    [Header("»óÈ£ÀÛ¿ë ¼³Á¤")]
+    [Header("ìƒí˜¸ì‘ìš© ì„¤ì •")]
     [SerializeField, Min(0.1f)] float _interactionDistance = 2f;
 
-    [Header("Ä³¸¯ÅÍ Á¤¸é ÆÇÁ¤")]
+    [Header("ìºë¦­í„° ì •ë©´ íŒì •")]
     [SerializeField, Range(1f, 180f)]
     float _interactionAngle = 180f;
 
-    [Header("»óÈ£ÀÛ¿ë ´ë»ó°ú Àå¾Ö¹° ·¹ÀÌ¾î")]
+    [Header("ìƒí˜¸ì‘ìš© ëŒ€ìƒê³¼ ì¥ì• ë¬¼ ë ˆì´ì–´")]
     [SerializeField] LayerMask _rayMask;
 
-    [Header("¾öÆó")]
+    [Header("ì—„í")]
     [SerializeField] PlayerCover _playerCover;
 
     [SerializeField, Min(0.01f)] float _targetCheckInterval = 0.05f;
@@ -30,18 +30,18 @@ public class PlayerInteraction : MonoBehaviour
     string _cachedPrompt;
 
     readonly Collider[] _overlapBuffer = new Collider[32];
-    //Äİ¶óÀÌ´õ°¡ ¿©·¯ °³¿©µµ °°Àº ´ë»óÀº ÇÑ ¹ø¸¸ °Ë»ç
+    //ì½œë¼ì´ë”ê°€ ì—¬ëŸ¬ ê°œì—¬ë„ ê°™ì€ ëŒ€ìƒì€ í•œ ë²ˆë§Œ ê²€ì‚¬
     readonly HashSet<IInteractable> _checkedTargets = new HashSet<IInteractable>();
     void Update()
     {
-        //ÀÏ½ÃÁ¤ÁöÇÏ°Å³ª ¸Ş´º »ç¿ë ÁßÀÌ¸é ´ë»ó ¼±ÅÃ ÇØÁ¦
+        //ì¼ì‹œì •ì§€í•˜ê±°ë‚˜ ë©”ë‰´ ì‚¬ìš© ì¤‘ì´ë©´ ëŒ€ìƒ ì„ íƒ í•´ì œ
         if (Time.timeScale == 0f || Cursor.lockState != CursorLockMode.Locked)
         {
             UpdateCurrentTarget(null);
             _nextTargetCheckTime = 0f;
             return;
         }
-        //¾öÆó Áß¿¡´Â EÅ°·Î ¾öÆó ÇØÁ¦¸¸ °¡´É
+        //ì—„í ì¤‘ì—ëŠ” Eí‚¤ë¡œ ì—„í í•´ì œë§Œ ê°€ëŠ¥
         if(_playerCover != null && _playerCover.IsInCover)
         {
             UpdateCurrentTarget(null);
@@ -54,7 +54,7 @@ public class PlayerInteraction : MonoBehaviour
         }
 
         bool interactPressed = Input.GetKeyDown(KeyCode.E);
-        //ÀÏÁ¤ °£°İÀ¸·Î Å½»öÇÏ°í, EÅ°¸¦ ´©¸¥ ¼ø°£¿¡´Â Áï½Ã Àç°Ë»ç
+        //ì¼ì • ê°„ê²©ìœ¼ë¡œ íƒìƒ‰í•˜ê³ , Eí‚¤ë¥¼ ëˆ„ë¥¸ ìˆœê°„ì—ëŠ” ì¦‰ì‹œ ì¬ê²€ì‚¬
         if(interactPressed || Time.time >= _nextTargetCheckTime)
         {
             UpdateCurrentTarget(FindTarget());
@@ -68,7 +68,7 @@ public class PlayerInteraction : MonoBehaviour
             _currentTarget.Interact();
         }
     }
-    //ÇöÀç »óÅÂ¿¡ ¸Â´Â È­¸é ¾È³» ¹®±¸ ¹İÈ¯
+    //í˜„ì¬ ìƒíƒœì— ë§ëŠ” í™”ë©´ ì•ˆë‚´ ë¬¸êµ¬ ë°˜í™˜
     public string GetInteractionPrompt()
     {
         if(!isActiveAndEnabled || Time.timeScale == 0f || Cursor.lockState != CursorLockMode.Locked)
@@ -78,7 +78,7 @@ public class PlayerInteraction : MonoBehaviour
 
         if(_playerCover != null && _playerCover.IsInCover)
         {
-            return "[E] ¾öÆó ÇØÁ¦";
+            return "[E] ì—„í í•´ì œ";
         }
 
         Component targetComponent = _currentTarget as Component;
@@ -105,7 +105,7 @@ public class PlayerInteraction : MonoBehaviour
 
     IInteractable FindTarget()
     {
-        //µ¿Àü -> ¹®, ¶óµğ¿À -> ÀÏ¹İ ´ë»ó -> ¾öÆó ¼øÀ¸·Î ¿ì¼± ¼±ÅÃ
+        //ë™ì „ -> ë¬¸, ë¼ë””ì˜¤ -> ì¼ë°˜ ëŒ€ìƒ -> ì—„í ìˆœìœ¼ë¡œ ìš°ì„  ì„ íƒ
         int GetInteractionPriority(IInteractable target)
         {
             if (target is ThrowableCoin) return 3;
@@ -122,7 +122,7 @@ public class PlayerInteraction : MonoBehaviour
         int count = Physics.OverlapSphereNonAlloc(origin, _interactionDistance, _overlapBuffer, _rayMask, QueryTriggerInteraction.Ignore);
         Collider[] colliders = _overlapBuffer;
 
-        //¹è¿­ÀÌ °¡µæ Â÷¸é ÀÏ¹İ °Ë»öÀ¸·Î ´Ù½Ã È®ÀÎÇØ ´ë»ó ´©¶ô ¹æÁö
+        //ë°°ì—´ì´ ê°€ë“ ì°¨ë©´ ì¼ë°˜ ê²€ìƒ‰ìœ¼ë¡œ ë‹¤ì‹œ í™•ì¸í•´ ëŒ€ìƒ ëˆ„ë½ ë°©ì§€
         if(count == _overlapBuffer.Length)
         {
             colliders = Physics.OverlapSphere(origin, _interactionDistance, _rayMask, QueryTriggerInteraction.Ignore);
@@ -138,7 +138,7 @@ public class PlayerInteraction : MonoBehaviour
         for(int i = 0; i < count; i++) 
         {
             Collider col = colliders[i];
-            //Äİ¶óÀÌ´õ ÀÚ½ÅÀÌ³ª ºÎ¸ğ¿¡¼­ »óÈ£ÀÛ¿ë ±â´É Ã£±â
+            //ì½œë¼ì´ë” ìì‹ ì´ë‚˜ ë¶€ëª¨ì—ì„œ ìƒí˜¸ì‘ìš© ê¸°ëŠ¥ ì°¾ê¸°
             IInteractable target = col.GetComponentInParent<IInteractable>();
             
             if(target == null) continue;    
@@ -148,7 +148,7 @@ public class PlayerInteraction : MonoBehaviour
 
             Vector3 point = target.InteractionPosition;
 
-            //½ÇÁ¦ »óÈ£ÀÛ¿ë À§Ä¡°¡ °Å¸®¿Í Á¤¸é ¹üÀ§ ¾È¿¡ ÀÖ´ÂÁö È®ÀÎ
+            //ì‹¤ì œ ìƒí˜¸ì‘ìš© ìœ„ì¹˜ê°€ ê±°ë¦¬ì™€ ì •ë©´ ë²”ìœ„ ì•ˆì— ìˆëŠ”ì§€ í™•ì¸
             float sqrDistance = (point - origin).sqrMagnitude;
 
             if (sqrDistance > sqrInteractionDistance) continue;
@@ -157,15 +157,15 @@ public class PlayerInteraction : MonoBehaviour
 
             if(!IsInsideCameraView(viewport)) continue;
 
-            //ÇÃ·¹ÀÌ¾î ¶Ç´Â Ä«¸Ş¶ó¿¡¼­ ´ë»óÀÌ °¡·ÁÁö¸é Á¦¿Ü
+            //í”Œë ˆì´ì–´ ë˜ëŠ” ì¹´ë©”ë¼ì—ì„œ ëŒ€ìƒì´ ê°€ë ¤ì§€ë©´ ì œì™¸
             if (IsBlocked(origin,point,target)) continue;
             if (IsBlocked(_playerCamera.transform.position, point, target)) continue;
             
-            //È­¸é Áß¾Ó¿¡ °¡±î¿ï¼ö·Ï Á¡¼ö°¡ ÀÛÀ½
+            //í™”ë©´ ì¤‘ì•™ì— ê°€ê¹Œìš¸ìˆ˜ë¡ ì ìˆ˜ê°€ ì‘ìŒ
             float x = (viewport.x - 0.5f) * _playerCamera.aspect;
             float y = viewport.y - 0.5f;
             float score = x * x + y * y;
-            //¿ì¼±¼øÀ§°¡ °°À¸¸é È­¸é Áß¾Ó¿¡ ´õ °¡±î¿î ´ë»ó ¼±ÅÃ
+            //ìš°ì„ ìˆœìœ„ê°€ ê°™ìœ¼ë©´ í™”ë©´ ì¤‘ì•™ì— ë” ê°€ê¹Œìš´ ëŒ€ìƒ ì„ íƒ
             int priority = GetInteractionPriority(target);
             if(bestTarget == null || priority > bestPriority || (priority == bestPriority && score < bestScore))
             {
@@ -180,7 +180,7 @@ public class PlayerInteraction : MonoBehaviour
 
     bool IsInFront(Vector3 origin, Vector3 point, Vector3 flatForward)
     {
-        //³ôÀÌ Â÷ÀÌ¸¦ Á¦¿ÜÇÏ°í ÁÂ¿ì °¢µµ È®ÀÎ
+        //ë†’ì´ ì°¨ì´ë¥¼ ì œì™¸í•˜ê³  ì¢Œìš° ê°ë„ í™•ì¸
         Vector3 flatToTarget = Vector3.ProjectOnPlane(point - origin, Vector3.up);
 
         if (flatToTarget.sqrMagnitude <= 0.001f) return true;
@@ -189,10 +189,10 @@ public class PlayerInteraction : MonoBehaviour
 
         return angle <= _interactionAngle * 0.5f;
     }
-    //´ë»óÀÌ Ä«¸Ş¶óÀÇ Ç¥½Ã ¹üÀ§ ¾È¿¡ ÀÖ´ÂÁö È®ÀÎ
+    //ëŒ€ìƒì´ ì¹´ë©”ë¼ì˜ í‘œì‹œ ë²”ìœ„ ì•ˆì— ìˆëŠ”ì§€ í™•ì¸
     bool IsInsideCameraView(Vector3 viewport)
     {
-        //x,y°¡ 0~1 ¾ÈÀÌ¸é È­¸é ¾ÈÂÊ 
+        //x,yê°€ 0~1 ì•ˆì´ë©´ í™”ë©´ ì•ˆìª½ 
         return viewport.z >= _playerCamera.nearClipPlane && viewport.z <= _playerCamera.farClipPlane && viewport.x >= 0f && viewport.x <= 1f && viewport.y >= 0f && viewport.y <= 1f;
     }
     bool IsBlocked(Vector3 origin, Vector3 point, IInteractable target)
@@ -201,20 +201,20 @@ public class PlayerInteraction : MonoBehaviour
         float distance = direction.magnitude;
 
         if(distance <= 0.001f) return false;
-        //´ë»ó±îÁö Á÷¼±À» ½÷¼­ °¡·Î¸·´Â ¹°Ã¼ È®ÀÎ
+        //ëŒ€ìƒê¹Œì§€ ì§ì„ ì„ ì´ì„œ ê°€ë¡œë§‰ëŠ” ë¬¼ì²´ í™•ì¸
         bool hasHit = Physics.Raycast(origin, direction / distance, out RaycastHit hit, distance, _rayMask, QueryTriggerInteraction.Ignore);
-        //Áß°£¿¡ ºÎµúÈù Collider°¡ ¾øÀ¸¸é °¡·ÁÁöÁö ¾ÊÀ½
+        //ì¤‘ê°„ì— ë¶€ë”ªíŒ Colliderê°€ ì—†ìœ¼ë©´ ê°€ë ¤ì§€ì§€ ì•ŠìŒ
         if(!hasHit) return false;
         
         IInteractable hitTarget = hit.collider.GetComponentInParent<IInteractable>();
 
-        //´ë»ó ÀÚ½Å¿¡ ¸ÂÀº °ÍÀº Çã¿ëÇÏ°í, ´Ù¸¥ ¹°Ã¼¿¡ ¸ÂÀ¸¸é Â÷´Ü
+        //ëŒ€ìƒ ìì‹ ì— ë§ì€ ê²ƒì€ í—ˆìš©í•˜ê³ , ë‹¤ë¥¸ ë¬¼ì²´ì— ë§ìœ¼ë©´ ì°¨ë‹¨
         return !ReferenceEquals(hitTarget, target);
     }
 
      void OnDisable()
     {
-        //ºñÈ°¼ºÈ­µÇ¸é ÀÌÀü ´ë»ó Á¤º¸ ÃÊ±âÈ­
+        //ë¹„í™œì„±í™”ë˜ë©´ ì´ì „ ëŒ€ìƒ ì •ë³´ ì´ˆê¸°í™”
         _currentTarget = null;
         _checkedTargets.Clear();
         _nextTargetCheckTime = 0f;

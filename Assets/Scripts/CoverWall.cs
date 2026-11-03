@@ -1,31 +1,31 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
 [RequireComponent (typeof(BoxCollider))]
 public class CoverWall : MonoBehaviour, IInteractable
 {
     [SerializeField] PlayerCover _playerCover;
 
-    [Header("¾öÆó »óÈ£ÀÛ¿ë °Å¸®")]
+    [Header("ì—„í ìƒí˜¸ì‘ìš© ê±°ë¦¬")]
     [SerializeField, Min(0.1f)]
     float _interactionDistance = 0.8f;
 
     BoxCollider _wallCollider;
 
-    public string DisplayName => "º®¿¡ ±â´ë±â";
+    public string DisplayName => "ë²½ì— ê¸°ëŒ€ê¸°";
 
-    //ÇÃ·¹ÀÌ¾î¿Í °¡Àå °¡±î¿î º® Ç¥¸éÀ» »óÈ£ÀÛ¿ë À§Ä¡·Î »ç¿ë
+    //í”Œë ˆì´ì–´ì™€ ê°€ì¥ ê°€ê¹Œìš´ ë²½ í‘œë©´ì„ ìƒí˜¸ì‘ìš© ìœ„ì¹˜ë¡œ ì‚¬ìš©
     public Vector3 InteractionPosition => _playerCover != null ? _wallCollider.ClosestPoint(_playerCover.ProbePosition) : transform.position;
 
     public bool CanInteract
     {
         get
         {
-            //º®ÀÌ ºñÈ°¼º »óÅÂÀÌ°Å³ª ÇÃ·¹ÀÌ¾î°¡ ¾öÆóÇÒ ¼ö ¾øÀ¸¸é Â÷´Ü
+            //ë²½ì´ ë¹„í™œì„± ìƒíƒœì´ê±°ë‚˜ í”Œë ˆì´ì–´ê°€ ì—„íí•  ìˆ˜ ì—†ìœ¼ë©´ ì°¨ë‹¨
             if(!isActiveAndEnabled || _wallCollider == null || !_wallCollider.enabled || _playerCover == null || !_playerCover.CanEnter)
             {
                 return false;
             }
-            //ÇÃ·¹ÀÌ¾î¿Í º® »çÀÌÀÇ °Å¸®°¡ »óÈ£ÀÛ¿ë ¹üÀ§ ¾ÈÀÎÁö È®ÀÎ
+            //í”Œë ˆì´ì–´ì™€ ë²½ ì‚¬ì´ì˜ ê±°ë¦¬ê°€ ìƒí˜¸ì‘ìš© ë²”ìœ„ ì•ˆì¸ì§€ í™•ì¸
             Vector3 origin = _playerCover.ProbePosition;
             Vector3 closestPoint = _wallCollider.ClosestPoint(origin);
             float sqrDistance = (closestPoint - origin).sqrMagnitude;
@@ -41,7 +41,7 @@ public class CoverWall : MonoBehaviour, IInteractable
     public void Interact()
     {
         if (!CanInteract) return;
-        //ÇØ´ç º®¿¡ ¾öÆó
+        //í•´ë‹¹ ë²½ì— ì—„í
         _playerCover.EnterCover(_wallCollider);
     }
 }

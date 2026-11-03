@@ -1,17 +1,17 @@
-using UnityEngine;
-//ÀûÀÇ ½Ã¾ß ¹üÀ§¸¦ ºÎÃ¤²Ã ¸Ş½¬·Î Ç¥½Ã
+ï»¿using UnityEngine;
+//ì ì˜ ì‹œì•¼ ë²”ìœ„ë¥¼ ë¶€ì±„ê¼´ ë©”ì‰¬ë¡œ í‘œì‹œ
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
 public class EnemyViewMesh : MonoBehaviour
 {
-    [Header("½Ã¾ß Á¤º¸")]
+    [Header("ì‹œì•¼ ì •ë³´")]
     [SerializeField] EnemyVision _vision;
 
-    [Header("ºÎÃ¤²Ã Á¤¹Ğµµ")]
+    [Header("ë¶€ì±„ê¼´ ì •ë°€ë„")]
     [SerializeField, Range(3, 360)]
     int _segmentCount = 60;
 
 
-    [Header("ÇÃ·¹ÀÌ¾î Å½Áö Å×½ºÆ®")]
+    [Header("í”Œë ˆì´ì–´ íƒì§€ í…ŒìŠ¤íŠ¸")]
     [SerializeField] Color _normalColor = new Color(1f, 1f, 0f, 0.3f);
     [SerializeField] Color _detectedColor = new Color(1f, 0f, 0f, 0.3f);
 
@@ -24,7 +24,7 @@ public class EnemyViewMesh : MonoBehaviour
 
     
      void Awake()
-    {//½Ã¾ß¸¦ Ç¥½ÃÇÒ ¸Ş½¬ »ı¼º
+    {//ì‹œì•¼ë¥¼ í‘œì‹œí•  ë©”ì‰¬ ìƒì„±
         _mesh = new Mesh();
         _mesh.name = "Enemy View Mesh";
         _mesh.MarkDynamic();
@@ -39,7 +39,7 @@ public class EnemyViewMesh : MonoBehaviour
      void LateUpdate()
     {
         if(_vision == null || Time.timeScale <= 0f) return;
-        //ºĞÇÒ ¼ö°¡ ¹Ù²î¸é ¸Ş½¬ ±¸¼ºµµ ´Ù½Ã »ı¼º
+        //ë¶„í•  ìˆ˜ê°€ ë°”ë€Œë©´ ë©”ì‰¬ êµ¬ì„±ë„ ë‹¤ì‹œ ìƒì„±
         if(_vertices.Length != _segmentCount + 2)
         {
             CreateArrays();
@@ -51,7 +51,7 @@ public class EnemyViewMesh : MonoBehaviour
 
     void CreateArrays()
     {
-        //Áß½ÉÁ¡°ú ºÎÃ¤²Ã °¡ÀåÀÚ¸® Á¡ ÁØºñ
+        //ì¤‘ì‹¬ì ê³¼ ë¶€ì±„ê¼´ ê°€ì¥ìë¦¬ ì  ì¤€ë¹„
         _vertices = new Vector3[_segmentCount + 2];
         _triangles = new int[_segmentCount * 3];
 
@@ -59,7 +59,7 @@ public class EnemyViewMesh : MonoBehaviour
         {
             int index = i * 3;
 
-            //Áß½ÉÁ¡°ú °¡ÀåÀÚ¸® Á¡ 2°³¸¦ ¿¬°áÇØ »ï°¢Çü ±¸¼º
+            //ì¤‘ì‹¬ì ê³¼ ê°€ì¥ìë¦¬ ì  2ê°œë¥¼ ì—°ê²°í•´ ì‚¼ê°í˜• êµ¬ì„±
             _triangles[index] = 0;
             _triangles[index + 1] = i + 1;
             _triangles[index + 2] = i + 2;
@@ -74,17 +74,17 @@ public class EnemyViewMesh : MonoBehaviour
 
     void UpdateViewColor()
     {
-        //±âÁ¸ ¼³Á¤À» À¯ÁöÇÏ¸é¼­ Å½Áö ¿©ºÎ¿¡ µû¶ó »ö»ó º¯°æ
+        //ê¸°ì¡´ ì„¤ì •ì„ ìœ ì§€í•˜ë©´ì„œ íƒì§€ ì—¬ë¶€ì— ë”°ë¼ ìƒ‰ìƒ ë³€ê²½
         _meshRenderer.GetPropertyBlock(_propertyBlock);
         _propertyBlock.SetColor("_BaseColor", _vision.CanSeePlayer ? _detectedColor : _normalColor);
         _meshRenderer.SetPropertyBlock(_propertyBlock); 
     }
     void DrawView(Vector3 eyePosition,Vector3 forward)
     {
-        //´«ÀÇ ¼öÆò À§Ä¡¿Í ½Ã¾ß ¸Ş½¬ ¿ÀºêÁ§Æ®ÀÇ ³ôÀÌ¸¦ »ç¿ë
+        //ëˆˆì˜ ìˆ˜í‰ ìœ„ì¹˜ì™€ ì‹œì•¼ ë©”ì‰¬ ì˜¤ë¸Œì íŠ¸ì˜ ë†’ì´ë¥¼ ì‚¬ìš©
         Vector3 center = new Vector3(eyePosition.x,transform.position.y,eyePosition.z); 
 
-        //¿ùµå À§Ä¡¸¦ ¸Ş½¬¿¡¼­ »ç¿ëÇÏ´Â ·ÎÄÃ À§Ä¡·Î º¯È¯
+        //ì›”ë“œ ìœ„ì¹˜ë¥¼ ë©”ì‰¬ì—ì„œ ì‚¬ìš©í•˜ëŠ” ë¡œì»¬ ìœ„ì¹˜ë¡œ ë³€í™˜
         _vertices[0] = transform.InverseTransformPoint(center);
 
         float radius = _vision.ViewRadius;
@@ -93,11 +93,11 @@ public class EnemyViewMesh : MonoBehaviour
 
         for(int i = 0; i <= _segmentCount; i++)
         {
-            //½Ã¾ß ¿ŞÂÊºÎÅÍ ¿À¸¥ÂÊ±îÁö ¹æÇâÀ» ³ª´©¾î °Ë»ç
+            //ì‹œì•¼ ì™¼ìª½ë¶€í„° ì˜¤ë¥¸ìª½ê¹Œì§€ ë°©í–¥ì„ ë‚˜ëˆ„ì–´ ê²€ì‚¬
             float angle = startAngle + angleStep * i;
             Vector3 direction = Quaternion.AngleAxis(angle, Vector3.up) * forward;
             float distance = radius;
-            //Àå¾Ö¹°ÀÌ ÀÖÀ¸¸é ±× ¾Õ±îÁö¸¸ ½Ã¾ß Ç¥½Ã
+            //ì¥ì• ë¬¼ì´ ìˆìœ¼ë©´ ê·¸ ì•ê¹Œì§€ë§Œ ì‹œì•¼ í‘œì‹œ
             if (_vision.CheckObstacle(eyePosition,direction,radius,out RaycastHit hit))
             {
                 distance = hit.distance;    
@@ -107,14 +107,14 @@ public class EnemyViewMesh : MonoBehaviour
             _vertices[i+1] = transform.InverseTransformPoint(worldPoint);   
         }
 
-        //°è»êÇÑ À§Ä¡·Î ¸Ş½¬¿Í Ç¥½Ã ¹üÀ§ °»½Å
+        //ê³„ì‚°í•œ ìœ„ì¹˜ë¡œ ë©”ì‰¬ì™€ í‘œì‹œ ë²”ìœ„ ê°±ì‹ 
         _mesh.vertices = _vertices;
         _mesh.RecalculateBounds();
     }
 
     void OnDestroy()
     {
-        //Á÷Á¢ »ı¼ºÇÑ ¸Ş½¬ Á¤¸®
+        //ì§ì ‘ ìƒì„±í•œ ë©”ì‰¬ ì •ë¦¬
         if(_mesh != null)
         {
             Destroy(_mesh);

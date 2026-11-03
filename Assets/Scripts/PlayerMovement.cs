@@ -1,4 +1,4 @@
-using System;
+ï»¿using System;
 using UnityEngine;
 
 [RequireComponent (typeof(CharacterController))]
@@ -14,12 +14,12 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] float _crouchSpeed = 1.2f;
     [SerializeField] float _crouchHeight = 1f;
 
-    //º® µîÀÇ ·¹ÀÌ·¯
+    //ë²½ ë“±ì˜ ë ˆì´ëŸ¬
     [SerializeField] LayerMask _standObstacleMask;
 
     [SerializeField] float _gravity = -20f;
 
-    [Header("½ºÅÂ¹Ì³ª")]
+    [Header("ìŠ¤íƒœë¯¸ë‚˜")]
     [SerializeField, Min(1f)] float _maxStamina = 100f;
     [SerializeField, Min(0.1f)] float _staminaDrainPerSecond = 40f;
     [SerializeField, Min(0.1f)] float _staminaRecoveryPerSecond = 20f;
@@ -88,7 +88,7 @@ public class PlayerMovement : MonoBehaviour
         bool isInCover = _cover != null && _cover.IsInCover;
 
 
-        //¾öÆó Áß¿¡´Â ¿õÅ©¸®±â ÀüÈ¯ ±İÁö
+        //ì—„í ì¤‘ì—ëŠ” ì›…í¬ë¦¬ê¸° ì „í™˜ ê¸ˆì§€
         if (Cursor.lockState == CursorLockMode.Locked && Input.GetKeyDown(KeyCode.C) && !isInCover)
         {
             if (!IsCrouching)
@@ -99,43 +99,43 @@ public class PlayerMovement : MonoBehaviour
                 SetCrouching(false);
             }
         }
-        //±âº» »óÅÂ´Â ÀÌµ¿ ÀÔ·Â ¾øÀ½
+        //ê¸°ë³¸ ìƒíƒœëŠ” ì´ë™ ì…ë ¥ ì—†ìŒ
         Vector2 input = Vector2.zero;
         bool runPressed = false;
 
-        //Ä¿¼­°¡ Àá°Ü ÀÖÀ» ¶§¸¸ ÀÌµ¿°ú ÀÔ·Â ¹Ş±â
+        //ì»¤ì„œê°€ ì ê²¨ ìˆì„ ë•Œë§Œ ì´ë™ê³¼ ì…ë ¥ ë°›ê¸°
         if (Cursor.lockState == CursorLockMode.Locked)
         {
             input = new Vector2(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"));
 
-            //¿ŞÂÊ Shift Å°¸¦ ´©¸£°í ÀÖ´ÂÁö È®ÀÎ
+            //ì™¼ìª½ Shift í‚¤ë¥¼ ëˆ„ë¥´ê³  ìˆëŠ”ì§€ í™•ì¸
             runPressed = Input.GetKey(KeyCode.LeftShift);
         }
 
         if (isInCover) input.y = 0f;
-        //´ë°¢¼± ÀÌµ¿ ¼Óµµ Á¦ÇÑ
+        //ëŒ€ê°ì„  ì´ë™ ì†ë„ ì œí•œ
         input = Vector2.ClampMagnitude(input, 1f);
 
-        //Ä«¸Ş¶ó ±âÁØ ¼öÆò ÀÌµ¿ ¹æÇâ °è»ê
+        //ì¹´ë©”ë¼ ê¸°ì¤€ ìˆ˜í‰ ì´ë™ ë°©í–¥ ê³„ì‚°
         Vector3 forward = Vector3.ProjectOnPlane(_camerTransform.forward, Vector3.up).normalized;
         Vector3 right = Vector3.Cross(Vector3.up, forward);
         Vector3 moveDirection = forward * input.y + right * input.x;
 
         bool hasInput = input.sqrMagnitude > 0.001f;
 
-        //¿õÅ©¸° »óÅÂ°Å³ª ¾öÆó ÁßÀÌ¸é ´Ş¸®±â ºÒ°¡
+        //ì›…í¬ë¦° ìƒíƒœê±°ë‚˜ ì—„í ì¤‘ì´ë©´ ë‹¬ë¦¬ê¸° ë¶ˆê°€
         bool wantsRun = runPressed && hasInput && !IsCrouching && !isInCover && CanRun; 
         float speed = IsCrouching ? _crouchSpeed  : wantsRun ? _runSpeed : _walkSpeed;
 
-        //ÀÌµ¿ ¹æÇâÀ¸·Î Ä³¸¯ÅÍ È¸Àü
-        //¾öÆó Áß È¸ÀüÀº PlayerCover°¡ Ã³¸®
+        //ì´ë™ ë°©í–¥ìœ¼ë¡œ ìºë¦­í„° íšŒì „
+        //ì—„í ì¤‘ íšŒì „ì€ PlayerCoverê°€ ì²˜ë¦¬
         if (!isInCover&&Cursor.lockState == CursorLockMode.Locked && hasInput && moveDirection.sqrMagnitude > 0.001f)
         {
             Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
             transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, _rotationSpeed * Time.deltaTime);
         } 
 
-        //Áö¸é¿¡¼­´Â ÀÛÀº ÇÏ°­ ¼Óµµ¸¦ À¯ÁöÇÏ°í Áß·Â Àû¿ë
+        //ì§€ë©´ì—ì„œëŠ” ì‘ì€ í•˜ê°• ì†ë„ë¥¼ ìœ ì§€í•˜ê³  ì¤‘ë ¥ ì ìš©
         if(_controller.isGrounded && _verticalSpeed < 0f)
         {
             _verticalSpeed = -2f;
@@ -147,32 +147,32 @@ public class PlayerMovement : MonoBehaviour
 
         if (isInCover)
         {
-            //Ä³¸¯ÅÍÀÇ ¿À¸¥ÂÊ°ú Ä«¸Ş¶óÀÇ ¿À¸¥ÂÊÀÌ °°Àº ¹æÇâÀÎÁö È®ÀÎ
+            //ìºë¦­í„°ì˜ ì˜¤ë¥¸ìª½ê³¼ ì¹´ë©”ë¼ì˜ ì˜¤ë¥¸ìª½ì´ ê°™ì€ ë°©í–¥ì¸ì§€ í™•ì¸
             float alignment = Vector3.Dot(transform.right, right);
-            //¼­·Î ¹İ´ë ¹æÇâÀÌ¸é ÀÔ·ÂÀ» µÚÁı¾î È­¸é ±âÁØ ÁÂ¿ì¸¦ ¸ÂÃã
+            //ì„œë¡œ ë°˜ëŒ€ ë°©í–¥ì´ë©´ ì…ë ¥ì„ ë’¤ì§‘ì–´ í™”ë©´ ê¸°ì¤€ ì¢Œìš°ë¥¼ ë§ì¶¤
             float coverInput = alignment < 0f ? - input.x : input.x;
             
             velocity = _cover.GetVelocity(coverInput);
         }
         else
         {
-            //ÀÏ¹İ »óÅÂ : Ä«¸Ş¶ó ±âÁØÀ¸·Î ÀÌµ¿
+            //ì¼ë°˜ ìƒíƒœ : ì¹´ë©”ë¼ ê¸°ì¤€ìœ¼ë¡œ ì´ë™
             velocity = moveDirection * speed;
         }
-            //µÎ »óÅÂ ¸ğµÎ Áß·Â Àû¿ë
+            //ë‘ ìƒíƒœ ëª¨ë‘ ì¤‘ë ¥ ì ìš©
             velocity.y = _verticalSpeed;
 
         Vector3 beforePosition = transform.position;
 
         CollisionFlags flags = _controller.Move(velocity * Time.deltaTime);
 
-        //ÀÌ¹ø ÀÌµ¿¿¡¼­ Áö¸é¿¡ ´ê¾Ò´Ù¸é ÇÏ°­ ¼Óµµ ÃÊ±âÈ­
+        //ì´ë²ˆ ì´ë™ì—ì„œ ì§€ë©´ì— ë‹¿ì•˜ë‹¤ë©´ í•˜ê°• ì†ë„ ì´ˆê¸°í™”
         if((flags & CollisionFlags.Below) !=0 && _verticalSpeed < 0f)
         {
             _verticalSpeed = -2f;
         }
 
-        //Ãæµ¹ Ã³¸® ÈÄ ½ÇÁ¦ ¼öÆò ÀÌµ¿ ¼Óµµ °è»ê
+        //ì¶©ëŒ ì²˜ë¦¬ í›„ ì‹¤ì œ ìˆ˜í‰ ì´ë™ ì†ë„ ê³„ì‚°
         Vector3 moved = transform.position - beforePosition;
         moved.y = 0f;
 
@@ -181,12 +181,12 @@ public class PlayerMovement : MonoBehaviour
         IsRunning = wantsRun && hasInput && MoveSpeed > 0.1f;
         UpdateStamina(IsRunning && _controller.isGrounded);
 
-        //½ÇÁ¦ ÀÌµ¿ ¼Óµµ¸¦ Ä³¸¯ÅÍ ±âÁØ ¹æÇâÀ¸·Î º¯È¯ÇÏ¿© ¾Ö´Ï¸ŞÀÌ¼Ç¿¡ »ç¿ë
+        //ì‹¤ì œ ì´ë™ ì†ë„ë¥¼ ìºë¦­í„° ê¸°ì¤€ ë°©í–¥ìœ¼ë¡œ ë³€í™˜í•˜ì—¬ ì• ë‹ˆë©”ì´ì…˜ì— ì‚¬ìš©
         Vector3 worldVelocity = Time.deltaTime > 0f ? moved / Time.deltaTime : Vector3.zero;
         Vector3 localVelocity = transform.InverseTransformDirection(worldVelocity);
 
-        //½ÇÁ¦ ÁÂ¿ì ÀÌµ¿ ¼Óµµ¸¦ -1~1·Î º¯È¯
-        //º®¿¡ ¸·Çô ¿òÁ÷ÀÌÁö ¾ÊÀ¸¸é 0
+        //ì‹¤ì œ ì¢Œìš° ì´ë™ ì†ë„ë¥¼ -1~1ë¡œ ë³€í™˜
+        //ë²½ì— ë§‰í˜€ ì›€ì§ì´ì§€ ì•Šìœ¼ë©´ 0
         CoverMove = _cover != null && _cover.IsInCover ? Mathf.Clamp(localVelocity.x / Mathf.Max(_cover.CoverSpeed, 0.01f), -1f, 1f) : 0f;
         float animationBaseSpeed = IsCrouching ? _crouchSpeed : _walkSpeed;
         AnimationMove = Vector2.ClampMagnitude(new Vector2(localVelocity.x, localVelocity.z) / Mathf.Max(animationBaseSpeed, 0.01f), 1f);
@@ -196,7 +196,7 @@ public class PlayerMovement : MonoBehaviour
     void UpdateStamina(bool isActuallyRunning)
     {
         float deltaTime = Time.deltaTime;
-        //½ÇÁ¦·Î ´Ş¸®´Â µ¿¾È ½ºÅÂ¹Ì³ª ¼Ò¸ğ
+        //ì‹¤ì œë¡œ ë‹¬ë¦¬ëŠ” ë™ì•ˆ ìŠ¤íƒœë¯¸ë‚˜ ì†Œëª¨
         if (isActuallyRunning)
         {
             _curretStamina = MathF.Max(0f, _curretStamina - _staminaDrainPerSecond * deltaTime);
@@ -205,7 +205,7 @@ public class PlayerMovement : MonoBehaviour
                 IsExhausted = true;
             return;
         }
-        //´Ş¸®±â¸¦ ¸ØÃá µÚ È¸º¹ ´ë±â ½Ã°£ Àû¿ë
+        //ë‹¬ë¦¬ê¸°ë¥¼ ë©ˆì¶˜ ë’¤ íšŒë³µ ëŒ€ê¸° ì‹œê°„ ì ìš©
         float recoveryTime = deltaTime;
         if(_staminaRecoveryTimer > 0f)
         {
@@ -213,12 +213,12 @@ public class PlayerMovement : MonoBehaviour
             _staminaRecoveryTimer -= waitTime;
             recoveryTime -= waitTime;
         }
-        //´ë±â ½Ã°£ÀÌ ³¡³ª¸é ½ºÅÂ¹Ì³ª È¸º¹
+        //ëŒ€ê¸° ì‹œê°„ì´ ëë‚˜ë©´ ìŠ¤íƒœë¯¸ë‚˜ íšŒë³µ
         if(recoveryTime > 0f)
         {
             _curretStamina = Mathf.Min(_maxStamina, _curretStamina + _staminaRecoveryPerSecond * recoveryTime);
         }
-        //Å»Áø ÈÄ ÀÏÁ¤·® ÀÌ»ó È¸º¹ÇÏ¸é ´Ù½Ã ´Ş¸®±â Çã¿ë
+        //íƒˆì§„ í›„ ì¼ì •ëŸ‰ ì´ìƒ íšŒë³µí•˜ë©´ ë‹¤ì‹œ ë‹¬ë¦¬ê¸° í—ˆìš©
         if(IsExhausted && StaminaRatio >= _runResumeRatio)
         {
             IsExhausted =false;
@@ -229,18 +229,18 @@ public class PlayerMovement : MonoBehaviour
     {
         IsCrouching = crouching;
 
-        //Ä¸½¶ Áö¸§º¸´Ù ÀÛ¾ÆÁöÁö ¾Êµµ·Ï ³ôÀÌ Á¦ÇÑ
+        //ìº¡ìŠ ì§€ë¦„ë³´ë‹¤ ì‘ì•„ì§€ì§€ ì•Šë„ë¡ ë†’ì´ ì œí•œ
         float height = crouching ? Mathf.Clamp(_crouchHeight, _controller.radius * 2f, _standingHeight) : _standingHeight;
 
         Vector3 center = _standingCenter;
 
-        //³ôÀÌ°¡ ÁÙ¾îµç ¸¸Å­ Áß½Éµµ ³»·Á ¹ß À§Ä¡ À¯Áö
+        //ë†’ì´ê°€ ì¤„ì–´ë“  ë§Œí¼ ì¤‘ì‹¬ë„ ë‚´ë ¤ ë°œ ìœ„ì¹˜ ìœ ì§€
         center.y -= (_standingHeight - height) * 0.5f;
 
         _controller.height = height;
         _controller.center = center;
     }
-    //ÇöÀç ¸Ó¸® À§Ä¡ºÎÅÍ ÀÏ¾î¼¹À» ¶§ÀÇ ¸Ó¸® À§Ä¡±îÁö Àå¾Ö¹° È®ÀÎ
+    //í˜„ì¬ ë¨¸ë¦¬ ìœ„ì¹˜ë¶€í„° ì¼ì–´ì„°ì„ ë•Œì˜ ë¨¸ë¦¬ ìœ„ì¹˜ê¹Œì§€ ì¥ì• ë¬¼ í™•ì¸
     bool CanStand()
     {
         Vector3 up = transform.up;

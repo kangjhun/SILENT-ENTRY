@@ -1,5 +1,5 @@
-using UnityEngine;
-//º®¿¡ ±â´ë±â, ¾öÆó ÀÌµ¿, ¾öÆó ÇØÁ¦ Ã³¸®
+ï»¿using UnityEngine;
+//ë²½ì— ê¸°ëŒ€ê¸°, ì—„í ì´ë™, ì—„í í•´ì œ ì²˜ë¦¬
 [RequireComponent (typeof(CharacterController))]
 [RequireComponent(typeof(PlayerMovement))]
 public class PlayerCover : MonoBehaviour
@@ -16,21 +16,21 @@ public class PlayerCover : MonoBehaviour
     PlayerMovement _movement;
 
     Collider _wall;
-    Vector3 _wallNormal;//º® Ç¥¸é¿¡¼­ ¹Ù±ùÀ¸·Î ÇâÇÏ´Â ¹æÇâ
+    Vector3 _wallNormal;//ë²½ í‘œë©´ì—ì„œ ë°”ê¹¥ìœ¼ë¡œ í–¥í•˜ëŠ” ë°©í–¥
     Vector3 _wallPoint;
     Vector3 _visualOriginalLocalPosition;
 
     public bool IsInCover {  get; private set; }
     public float CoverSpeed => _coverSpeed;
-    //ÇÃ·¹ÀÌ¾î Áß½ÉÀ» º® °Ë»ç ±âÁØÁ¡À¸·Î »ç¿ë
+    //í”Œë ˆì´ì–´ ì¤‘ì‹¬ì„ ë²½ ê²€ì‚¬ ê¸°ì¤€ì ìœ¼ë¡œ ì‚¬ìš©
     public Vector3 ProbePosition => transform.TransformPoint(_controller.center);
-    //¼­ ÀÖ°í ¹Ù´Ú¿¡ ´ê¾Æ ÀÖÀ» ¶§¸¸ ¾öÆó ÁøÀÔ °¡´É
+    //ì„œ ìˆê³  ë°”ë‹¥ì— ë‹¿ì•„ ìˆì„ ë•Œë§Œ ì—„í ì§„ì… ê°€ëŠ¥
     public bool CanEnter => !IsInCover && !_movement.IsCrouching && _controller.isGrounded;
      void Awake()
     {
         _controller = GetComponent<CharacterController>();
         _movement = GetComponent<PlayerMovement>(); 
-        //¾öÆó ÇØÁ¦ ½Ã º¹±¸ÇÒ ¸ğµ¨ À§Ä¡ ÀúÀå
+        //ì—„í í•´ì œ ì‹œ ë³µêµ¬í•  ëª¨ë¸ ìœ„ì¹˜ ì €ì¥
         if(_visualRoot != null)
         {
             _visualOriginalLocalPosition = _visualRoot.localPosition;
@@ -40,30 +40,30 @@ public class PlayerCover : MonoBehaviour
     public void EnterCover(Collider wall)
     {
         if(!CanEnter || wall == null) return;
-        //¹®Àº ¾öÆó ´ë»óÀ¸·Î »ç¿ëÇÏÁö ¾ÊÀ½
+        //ë¬¸ì€ ì—„í ëŒ€ìƒìœ¼ë¡œ ì‚¬ìš©í•˜ì§€ ì•ŠìŒ
         if (wall.GetComponentInParent<DoorController>() != null) return;
         Vector3 origin = ProbePosition;
         Vector3 direction = wall.ClosestPoint(origin) - origin;
 
         if (direction.sqrMagnitude < 0.0001f) return;
 
-        //¾öÆóÇÒ º® Ç¥¸éÀÇ À§Ä¡¿Í ¹æÇâ È®ÀÎ
+        //ì—„íí•  ë²½ í‘œë©´ì˜ ìœ„ì¹˜ì™€ ë°©í–¥ í™•ì¸
         if(!wall.Raycast(new Ray(origin,direction.normalized), out RaycastHit hit, _enterDistance))
         {
             return;
         }
 
-        //¹Ù´ÚÀÌ³ª °æ»çÁø ¸éÀº Á¦¿Ü
+        //ë°”ë‹¥ì´ë‚˜ ê²½ì‚¬ì§„ ë©´ì€ ì œì™¸
         if (Mathf.Abs(hit.normal.y) > 0.1f) return;
 
         _wall = wall;
         _wallPoint = hit.point;
         _wallNormal = Vector3.ProjectOnPlane(hit.normal, Vector3.up).normalized;
 
-        //Ä³¸¯ÅÍÀÇ µîÀÌ º®À» ÇâÇÏµµ·Ï È¸Àü
+        //ìºë¦­í„°ì˜ ë“±ì´ ë²½ì„ í–¥í•˜ë„ë¡ íšŒì „
         transform.rotation = Quaternion.LookRotation(_wallNormal);
         IsInCover = true;
-        //¸ğÁ©À» º® ÂÊÀ¸·Î ¿Å°Ü ±â´ë´Â ¸ğ½À Á¶Á¤
+        //ëª¨ì ¤ì„ ë²½ ìª½ìœ¼ë¡œ ì˜®ê²¨ ê¸°ëŒ€ëŠ” ëª¨ìŠµ ì¡°ì •
         if(_visualRoot != null)
         {
             _visualRoot.localPosition = _visualOriginalLocalPosition;
@@ -77,14 +77,14 @@ public class PlayerCover : MonoBehaviour
     {
         IsInCover = false;
         _wall = null;
-        //¸ğµ¨À» ¿ø·¡ À§Ä¡·Î º¹±¸
+        //ëª¨ë¸ì„ ì›ë˜ ìœ„ì¹˜ë¡œ ë³µêµ¬
         if(_visualRoot != null )
         {
             _visualRoot.localPosition = _visualOriginalLocalPosition;
         }
     }
 
-    //¾öÆó Áß »ç¿ëÇÒ ÀÌµ¿ ¼Óµµ °è»ê
+    //ì—„í ì¤‘ ì‚¬ìš©í•  ì´ë™ ì†ë„ ê³„ì‚°
     public Vector3 GetVelocity(float horizontal)
     {
         if(!IsInCover) return Vector3.zero;
@@ -94,7 +94,7 @@ public class PlayerCover : MonoBehaviour
             return Vector3.zero;
         }
         
-        //µî µÚ¿¡ ¾öÆóÇÒ º®ÀÌ ¾øÀ¸¸é ÇØÁ¦
+        //ë“± ë’¤ì— ì—„íí•  ë²½ì´ ì—†ìœ¼ë©´ í•´ì œ
         if (!HasWall(ProbePosition))
         {
             ExitCover();
@@ -103,13 +103,13 @@ public class PlayerCover : MonoBehaviour
 
         transform.rotation = Quaternion.LookRotation(_wallNormal);
 
-        //º®À» µû¶ó ÁÂ¿ì·Î ÀÌµ¿
+        //ë²½ì„ ë”°ë¼ ì¢Œìš°ë¡œ ì´ë™
         Vector3 wallRight = Vector3.Cross(Vector3.up, _wallNormal);
         Vector3 sideVelocity = wallRight * horizontal * _coverSpeed;
 
         if(Mathf.Abs(horizontal) > 0.001f)
         {
-            //ÀÌµ¿ÇÒ ÂÊÀ» ¹Ì¸® °Ë»çÇØ º® ³¡À» ¹ş¾î³ªÁö ¾Êµµ·Ï Á¦ÇÑ
+            //ì´ë™í•  ìª½ì„ ë¯¸ë¦¬ ê²€ì‚¬í•´ ë²½ ëì„ ë²—ì–´ë‚˜ì§€ ì•Šë„ë¡ ì œí•œ
             Vector3 edgeProbe = ProbePosition + sideVelocity * Time.deltaTime + wallRight * Mathf.Sign(horizontal) * _controller.radius;
 
             if (!HasWall(edgeProbe))
@@ -118,7 +118,7 @@ public class PlayerCover : MonoBehaviour
             }
         }
 
-        //º®°ú ÀÏÁ¤ÇÑ °£°İÀ» À¯ÁöÇÏµµ·Ï ÀÌµ¿ ¼Óµµ Á¶Á¤
+        //ë²½ê³¼ ì¼ì •í•œ ê°„ê²©ì„ ìœ ì§€í•˜ë„ë¡ ì´ë™ ì†ë„ ì¡°ì •
         float distance = Vector3.Dot(ProbePosition - _wallPoint, _wallNormal);
         float desiredDistance = _controller.radius +  _wallGap;
 
@@ -129,13 +129,13 @@ public class PlayerCover : MonoBehaviour
 
     bool HasWall(Vector3 origin)
     {
-        //º® ÂÊÀ¸·Î °Ë»çÇØ Ç¥¸éÀÌ ÀÌ¾îÁö´ÂÁö È®ÀÎ
+        //ë²½ ìª½ìœ¼ë¡œ ê²€ì‚¬í•´ í‘œë©´ì´ ì´ì–´ì§€ëŠ”ì§€ í™•ì¸
         if(!_wall.Raycast(new Ray(origin,-_wallNormal), out RaycastHit hit,_enterDistance + _controller.radius))
         {
             return false;
         }
 
-        //Ã³À½ ¾öÆóÇÑ ¸é°ú ¹æÇâÀÌ °ÅÀÇ °°¾Æ¾ß À¯Áö
+        //ì²˜ìŒ ì—„íí•œ ë©´ê³¼ ë°©í–¥ì´ ê±°ì˜ ê°™ì•„ì•¼ ìœ ì§€
         return Vector3.Dot(hit.normal, _wallNormal) > 0.95f;
     }
 

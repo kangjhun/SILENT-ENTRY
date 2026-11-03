@@ -1,16 +1,16 @@
-using UnityEngine;
-//ÇÃ·¹ÀÌ¾îÀÇ ÀÌµ¿ »óÅÂ¸¦ ¾Ö´Ï¸ŞÀÌ¼Ç¿¡ ¹İ¿µ
+ï»¿using UnityEngine;
+//í”Œë ˆì´ì–´ì˜ ì´ë™ ìƒíƒœë¥¼ ì• ë‹ˆë©”ì´ì…˜ì— ë°˜ì˜
 [RequireComponent (typeof(PlayerMovement))]
 public class PlayerAnimation : MonoBehaviour
 {
-    [Header("¾Ö´Ï¸ŞÀÌÅÍ")]
+    [Header("ì• ë‹ˆë©”ì´í„°")]
     [SerializeField] Animator _animator;
-    [Header("¾Ö´Ï¸ŞÀÌ¼Ç ÀüÈ¯")]
+    [Header("ì• ë‹ˆë©”ì´ì…˜ ì „í™˜")]
     [SerializeField, Min(0f)] float _blendTime = 0.1f;
 
      PlayerMovement _playerMovement;
      PlayerCover _playerCover;
-    //¾Ö´Ï¸ŞÀÌÅÍ ÆÄ¶ó¹ÌÅÍ ID ÀúÀå
+    //ì• ë‹ˆë©”ì´í„° íŒŒë¼ë¯¸í„° ID ì €ì¥
     static readonly int MoveXHash = Animator.StringToHash("MoveX");
     static readonly int MoveYHash = Animator.StringToHash("MoveY");
     static readonly int IsRunningHash = Animator.StringToHash("IsRunning");
@@ -25,32 +25,32 @@ public class PlayerAnimation : MonoBehaviour
 
         if (_animator == null)
         {
-            Debug.LogError("animator¸¦ ¿¬°áÇØÁÖ¼¼¿ä", this);
+            Debug.LogError("animatorë¥¼ ì—°ê²°í•´ì£¼ì„¸ìš”", this);
             enabled = false;
             return;
         }
-        //¾Ö´Ï¸ŞÀÌ¼ÇÀÌ ÇÃ·¹ÀÌ¾î À§Ä¡¸¦ Á÷Á¢ ¹Ù²ÙÁö ¾Êµµ·Ï ¼³Á¤
+        //ì• ë‹ˆë©”ì´ì…˜ì´ í”Œë ˆì´ì–´ ìœ„ì¹˜ë¥¼ ì§ì ‘ ë°”ê¾¸ì§€ ì•Šë„ë¡ ì„¤ì •
         _animator.applyRootMotion = false;
     }
 
     void LateUpdate()
     {
         if(Time.timeScale ==  0f) { return; }
-        //ÇöÀç ÀÌµ¿ ¹æÇâ°ú ¾É±â, ¾öÆó »óÅÂ È®ÀÎ
+        //í˜„ì¬ ì´ë™ ë°©í–¥ê³¼ ì•‰ê¸°, ì—„í ìƒíƒœ í™•ì¸
         Vector2 move =_playerMovement.AnimationMove;
         bool isCrouching = _playerMovement.IsCrouching;
         bool isInCover = _playerCover != null && _playerCover.IsInCover;
-        //ÀÌµ¿ ¹æÇâÀ» ºÎµå·´°Ô ¹İ¿µÇÏ°í, ¾É¾Æ ÀÖÀ» ¶§´Â ´Ş¸®±â ÇØÁ¦
+        //ì´ë™ ë°©í–¥ì„ ë¶€ë“œëŸ½ê²Œ ë°˜ì˜í•˜ê³ , ì•‰ì•„ ìˆì„ ë•ŒëŠ” ë‹¬ë¦¬ê¸° í•´ì œ
         _animator.SetFloat(MoveXHash,move.x,_blendTime,Time.deltaTime);
         _animator.SetFloat(MoveYHash,move.y,_blendTime,Time.deltaTime);
         _animator.SetBool(IsRunningHash,_playerMovement.IsRunning && !isCrouching );
 
         _animator.SetBool(IsCrouchingHash,isCrouching); 
         _animator.SetBool(ISInCoverHash,isInCover);
-        //¾ÉÀº »óÅÂÀÇ ÀÌµ¿·®À» 0~1 ¹üÀ§·Î Àü´Ş
+        //ì•‰ì€ ìƒíƒœì˜ ì´ë™ëŸ‰ì„ 0~1 ë²”ìœ„ë¡œ ì „ë‹¬
         float crouchSpeed = Mathf.Clamp01(move.magnitude);
         _animator.SetFloat(CrouchSpeedHash, crouchSpeed, _blendTime, Time.deltaTime);
-        //¾öÆó Áß ÀÌµ¿ °ªÀ» ¾Ö´Ï¸ŞÀÌ¼Ç¿¡ ¹İ¿µ
+        //ì—„í ì¤‘ ì´ë™ ê°’ì„ ì• ë‹ˆë©”ì´ì…˜ì— ë°˜ì˜
         _animator.SetFloat(CoverMoveHash, _playerMovement.CoverMove, _blendTime, Time.deltaTime);
     }
 

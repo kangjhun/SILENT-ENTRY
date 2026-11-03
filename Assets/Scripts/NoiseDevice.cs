@@ -1,26 +1,26 @@
-using UnityEngine;
-//¶óµğ¿À¸¦ ÄÑ¼­ ÁÖº¯ ÀûÀ» ¼ÒÀ½ À§Ä¡·Î À¯µµ
+ï»¿using UnityEngine;
+//ë¼ë””ì˜¤ë¥¼ ì¼œì„œ ì£¼ë³€ ì ì„ ì†ŒìŒ ìœ„ì¹˜ë¡œ ìœ ë„
 public class NoiseDevice : MonoBehaviour,IInteractable
 {
-    [Header("»óÈ£ÀÛ¿ë")]
-    [SerializeField] string _displayName = "¶óµğ¿À";
+    [Header("ìƒí˜¸ì‘ìš©")]
+    [SerializeField] string _displayName = "ë¼ë””ì˜¤";
     [SerializeField] Transform _interactionPoint;
 
-    [Header("¼ÒÀ½À» µéÀ» Àû")]
+    [Header("ì†ŒìŒì„ ë“¤ì„ ì ")]
     [SerializeField] EnemyFSM[] _enemies;
 
-    [Header("¼ÒÀ½ ¼³Á¤")]
+    [Header("ì†ŒìŒ ì„¤ì •")]
     [SerializeField, Min(0.1f)] float _hearingRadius = 10f;
     [SerializeField, Min(0f)] float _cooldown = 2f;
 
-    [Header("¶óµğ¿À »ç¿îµå")]
+    [Header("ë¼ë””ì˜¤ ì‚¬ìš´ë“œ")]
     [SerializeField] AudioSource _audioSource;
     [SerializeField, Min(0.1f)] float _playDuration = 4f;
     [SerializeField, Min(0.1f)] float _noiseInterval = 0.5f;
     
-    float _nextUseTime;//´Ù½Ã ÄÓ ¼ö ÀÖ´Â ½Ã°£
-    float _soundEndTime;//Àç»ıÀÌ ³¡³ª´Â ½Ã°£
-    float _nextNoiseTIme;//Àû¿¡°Ô ¼ÒÀ½À» ´Ù½Ã ¾Ë¸± ½Ã°£
+    float _nextUseTime;//ë‹¤ì‹œ ì¼¤ ìˆ˜ ìˆëŠ” ì‹œê°„
+    float _soundEndTime;//ì¬ìƒì´ ëë‚˜ëŠ” ì‹œê°„
+    float _nextNoiseTIme;//ì ì—ê²Œ ì†ŒìŒì„ ë‹¤ì‹œ ì•Œë¦´ ì‹œê°„
 
     string _playPrompt;
     string _playingPrompt;
@@ -28,34 +28,34 @@ public class NoiseDevice : MonoBehaviour,IInteractable
     bool _soundActive;
     bool _audioPaused;
 
-    //Àç»ı»óÅÂ¿¡ µû¶ó »óÈ£ÀÛ¿ë ¾È³» º¯°æ
+    //ì¬ìƒìƒíƒœì— ë”°ë¼ ìƒí˜¸ì‘ìš© ì•ˆë‚´ ë³€ê²½
     public string DisplayName => _soundActive ? _playingPrompt : _playPrompt;
 
 
     public Vector3 InteractionPosition => _interactionPoint != null ? _interactionPoint.position : transform.position;
 
-    //Àç»ı ÁßÀÌ³ª ÄğÅ¸ÀÓ Áß¿¡µµ ¾È³»¸¦ Ç¥½ÃÇÒ ¼ö ÀÖµµ·Ï À¯Áö
+    //ì¬ìƒ ì¤‘ì´ë‚˜ ì¿¨íƒ€ì„ ì¤‘ì—ë„ ì•ˆë‚´ë¥¼ í‘œì‹œí•  ìˆ˜ ìˆë„ë¡ ìœ ì§€
     public bool CanInteract => isActiveAndEnabled;
 
     void Awake()
     {
-        _playPrompt = $"{_displayName} ÄÑ±â";
-        _playingPrompt = $"{_displayName} Àç»ı Áß";
+        _playPrompt = $"{_displayName} ì¼œê¸°";
+        _playingPrompt = $"{_displayName} ì¬ìƒ ì¤‘";
     }
     public void Interact()
     {
         if (!CanInteract) return;
-        //Àç»ı ÁßÀÌ°Å³ª ÄğÅ¸ÀÓÀÌ ³²¾Æ ÀÖÀ¸¸é ÀÛµ¿ÇÏÁö ¾ÊÀ½
+        //ì¬ìƒ ì¤‘ì´ê±°ë‚˜ ì¿¨íƒ€ì„ì´ ë‚¨ì•„ ìˆìœ¼ë©´ ì‘ë™í•˜ì§€ ì•ŠìŒ
         if (_soundActive || Time.time < _nextUseTime) return;
         if(_audioSource == null || _audioSource.clip == null)
         {
-            Debug.Log("¶óµğ¿ÀÀÇ Audio Source¿Í À½¾ÇÀ» ¿¬°áÇÏ¼¼¿ä.", this);
+            Debug.Log("ë¼ë””ì˜¤ì˜ Audio Sourceì™€ ìŒì•…ì„ ì—°ê²°í•˜ì„¸ìš”.", this);
             return;
         }
 
         
         _nextUseTime = Time.time + _cooldown;
-        //Á¤ÇØÁø Àç»ı ½Ã°£ µ¿¾È À½¾Ç ¹İº¹
+        //ì •í•´ì§„ ì¬ìƒ ì‹œê°„ ë™ì•ˆ ìŒì•… ë°˜ë³µ
         _audioPaused = false;
         _audioSource.loop = true;
         _audioSource.Play();
@@ -71,7 +71,7 @@ public class NoiseDevice : MonoBehaviour,IInteractable
     void EmitNoise()
     {
         if(_enemies == null) return;    
-        //¿¬°áµÈ Àû¿¡°Ô ¼ÒÀ½ À§Ä¡, µé¸®´Â ¹üÀ§, ¿ì¼±¼øÀ§ Àü´Ş
+        //ì—°ê²°ëœ ì ì—ê²Œ ì†ŒìŒ ìœ„ì¹˜, ë“¤ë¦¬ëŠ” ë²”ìœ„, ìš°ì„ ìˆœìœ„ ì „ë‹¬
         foreach(EnemyFSM enemy in _enemies)
         {
             if (enemy == null) continue;
@@ -82,7 +82,7 @@ public class NoiseDevice : MonoBehaviour,IInteractable
     void Update()
     {
         if(!_soundActive) return;
-        //°ÔÀÓÀÌ ¸ØÃß¸é À½¾Çµµ ÇöÀç À§Ä¡¿¡¼­ ÀÏ½ÃÁ¤Áö
+        //ê²Œì„ì´ ë©ˆì¶”ë©´ ìŒì•…ë„ í˜„ì¬ ìœ„ì¹˜ì—ì„œ ì¼ì‹œì •ì§€
         if(Time.timeScale <= 0f)
         {
             if(!_audioPaused && _audioSource != null)
@@ -93,7 +93,7 @@ public class NoiseDevice : MonoBehaviour,IInteractable
             return;
         }
 
-        //°ÔÀÓÀ» Àç°³ÇÏ¸é ¸ØÃè´ø À½¾Ç ÀÌ¾î¼­ Àç»ı
+        //ê²Œì„ì„ ì¬ê°œí•˜ë©´ ë©ˆì·„ë˜ ìŒì•… ì´ì–´ì„œ ì¬ìƒ
         if (_audioPaused)
         {
             if (_audioSource != null)
@@ -116,7 +116,7 @@ public class NoiseDevice : MonoBehaviour,IInteractable
 
     void OnDisable()
     {
-        //ºñÈ°¼ºÈ­µÇ¸é À½¾Ç°ú ÀÛµ¿ »óÅÂ Á¤¸®
+        //ë¹„í™œì„±í™”ë˜ë©´ ìŒì•…ê³¼ ì‘ë™ ìƒíƒœ ì •ë¦¬
         if(_audioSource != null) 
             _audioSource.Stop();
         _soundActive = false;

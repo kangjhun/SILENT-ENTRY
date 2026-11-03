@@ -1,4 +1,4 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using UnityEngine.AI;
 
 [DefaultExecutionOrder(100)]
@@ -7,57 +7,62 @@ public class EnemyFSM : MonoBehaviour
 {
     public enum EnemyState
     {
-        Patrol,//Á¤ÇØÁø ÁöÁ¡À» ¼ø¼­´ë·Î ¼øÂû
-        Investigate,//¼Ò¸®°¡ ¹ß»ıÇÑ À§Ä¡·Î ÀÌµ¿
-        Chase,//º¸ÀÌ´Â ÇÃ·¹ÀÌ¾î¸¦ Ãß°İ
-        Search,//¸¶Áö¸· È®ÀÎ À§Ä¡·Î ÀÌµ¿ÇÑ µÚ ÁÖº¯ ¼ö»ö
-        Return,//¼øÂû ÁöÁ¡À» º¹±Í
-        Suspicious //ÇÃ·¹ÀÌ¾î¸¦ ¹ß°ßÇÏ±â Àü °¨Áö Áß
+        Patrol,//ì •í•´ì§„ ì§€ì ì„ ìˆœì„œëŒ€ë¡œ ìˆœì°°
+        Investigate,//ì†Œë¦¬ê°€ ë°œìƒí•œ ìœ„ì¹˜ë¡œ ì´ë™
+        Chase,//ë³´ì´ëŠ” í”Œë ˆì´ì–´ë¥¼ ì¶”ê²©
+        Search,//ë§ˆì§€ë§‰ í™•ì¸ ìœ„ì¹˜ë¡œ ì´ë™í•œ ë’¤ ì£¼ë³€ ìˆ˜ìƒ‰
+        Return,//ìˆœì°° ì§€ì ì„ ë³µê·€
+        Suspicious //í”Œë ˆì´ì–´ë¥¼ ë°œê²¬í•˜ê¸° ì „ ê°ì§€ ì¤‘
     }
 
-    [Header("ÇöÀç »óÅÂ")]
+    [Header("í˜„ì¬ ìƒíƒœ")]
     [SerializeField] EnemyState _currentState;
 
-    [Header("¼øÂû")]
+    [Header("ìˆœì°°")]
     [SerializeField] Transform[] _patrolPoints;
     [SerializeField] float _walkSpeed = 2f;
     [SerializeField] float _patrolWaitTime = 1f;
 
-    [Header("¼øÂû Ãâ¹ß Àü È¸Àü")]
+    [Header("ëª©í‘œë¬¼ íšë“ í›„ ìˆœì°°")]
+    [SerializeField] Transform[] _alertPatrolPoints;
+    bool _alertPatrolRequested;
+    bool _pendingPatrolChange;
+
+    [Header("ìˆœì°° ì¶œë°œ ì „ íšŒì „")]
     [SerializeField, Min(1f)] float _turnSpeed = 240f;
     [SerializeField, Range(1f, 45f)] float _startMoveAngle = 15f;
 
     bool _turningBeforeMove;
 
-    [Header("Á¶»ç")]
+    [Header("ì¡°ì‚¬")]
     [SerializeField, Min(0.1f)] float _investigateSpeed = 2.8f;
 
-    [Header("Ãß°İ")]
+    [Header("ì¶”ê²©")]
     [SerializeField] float _chaseSpeed = 4f;
     [SerializeField] float _repathInterval = 0.2f;
 
-    [Header("¼ö»ö")]
+    [Header("ìˆ˜ìƒ‰")]
     [SerializeField] float _searchDuration = 6.5f;
 
-    [Header("ÀÌµ¿ ÆÇÁ¤")]
+    [Header("ì´ë™ íŒì •")]
     [SerializeField] float _stoppingDistance = 0.3f;
     [SerializeField] float _sampleRadius = 2f;
     [SerializeField] float _moveTimeout = 12f;
 
-    [Header("ÇÃ·¹ÀÌ¾î ºÙÀâ±â")]
+    [Header("í”Œë ˆì´ì–´ ë¶™ì¡ê¸°")]
     [SerializeField] GameManager _gameManger;
     [SerializeField, Min(0.1f)] float _catchDistance = 1.2f;
 
-    [Header("Á¢ÃË °¨Áö")]
+    [Header("ì ‘ì´‰ ê°ì§€")]
     [SerializeField, Min(0f)] float _contactPadding = 0.05f;
     [SerializeField, Min(0.1f)] float _contactCatchDelay = 0.35f;
 
 
-    [Header("¹® Åë°ú")]
+    [Header("ë¬¸ í†µê³¼")]
     [SerializeField] DoorController[] _doors;
     [SerializeField, Min(0.1f)] float _doorLookAhead = 1.5f;
 
-    [Header("ÇÃ·¹ÀÌ¾î °¨Áö")]
+    [Header("í”Œë ˆì´ì–´ ê°ì§€")]
     [SerializeField, Min(0.1f)] float _detectionTime = 0.8f;
     [SerializeField, Min(0.1f)] float _detectionDecayTime = 1f;
 
@@ -68,25 +73,25 @@ public class EnemyFSM : MonoBehaviour
     int _patrolIndex;
     int _activeNoisePriority;
 
-    float _waitTimer; //¼øÂû ÁöÁ¡ ´ë±â ½Ã°£
-    float _moveTimer; //¸ñÀûÁö·Î ÀÌµ¿ÇÑ ½Ã°£
-    float _searchTimer; //Á¦ÀÚ¸®¿¡¼­ ÁÖº¯À» »ìÇÉ ½Ã°£
-    float _nextMoveTime; //´ÙÀ½ °æ·Î °»½ÅÀÌ °¡´ÉÇÑ ½Ã°¢
+    float _waitTimer; //ìˆœì°° ì§€ì  ëŒ€ê¸° ì‹œê°„
+    float _moveTimer; //ëª©ì ì§€ë¡œ ì´ë™í•œ ì‹œê°„
+    float _searchTimer; //ì œìë¦¬ì—ì„œ ì£¼ë³€ì„ ì‚´í•€ ì‹œê°„
+    float _nextMoveTime; //ë‹¤ìŒ ê²½ë¡œ ê°±ì‹ ì´ ê°€ëŠ¥í•œ ì‹œê°
     float _detectionAmount;
-    float _lastNoiseHeardTime = float.NegativeInfinity; //¸¶Áö¸·À¸·Î À¯È¿ÇÑ ¼ÒÀ½À» µéÀº ½Ã°£
+    float _lastNoiseHeardTime = float.NegativeInfinity; //ë§ˆì§€ë§‰ìœ¼ë¡œ ìœ íš¨í•œ ì†ŒìŒì„ ë“¤ì€ ì‹œê°„
     float _contactStartedAt;
 
-    bool _hasDestination; //ÀÌµ¿ °æ·Î ¼³Á¤¿¡ ¼º°øÇß´ÂÁö
-    bool _searchingAround; //¼ö»ö À§Ä¡¿¡ µµÂøÇØ ÁÖº¯À» »ìÇÇ´Â ÁßÀÎÁö
+    bool _hasDestination; //ì´ë™ ê²½ë¡œ ì„¤ì •ì— ì„±ê³µí–ˆëŠ”ì§€
+    bool _searchingAround; //ìˆ˜ìƒ‰ ìœ„ì¹˜ì— ë„ì°©í•´ ì£¼ë³€ì„ ì‚´í”¼ëŠ” ì¤‘ì¸ì§€
     public bool IsSearchingAround => _searchingAround;
-    bool _initialized; //ÃÊ±â ¼³Á¤À» ¸¶ÃÆ´ÂÁö
+    bool _initialized; //ì´ˆê¸° ì„¤ì •ì„ ë§ˆì³¤ëŠ”ì§€
     bool _waitingForDoor;
     bool _touchingPlayer;
 
-    bool _hasConfirmedPlayer; //ÀÌ¹Ì ¹ß°ßÀÌ È®Á¤µÈ ÇÃ·¹ÀÌ¾î¸¦ ¼ö»ö ÁßÀÎÁö
+    bool _hasConfirmedPlayer; //ì´ë¯¸ ë°œê²¬ì´ í™•ì •ëœ í”Œë ˆì´ì–´ë¥¼ ìˆ˜ìƒ‰ ì¤‘ì¸ì§€
     public float DetectionAmount => _detectionAmount;
 
-    EnemyState _stateBeforeSuspicion; //°¨Áö¸¦ ½ÃÀÛÇÏ±â Àü¿¡ ÇÏ´ø Çàµ¿
+    EnemyState _stateBeforeSuspicion; //ê°ì§€ë¥¼ ì‹œì‘í•˜ê¸° ì „ì— í•˜ë˜ í–‰ë™
 
 
     Vector3 _noisePosition;
@@ -95,7 +100,7 @@ public class EnemyFSM : MonoBehaviour
 
     const float ArrivalTolerance = 0.1f;
     const float ReturnRetryInterval = 1f;
-    const float NoiseMemoryTime = 1f; //¶óµğ¿À Àü´Ş °£°İ(0.5ÃÊº¸´Ù) ¿©À¯ ÀÖ°Ô ¼³Á¤
+    const float NoiseMemoryTime = 1f; //ë¼ë””ì˜¤ ì „ë‹¬ ê°„ê²©(0.5ì´ˆë³´ë‹¤) ì—¬ìœ  ìˆê²Œ ì„¤ì •
     CharacterController _playerController;
 
     public EnemyState CurrentState => _currentState;
@@ -103,20 +108,20 @@ public class EnemyFSM : MonoBehaviour
 
     public float TurnDirection {  get; private set; }   
 
-    //Agent°¡ ½ÇÁ¦ NavMesh ÀÌµ¿À» ¼öÇàÇÒ ¼ö ÀÖ´Â »óÅÂÀÎÁö È®ÀÎ
+    //Agentê°€ ì‹¤ì œ NavMesh ì´ë™ì„ ìˆ˜í–‰í•  ìˆ˜ ìˆëŠ” ìƒíƒœì¸ì§€ í™•ì¸
     bool AgentReady => _agent != null && _agent.enabled && _agent.isOnNavMesh;
 
-    //GameManager¸¦ ¿¬°áÇÏÁö ¾ÊÀº AI ´Üµ¶ Å×½ºÆ®´Â Çã¿ë
+    //GameManagerë¥¼ ì—°ê²°í•˜ì§€ ì•Šì€ AI ë‹¨ë… í…ŒìŠ¤íŠ¸ëŠ” í—ˆìš©
     bool GameEnded => _gameManger != null && !_gameManger.IsPlaying;
 
-    //ÀÌµ¿°ú ½Ã¾ß °¨Áö¿¡ ÇÊ¿äÇÑ ÄÄÆ÷³ÍÆ® ÁØºñ
+    //ì´ë™ê³¼ ì‹œì•¼ ê°ì§€ì— í•„ìš”í•œ ì»´í¬ë„ŒíŠ¸ ì¤€ë¹„
      void Awake()
     {
         _agent = GetComponent<NavMeshAgent>();  
         _vision = GetComponent<EnemyVision>();  
         _path = new NavMeshPath();  
     }
-    //¼³Á¤À» È®ÀÎÇÏ°í ¼øÂû ½ÃÀÛ
+    //ì„¤ì •ì„ í™•ì¸í•˜ê³  ìˆœì°° ì‹œì‘
     void Start()
     {
 
@@ -137,30 +142,30 @@ public class EnemyFSM : MonoBehaviour
 
         if(_playerController == null)
         {
-            Debug.LogWarning("Á¢ÃË °¨Áö : PlayerTargetÀ» ÇÃ·¹ÀÌ¾î CharacterControllerÀÇ " + "¿ÀºêÁ§Æ® ¶Ç´Â ÀÚ½Ä¿¡ ¿¬°áÇÏ¼¼¿ä.", this);
+            Debug.LogWarning("ì ‘ì´‰ ê°ì§€ : PlayerTargetì„ í”Œë ˆì´ì–´ CharacterControllerì˜ " + "ì˜¤ë¸Œì íŠ¸ ë˜ëŠ” ìì‹ì— ì—°ê²°í•˜ì„¸ìš”.", this);
         }
         _initialized = true;
         _currentState = EnemyState.Patrol;
-        //ÃÖÃÊ »óÅÂ´Â ChangeState¸¦ °ÅÄ¡Áö ¾Ê°í Á÷Á¢ ½ÃÀÛ
+        //ìµœì´ˆ ìƒíƒœëŠ” ChangeStateë¥¼ ê±°ì¹˜ì§€ ì•Šê³  ì§ì ‘ ì‹œì‘
         EnterState();
     }
-    //Àû AI ½ÇÇà¿¡ ÇÊ¿äÇÑ ¼³Á¤ÀÌ µÇ¾î ÀÖ´ÂÁö È®ÀÎ
+    //ì  AI ì‹¤í–‰ì— í•„ìš”í•œ ì„¤ì •ì´ ë˜ì–´ ìˆëŠ”ì§€ í™•ì¸
     bool ValidateSetup()
     {
         if (!AgentReady)
         {
-            Debug.LogError("NavMeshAgent¿Í ÀûÀÇ NavMesh ¹èÄ¡¸¦ È®ÀÎÇÏ½Ã¿À.", this);
+            Debug.LogError("NavMeshAgentì™€ ì ì˜ NavMesh ë°°ì¹˜ë¥¼ í™•ì¸í•˜ì‹œì˜¤.", this);
             return false;
         }
 
         if (_vision == null)
         {
-            Debug.LogError("°°Àº ¿ÀºêÁ§Æ®¿¡ EnemyVisionÀÌ ÇÊ¿äÇÕ´Ï´Ù.", this);
+            Debug.LogError("ê°™ì€ ì˜¤ë¸Œì íŠ¸ì— EnemyVisionì´ í•„ìš”í•©ë‹ˆë‹¤.", this);
             return false;
         }
         if (_patrolPoints == null || _patrolPoints.Length == 0)
         {
-            Debug.LogError("¼øÂû ÁöÁ¡À» ¿¬°áÇÏ½Ã¿À.", this);
+            Debug.LogError("ìˆœì°° ì§€ì ì„ ì—°ê²°í•˜ì‹œì˜¤.", this);
             return false;
         }
 
@@ -168,18 +173,18 @@ public class EnemyFSM : MonoBehaviour
         {
             if (point == null)
             {
-                Debug.LogError("Patrol Poins¿¡ ºñ¾î ÀÖ´Â Ç×¸ñÀÌ ÀÖ½À´Ï´Ù.", this);
+                Debug.LogError("Patrol Poinsì— ë¹„ì–´ ìˆëŠ” í•­ëª©ì´ ìˆìŠµë‹ˆë‹¤.", this);
                 return false;
             }
         }
         return true;
     }
-    //ÇÃ·¹ÀÌ¾î °¨Áö, ¹® ÇĞÀÎ ÈÄ »óÅÂ¿¡ ¸Â´Â Çàµ¿À» ½ÇÇà
+    //í”Œë ˆì´ì–´ ê°ì§€, ë¬¸ í•™ì¸ í›„ ìƒíƒœì— ë§ëŠ” í–‰ë™ì„ ì‹¤í–‰
     void Update()
     {
         if (!_initialized || !AgentReady) return;
 
-        //»óÅÂ Ã³¸® Áß´Ü»Ó ¾Æ´Ï¶ó AgentÀÇ ÀÌµ¿µµ Á¤Áö
+        //ìƒíƒœ ì²˜ë¦¬ ì¤‘ë‹¨ë¿ ì•„ë‹ˆë¼ Agentì˜ ì´ë™ë„ ì •ì§€
         if (GameEnded)
         {
             if(_hasDestination || !_agent.isStopped)
@@ -191,8 +196,11 @@ public class EnemyFSM : MonoBehaviour
 
         if(Time.timeScale <=0f) { return; }
 
-        //¾î¶² »óÅÂ¿¡¼­µç ÇÃ·¹ÀÌ¾î ¹ß°ßÀ» ÃÖ¿ì¼±À¸·Î Ã³¸®
+        //ì–´ë–¤ ìƒíƒœì—ì„œë“  í”Œë ˆì´ì–´ ë°œê²¬ì„ ìµœìš°ì„ ìœ¼ë¡œ ì²˜ë¦¬
         UpdatePlayerDetection();
+        //ìˆœì°° ë˜ëŠ” ë³µê·€ ì¤‘ì´ë©´ ìƒˆ ìˆœì°° ê²½ë¡œ ì ìš©
+        if(_pendingPatrolChange && (_currentState == EnemyState.Patrol || _currentState == EnemyState.Return))
+        { EnterState(); }    
         if (UpdateDoorBeforeMove()) return;
         if (UpdateTurnBeforeMove()) return;
 
@@ -222,7 +230,28 @@ public class EnemyFSM : MonoBehaviour
             UpdateDoorBeforeMove();
         }
     }
-    //ÇÃ·¹ÀÌ¾î¸¦ º¸¸é °¨Áö·®À» ¿Ã¸®°í, ³õÄ¡¸é ¼ö»öÀ¸·Î ÀüÈ¯
+    //í˜„ì¬ í–‰ë™ì„ ìœ ì§€í•˜ë©´ì„œ ìˆœì°° ë³€ê²½ì„ ì˜ˆì•½
+    public void RequestAlertPatrol()
+    {
+        if(GameEnded || _alertPatrolRequested) return;
+        if(_alertPatrolRequested == null || _alertPatrolPoints.Length == 0)
+        {
+            Debug.LogWarning("ê²½ê³„ ê°•í™” í›„ ì‚¬ìš©í•  ìˆœì°° ì§€ì ì„ ì—°ê²°í•˜ì„¸ìš”.", this);
+            return;
+        }
+        foreach(Transform point in _alertPatrolPoints)
+        {
+            if(point == null)
+            {
+                Debug.LogWarning("ìƒˆ ìˆœì°° ì§€ì ì— ë¹„ì–´ ìˆëŠ” í•­ëª©ì´ ìˆìŠµë‹ˆë‹¤.", this);
+                return;
+            }
+            _alertPatrolRequested = true;
+            _pendingPatrolChange = true;
+        }
+    }
+
+    //í”Œë ˆì´ì–´ë¥¼ ë³´ë©´ ê°ì§€ëŸ‰ì„ ì˜¬ë¦¬ê³ , ë†“ì¹˜ë©´ ìˆ˜ìƒ‰ìœ¼ë¡œ ì „í™˜
     void UpdatePlayerDetection()
     {
         bool touchingNow = IsTouchingPlayer();
@@ -256,7 +285,7 @@ public class EnemyFSM : MonoBehaviour
         }
         if (seesPlayer)
         {
-            //º¸ÀÌ´Â µ¿¾È¸¸ ÇÃ·¹ÀÌ¾î À§Ä¡¸¦ ±â¾ï
+            //ë³´ì´ëŠ” ë™ì•ˆë§Œ í”Œë ˆì´ì–´ ìœ„ì¹˜ë¥¼ ê¸°ì–µ
             _lastSeenPosition = _vision.PlayerTarget.position;
             if (_hasConfirmedPlayer)
             {
@@ -289,10 +318,10 @@ public class EnemyFSM : MonoBehaviour
             }
         }
     }
-    //ÇöÀç Çàµ¿À» ´Ù¸¥ »óÅÂ·Î º¯°æ
+    //í˜„ì¬ í–‰ë™ì„ ë‹¤ë¥¸ ìƒíƒœë¡œ ë³€ê²½
     void ChangeState(EnemyState nextState)
     {
-        //°°Àº »óÅÂ¸¦ ´Ù½Ã ÃÊ±âÈ­ÇÏÁö ¾Êµµ·Ï ¹æÁö
+        //ê°™ì€ ìƒíƒœë¥¼ ë‹¤ì‹œ ì´ˆê¸°í™”í•˜ì§€ ì•Šë„ë¡ ë°©ì§€
         if(_currentState == nextState) return;
         if (_searchingAround)
         {
@@ -303,9 +332,20 @@ public class EnemyFSM : MonoBehaviour
         _currentState = nextState;
         EnterState();
     }
-    //»õ·Î¿î »óÅÂ¿¡ ¸Â°Ô ÀÌµ¿ ¼Óµµ¿Í ¸ñÀûÁö ¼³Á¤
+    //ìƒˆë¡œìš´ ìƒíƒœì— ë§ê²Œ ì´ë™ ì†ë„ì™€ ëª©ì ì§€ ì„¤ì •
     void EnterState()
     {
+        //ì¡°ì‚¬ì™€ ìˆ˜ìƒ‰ì„ ë§ˆì¹˜ê³  ë³µê·€í•  ë•Œë„ ì—¬ê¸°ì„œ ë³€ê²½ ì ìš©
+        if (_pendingPatrolChange && (_currentState == EnemyState.Patrol || _currentState == EnemyState.Return))
+        {
+            _patrolPoints = _alertPatrolPoints;
+            _patrolIndex = 0;
+            _pendingPatrolChange = false;
+
+            //ìƒˆ ê²½ë¡œì—ì„œ ê°€ì¥ ê°€ê¹Œìš´ ìˆœì°° ì§€ì ìœ¼ë¡œ ë³µê·€
+            _currentState = EnemyState.Return;
+        }
+
         _waitingForDoor = false;
         _turningBeforeMove = false;
 
@@ -319,7 +359,7 @@ public class EnemyFSM : MonoBehaviour
             _lastNoiseHeardTime = float.NegativeInfinity;
         }
 
-        //ÀÌÀü »óÅÂÀÇ ÀÌµ¿ °æ·Î¿Í Å¸ÀÌ¸Ó ÃÊ±âÈ­
+        //ì´ì „ ìƒíƒœì˜ ì´ë™ ê²½ë¡œì™€ íƒ€ì´ë¨¸ ì´ˆê¸°í™”
         _agent.updateRotation = true;
         _agent.ResetPath();
         _agent.isStopped = false;
@@ -332,7 +372,7 @@ public class EnemyFSM : MonoBehaviour
         _searchTimer = 0f;
         _nextMoveTime = 0f;
 
-        //¼øÂû, ¼ö»ö, º¹±ÍÀÇ ±âº» ÀÌµ¿ ¼Óµµ
+        //ìˆœì°°, ìˆ˜ìƒ‰, ë³µê·€ì˜ ê¸°ë³¸ ì´ë™ ì†ë„
         _agent.speed = _walkSpeed;
 
         switch(_currentState)
@@ -352,7 +392,7 @@ public class EnemyFSM : MonoBehaviour
                 _hasConfirmedPlayer = true;
                 _detectionAmount = 1f;
                 _agent.speed = _chaseSpeed;
-                //¸ñÀûÁö´Â UpdateChase¿¡¼­ ÁÖ±âÀûÀ¸·Î °»½Å
+                //ëª©ì ì§€ëŠ” UpdateChaseì—ì„œ ì£¼ê¸°ì ìœ¼ë¡œ ê°±ì‹ 
                 break;
             case EnemyState.Search:
                 _agent.speed = _hasConfirmedPlayer ? _chaseSpeed : _walkSpeed;
@@ -365,19 +405,19 @@ public class EnemyFSM : MonoBehaviour
             
         }
     }
-    //¼øÂû ÁöÁ¡¿¡ µµÂøÇÏ¸é Àá½Ã ±â´Ù·È´Ù°¡ ´ÙÀ½ ÁöÁ¡À¸·Î ÀÌµ¿
+    //ìˆœì°° ì§€ì ì— ë„ì°©í•˜ë©´ ì ì‹œ ê¸°ë‹¤ë ¸ë‹¤ê°€ ë‹¤ìŒ ì§€ì ìœ¼ë¡œ ì´ë™
     void UpdatePatrol()
     {
         _moveTimer += Time.deltaTime;
         if(_hasDestination && !HasArrived())
         {
-            //¸ñÀûÁö·Î ÀÌµ¿ ÁßÀÌ¸é ±â´Ù¸²
+            //ëª©ì ì§€ë¡œ ì´ë™ ì¤‘ì´ë©´ ê¸°ë‹¤ë¦¼
             if (_moveTimer < _moveTimeout) return;
-            //³Ê¹« ¿À·¡ °É¸®¸é ÇöÀç °æ·Î¸¦ Æ÷±â
+            //ë„ˆë¬´ ì˜¤ë˜ ê±¸ë¦¬ë©´ í˜„ì¬ ê²½ë¡œë¥¼ í¬ê¸°
             StopMoving();
         }
 
-        //µµÂøÇß°Å³ª °æ·Î¸¦ Æ÷±âÇÑ µÚ Àá½Ã ´ë±â
+        //ë„ì°©í–ˆê±°ë‚˜ ê²½ë¡œë¥¼ í¬ê¸°í•œ ë’¤ ì ì‹œ ëŒ€ê¸°
         _waitTimer += Time.deltaTime;
 
         if(_waitTimer < _patrolWaitTime) return;
@@ -385,12 +425,12 @@ public class EnemyFSM : MonoBehaviour
         _waitTimer = 0f;
         _moveTimer = 0f;
 
-        //¸¶Áö¸· ÁöÁ¡ ´ÙÀ½¿¡´Â Ã¹ ¹øÂ° ÁöÁ¡À¸·Î µ¹¾Æ°¨
+        //ë§ˆì§€ë§‰ ì§€ì  ë‹¤ìŒì—ëŠ” ì²« ë²ˆì§¸ ì§€ì ìœ¼ë¡œ ëŒì•„ê°
         _patrolIndex = (_patrolIndex +1 ) % _patrolPoints.Length;
 
         MoveTo(_patrolPoints[_patrolIndex].position,true);
     }
-    //¼Ò¸®°¡ ³­ °÷À¸·Î ÀÌµ¿ÇÑ µÚ ÁÖº¯ ¼ö»ö
+    //ì†Œë¦¬ê°€ ë‚œ ê³³ìœ¼ë¡œ ì´ë™í•œ ë’¤ ì£¼ë³€ ìˆ˜ìƒ‰
     void UpdateInvestigate()
     {
         _moveTimer += Time.deltaTime;
@@ -399,22 +439,22 @@ public class EnemyFSM : MonoBehaviour
 
         if(_hasDestination && !arrived && _moveTimer < _moveTimeout) return;
 
-        //µµÂøÇß´Ù¸é ¼ÒÀ½ À§Ä¡¸¦ ¼ö»ö, ÀÌµ¿½ÇÆĞ³ª ½Ã°£ ÃÊ°ú¶ó¸é ÇöÀç À§Ä¡¸¦ ¼ö»ö
+        //ë„ì°©í–ˆë‹¤ë©´ ì†ŒìŒ ìœ„ì¹˜ë¥¼ ìˆ˜ìƒ‰, ì´ë™ì‹¤íŒ¨ë‚˜ ì‹œê°„ ì´ˆê³¼ë¼ë©´ í˜„ì¬ ìœ„ì¹˜ë¥¼ ìˆ˜ìƒ‰
         _searchPosition = arrived ? _noisePosition : transform.position;   
         ChangeState(EnemyState.Search);
     }
-    //ÇÃ·¹ÀÌ¾î¸¦ ºÙÀâÀ» ¼ö ÀÖ´ÂÁö È®ÀÎÇÏ°í Ãß°İ °æ·Î °»½Å
+    //í”Œë ˆì´ì–´ë¥¼ ë¶™ì¡ì„ ìˆ˜ ìˆëŠ”ì§€ í™•ì¸í•˜ê³  ì¶”ê²© ê²½ë¡œ ê°±ì‹ 
     void UpdateChase()
     {
-        //ºÙÀâ±â ÆÇÁ¤Àº °æ·Î °»½Å °£°İ°ú °ü°è¾øÀÌ ¸Å ÇÁ·¹ÀÓ ½ÇÇà
+        //ë¶™ì¡ê¸° íŒì •ì€ ê²½ë¡œ ê°±ì‹  ê°„ê²©ê³¼ ê´€ê³„ì—†ì´ ë§¤ í”„ë ˆì„ ì‹¤í–‰
         if (CheckCatchPlayer()) return;
 
-        //°æ·Î °è»êÀº ÀÏÁ¤ °£°İÀ¸·Î Á¦ÇÑ
+        //ê²½ë¡œ ê³„ì‚°ì€ ì¼ì • ê°„ê²©ìœ¼ë¡œ ì œí•œ
         if (Time.time < _nextMoveTime) return;
         _nextMoveTime = Time.time + _repathInterval;
         MoveTo(_lastSeenPosition);
     }
-    //ÇÃ·¹ÀÌ¾î¿Í Á¢ÃËÇÏ°Å³ª °¡±îÀÌ ÀÖÀ¸¸é ¹Ì¼Ç ½ÇÆĞ Ã³¸®
+    //í”Œë ˆì´ì–´ì™€ ì ‘ì´‰í•˜ê±°ë‚˜ ê°€ê¹Œì´ ìˆìœ¼ë©´ ë¯¸ì…˜ ì‹¤íŒ¨ ì²˜ë¦¬
     bool CheckCatchPlayer()
     {
         if(_gameManger == null || !_gameManger.IsPlaying) return false;
@@ -428,7 +468,7 @@ public class EnemyFSM : MonoBehaviour
         }
         if(!_vision.CanSeePlayer || _vision.PlayerTarget == null) return false;
         
-        //´« À§Ä¡¿¡¼­ ÇÃ·¹ÀÌ¾î Å½Áö ±âÁØÁ¡±îÁöÀÇ °Å¸®
+        //ëˆˆ ìœ„ì¹˜ì—ì„œ í”Œë ˆì´ì–´ íƒì§€ ê¸°ì¤€ì ê¹Œì§€ì˜ ê±°ë¦¬
         Vector3 origin = _vision.EyePosition;
         Vector3 toPlayer = _vision.PlayerTarget.position - origin;
 
@@ -436,7 +476,7 @@ public class EnemyFSM : MonoBehaviour
 
         if(distance > _catchDistance) return false;
 
-        //°¡±î¿öµµ Áß°£¿¡ Àå¾Ö¹°ÀÌ ÀÖÀ¸¸é ºÙÀâÁö ¸øÇÔ
+        //ê°€ê¹Œì›Œë„ ì¤‘ê°„ì— ì¥ì• ë¬¼ì´ ìˆìœ¼ë©´ ë¶™ì¡ì§€ ëª»í•¨
         if(distance > 0.001f && _vision.CheckObstacle(origin,toPlayer/distance,distance,out _))
         {
             return false;
@@ -447,18 +487,18 @@ public class EnemyFSM : MonoBehaviour
 
         return true;
     }
-    //¼ö»ö À§Ä¡·Î ÀÌµ¿ÇÑ µÚ ÀÏÁ¤ ½Ã°£ ÁÖº¯À» »ìÇË
+    //ìˆ˜ìƒ‰ ìœ„ì¹˜ë¡œ ì´ë™í•œ ë’¤ ì¼ì • ì‹œê°„ ì£¼ë³€ì„ ì‚´í•Œ
     void UpdateSearch()
     {
         if (!_searchingAround)
         {
             _moveTimer += Time.deltaTime;
 
-            //¸ÕÀú ¼ö»öÇÒ À§Ä¡±îÁö ÀÌµ¿
+            //ë¨¼ì € ìˆ˜ìƒ‰í•  ìœ„ì¹˜ê¹Œì§€ ì´ë™
             if (_hasDestination && !HasArrived() && _moveTimer < _moveTimeout) return;
             StopMoving();
 
-            //Á¦ÀÚ¸® ¼ö»ö Áß¿¡´Â AgentÀÇ ÀÚµ¿ È¸Àü Áß´Ü
+            //ì œìë¦¬ ìˆ˜ìƒ‰ ì¤‘ì—ëŠ” Agentì˜ ìë™ íšŒì „ ì¤‘ë‹¨
             _agent.updateRotation = false;
 
             
@@ -470,7 +510,7 @@ public class EnemyFSM : MonoBehaviour
         _searchTimer += Time.deltaTime;
 
         if (_searchTimer < Mathf.Max(_searchDuration, 0.01f)) return;
-        //¼ÒÀ½ Á¶»ç ÁßÀÌ°í ¾ÆÁ÷ ¼Ò¸®°¡ µé¸®¸é ÇöÀå¿¡¼­ ´ë±â
+        //ì†ŒìŒ ì¡°ì‚¬ ì¤‘ì´ê³  ì•„ì§ ì†Œë¦¬ê°€ ë“¤ë¦¬ë©´ í˜„ì¥ì—ì„œ ëŒ€ê¸°
         bool stillHearingNoise = !_hasConfirmedPlayer && Time.time - _lastNoiseHeardTime < NoiseMemoryTime;
 
         if (stillHearingNoise) return;
@@ -478,7 +518,7 @@ public class EnemyFSM : MonoBehaviour
         ChangeState(EnemyState.Return);
         
     }
-    //¼øÂû ÁöÁ¡À¸·Î º¹±ÍÇÏ°í, ÀÌµ¿¿¡ ½ÇÆĞÇÏ¸é ´Ù½Ã ½Ãµµ
+    //ìˆœì°° ì§€ì ìœ¼ë¡œ ë³µê·€í•˜ê³ , ì´ë™ì— ì‹¤íŒ¨í•˜ë©´ ë‹¤ì‹œ ì‹œë„
     void UpdateReturn()
     {
         if (HasArrived())
@@ -498,7 +538,7 @@ public class EnemyFSM : MonoBehaviour
             StopMoving();
         }
 
-        //º¹±Í °æ·Î°¡ ¾øÀ¸¸é ÀÏÁ¤ °£°İÀ¸·Î Àç½Ãµµ
+        //ë³µê·€ ê²½ë¡œê°€ ì—†ìœ¼ë©´ ì¼ì • ê°„ê²©ìœ¼ë¡œ ì¬ì‹œë„
         if(!_hasDestination && Time.time >= _nextMoveTime)
         {
             _nextMoveTime = Time.time + ReturnRetryInterval;
@@ -507,7 +547,7 @@ public class EnemyFSM : MonoBehaviour
             MoveTo(_patrolPoints[_patrolIndex].position);
         }
     }
-    //°¨Áö ÁßÀÎ ÇÃ·¹ÀÌ¾î ÂÊÀ¸·Î ¸öÀ» È¸Àü
+    //ê°ì§€ ì¤‘ì¸ í”Œë ˆì´ì–´ ìª½ìœ¼ë¡œ ëª¸ì„ íšŒì „
     void UpdateSuspicious()
     {
         Vector3 direction = _lastSeenPosition - transform.position;
@@ -526,19 +566,19 @@ public class EnemyFSM : MonoBehaviour
         transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, _turnSpeed * Time.deltaTime);
 
     }
-    //¸ñÀûÁö±îÁö ÀÌµ¿ °¡´ÉÇÑ °æ·Î¸¦ Ã£¾Æ ÀÌµ¿ ½ÃÀÛ
+    //ëª©ì ì§€ê¹Œì§€ ì´ë™ ê°€ëŠ¥í•œ ê²½ë¡œë¥¼ ì°¾ì•„ ì´ë™ ì‹œì‘
     void MoveTo(Vector3 position, bool turnBeforeMove = false)
     {
-        //ÇöÀç AgentÀÇ Á¾·ù¿Í ÀÌµ¿ °¡´ÉÇÑ ¿µ¿ª¿¡ ¸ÂÃç °Ë»ö
+        //í˜„ì¬ Agentì˜ ì¢…ë¥˜ì™€ ì´ë™ ê°€ëŠ¥í•œ ì˜ì—­ì— ë§ì¶° ê²€ìƒ‰
         NavMeshQueryFilter filter = new NavMeshQueryFilter
         {
             agentTypeID = _agent.agentTypeID,
             areaMask = _agent.areaMask,
         };
 
-        //¿äÃ» À§Ä¡ ±ÙÃ³¿¡¼­ NavMesh À§ÀÇ ÁöÁ¡À» Ã£À½
+        //ìš”ì²­ ìœ„ì¹˜ ê·¼ì²˜ì—ì„œ NavMesh ìœ„ì˜ ì§€ì ì„ ì°¾ìŒ
         bool found = NavMesh.SamplePosition(position, out NavMeshHit hit, _sampleRadius, filter);
-        //½ÇÁ¦·Î ³¡±îÁö µµ´Ş °¡´ÉÇÑ °æ·Î¸¸ Çã¿ë
+        //ì‹¤ì œë¡œ ëê¹Œì§€ ë„ë‹¬ ê°€ëŠ¥í•œ ê²½ë¡œë§Œ í—ˆìš©
         if(!found || !_agent.CalculatePath(hit.position,_path) || _path.status != NavMeshPathStatus.PathComplete)
         {
             StopMoving();
@@ -555,15 +595,15 @@ public class EnemyFSM : MonoBehaviour
         _agent.updateRotation = !turnBeforeMove;
         _agent.isStopped = turnBeforeMove;
     }
-    //¸ñÀûÁö¿¡ µµÂøÇß´ÂÁö È®ÀÎ
+    //ëª©ì ì§€ì— ë„ì°©í–ˆëŠ”ì§€ í™•ì¸
     bool HasArrived()
     {
         if(!_hasDestination || _agent.pathPending) return false;
         if(_agent.pathStatus != NavMeshPathStatus.PathComplete) return false;
-        //Á¤Áö °Å¸®¿Í ÀÛÀº ¿ÀÂ÷ ¹üÀ§ ¾ÈÀÌ¸é µµÂøÀ¸·Î ÆÇ´Ü
+        //ì •ì§€ ê±°ë¦¬ì™€ ì‘ì€ ì˜¤ì°¨ ë²”ìœ„ ì•ˆì´ë©´ ë„ì°©ìœ¼ë¡œ íŒë‹¨
         return _agent.remainingDistance <= _agent.stoppingDistance + ArrivalTolerance;
     }
-    //ÀÌµ¿À» ¸ØÃß°í ±âÁ¸ °æ·Î Á¦°Å
+    //ì´ë™ì„ ë©ˆì¶”ê³  ê¸°ì¡´ ê²½ë¡œ ì œê±°
     void StopMoving()
     {
         _waitingForDoor = false;
@@ -575,13 +615,13 @@ public class EnemyFSM : MonoBehaviour
         _hasDestination = false;
     }
 
-    //µé¸®´Â ¹üÀ§¿Í ¼ÒÀ½ ¿ì¼±¼øÀ§¸¦ È®ÀÎÇÏ°í ¼ÒÀ½ Á¶»ç ½ÃÀÛ
+    //ë“¤ë¦¬ëŠ” ë²”ìœ„ì™€ ì†ŒìŒ ìš°ì„ ìˆœìœ„ë¥¼ í™•ì¸í•˜ê³  ì†ŒìŒ ì¡°ì‚¬ ì‹œì‘
     public void HearNoise(Vector3 position, float hearingRadius,int priority =2)
     {
         
         if (!_initialized || !isActiveAndEnabled || !AgentReady) return;
         if (GameEnded || Time.timeScale <= 0f) return;
-        //ÇÃ·¹ÀÌ¾î Ãß°İÀÌ³ª ½Ã°¢ Å½Áö¸¦ ¼ÒÀ½º¸´Ù ¿ì¼±
+        //í”Œë ˆì´ì–´ ì¶”ê²©ì´ë‚˜ ì‹œê° íƒì§€ë¥¼ ì†ŒìŒë³´ë‹¤ ìš°ì„ 
         if (_currentState == EnemyState.Chase || _vision.CanSeePlayer || _currentState == EnemyState.Suspicious ) return;
         if (_currentState == EnemyState.Search && _hasConfirmedPlayer) return;
         if (hearingRadius <= 0f) return;
@@ -591,7 +631,7 @@ public class EnemyFSM : MonoBehaviour
         if (toNoise.sqrMagnitude > hearingRadius * hearingRadius) return;
 
         bool investingating = _currentState == EnemyState.Investigate || _currentState == EnemyState.Search;
-        //ÀÌ¹Ì Á¶»ç ÁßÀÎ ¼Ò¸®º¸´Ù ¿ì¼±¼øÀ§°¡ ³·À¸¸é ¹«½Ã
+        //ì´ë¯¸ ì¡°ì‚¬ ì¤‘ì¸ ì†Œë¦¬ë³´ë‹¤ ìš°ì„ ìˆœìœ„ê°€ ë‚®ìœ¼ë©´ ë¬´ì‹œ
         if (investingating && priority < _activeNoisePriority) return;
 
         Vector3 difference = position - _noisePosition;
@@ -600,8 +640,8 @@ public class EnemyFSM : MonoBehaviour
         bool samePosition = difference.sqrMagnitude <= 0.5f * 0.5f;
 
         _activeNoisePriority = priority;
-        _lastNoiseHeardTime = Time.time;//ÀÌµ¿ÇÏ°Å³ª ¼ö»ö ÁßÀÌ¾îµµ ¼ÒÀ½ÀÌ °è¼Ó µé¸®´Â Á¤º¸´Â °»½Å
-        //°°Àº À§Ä¡ÀÇ ¼Ò¸®´Â µé¸° ½Ã°£¸¸ °»½ÅÇÏ°í ÀÌµ¿Àº ´Ù½Ã ½ÃÀÛÇÏÁö ¾ÊÀ½
+        _lastNoiseHeardTime = Time.time;//ì´ë™í•˜ê±°ë‚˜ ìˆ˜ìƒ‰ ì¤‘ì´ì–´ë„ ì†ŒìŒì´ ê³„ì† ë“¤ë¦¬ëŠ” ì •ë³´ëŠ” ê°±ì‹ 
+        //ê°™ì€ ìœ„ì¹˜ì˜ ì†Œë¦¬ëŠ” ë“¤ë¦° ì‹œê°„ë§Œ ê°±ì‹ í•˜ê³  ì´ë™ì€ ë‹¤ì‹œ ì‹œì‘í•˜ì§€ ì•ŠìŒ
         if (investingating && samePosition) return;
 
         _noisePosition = position;
@@ -618,7 +658,7 @@ public class EnemyFSM : MonoBehaviour
             ChangeState(EnemyState.Investigate);
         }
     }
-    //Ãâ¹ß Àü¿¡ ÀÌµ¿ÇÒ ¹æÇâÀ» ¹Ù¶óº¸µµ·Ï È¸Àü
+    //ì¶œë°œ ì „ì— ì´ë™í•  ë°©í–¥ì„ ë°”ë¼ë³´ë„ë¡ íšŒì „
     bool UpdateTurnBeforeMove()
     {
         if(!_turningBeforeMove) return false;
@@ -659,7 +699,7 @@ public class EnemyFSM : MonoBehaviour
 
         return true;
     }
-    //¾Õ¿¡ ¹®ÀÌ ÀÖÀ¸¸é ¿­°í, ¿ÏÀüÈ÷ ¿­¸± ¶§±îÁö ´ë±â
+    //ì•ì— ë¬¸ì´ ìˆìœ¼ë©´ ì—´ê³ , ì™„ì „íˆ ì—´ë¦´ ë•Œê¹Œì§€ ëŒ€ê¸°
     bool UpdateDoorBeforeMove()
     {
         DoorController door = FindDoorOnPath();
@@ -683,7 +723,7 @@ public class EnemyFSM : MonoBehaviour
         }
         return false;
     }
-    //¾ÕÀ¸·Î ÀÌµ¿ÇÒ °æ·Õ¿¡¼­ Åë°úÇØ¾ß ÇÒ ¹®À» Ã£À½
+    //ì•ìœ¼ë¡œ ì´ë™í•  ê²½ë¡±ì—ì„œ í†µê³¼í•´ì•¼ í•  ë¬¸ì„ ì°¾ìŒ
     DoorController FindDoorOnPath()
     {
         if(!_hasDestination || !_agent.hasPath || _agent.pathPending || HasArrived()||_doors == null)
@@ -743,7 +783,7 @@ public class EnemyFSM : MonoBehaviour
         }
         return null;
     }
-    //½ÇÁ¦ ÀÌµ¿ °æ·Î°¡ °¡Àå ÂªÀº ¼øÂû ÁöÁ¡À» º¹±Í À§Ä¡·Î ¼±ÅÃ
+    //ì‹¤ì œ ì´ë™ ê²½ë¡œê°€ ê°€ì¥ ì§§ì€ ìˆœì°° ì§€ì ì„ ë³µê·€ ìœ„ì¹˜ë¡œ ì„ íƒ
     void SelectClosestPatrolPoint()
     {
         float shortestDistance = Mathf.Infinity;
@@ -784,7 +824,7 @@ public class EnemyFSM : MonoBehaviour
 
         _patrolIndex = closestIndex;    
     }
-    //ÇÃ·¹ÀÌ¾î¿Í ¸öÀÌ ´êÀ» ¸¸Å­ °¡±î¿îÁö È®ÀÎÇÏ°í º® ³Ê¸Ó´Â Á¦¿Ü
+    //í”Œë ˆì´ì–´ì™€ ëª¸ì´ ë‹¿ì„ ë§Œí¼ ê°€ê¹Œìš´ì§€ í™•ì¸í•˜ê³  ë²½ ë„ˆë¨¸ëŠ” ì œì™¸
     bool IsTouchingPlayer()
     {
         if (_playerController == null || !_playerController.enabled || !_playerController.gameObject.activeInHierarchy) return false;

@@ -1,27 +1,27 @@
-using TMPro;
+ï»¿using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-//°ÔÀÓ ¾È³», ÀÏ½ÃÁ¤Áö ¸Ş´º, °á°ú È­¸é °ü¸®
+//ê²Œì„ ì•ˆë‚´, ì¼ì‹œì •ì§€ ë©”ë‰´, ê²°ê³¼ í™”ë©´ ê´€ë¦¬
 public class GameUIManager : MonoBehaviour
 {
-    [Header("°ÔÀÓ Á¤º¸")]
+    [Header("ê²Œì„ ì •ë³´")]
     [SerializeField] GameManager _gameManagr;
     [SerializeField] PlayerInteraction _playerInteraction;
     [SerializeField] PlayerCoinThrower _coinThrower;
 
-    [Header("UI ÅØ½ºÆ®")]
+    [Header("UI í…ìŠ¤íŠ¸")]
     [SerializeField] TMP_Text _interactionText;
     [SerializeField] TMP_Text _objectiveText;
     [SerializeField] TMP_Text _coinText;
 
-    [Header("UI ¹è°æ")]
+    [Header("UI ë°°ê²½")]
     [SerializeField] Image _interactionBackground;
     [SerializeField] Image _objectiveBackground;
     [SerializeField] Image _coinBackground;
     [SerializeField] Image _objectiveAccent;
 
-    [Header("¸ñÇ¥ À§Ä¡ Ç¥½Ã")]
+    [Header("ëª©í‘œ ìœ„ì¹˜ í‘œì‹œ")]
     [SerializeField] Camera _markerCamera;
     [SerializeField] RectTransform _markerCanvasRect;
     [SerializeField] TMP_Text _objectiveMarkerText;
@@ -31,27 +31,27 @@ public class GameUIManager : MonoBehaviour
 
     [SerializeField] Vector2 _markerScreenMargin = new Vector2(110f, 40f);
 
-    [Header("ÀÏ½ÃÀûÀÎ ¾È³» ¸Ş½ÃÁö")]
+    [Header("ì¼ì‹œì ì¸ ì•ˆë‚´ ë©”ì‹œì§€")]
     [SerializeField] GameObject _noticePanel;
     [SerializeField] TMP_Text _noticeText;
     [SerializeField, Min(0.1f)] float _noticeDuration = 2f;
 
-    [Header("½ÃÀÛ ¾È³»")]
+    [Header("ì‹œì‘ ì•ˆë‚´")]
     [SerializeField] bool _showStartNotice = true;
     [SerializeField, Min(0.1f)] float _startNoticeDuration = 5f;
 
-    [Header("ÀÏ½ÃÁ¤Áö ¸Ş´º")]
+    [Header("ì¼ì‹œì •ì§€ ë©”ë‰´")]
     [SerializeField] GameObject _pausePanel;
     [SerializeField] Behaviour _cameraInputController;
 
-    [Header("Á¶ÀÛ¹ı È­¸é")]
+    [Header("ì¡°ì‘ë²• í™”ë©´")]
     [SerializeField] GameObject _pauseMenuBox;
     [SerializeField] GameObject _controlsBox;
 
-    [Header("½ÃÀÛ È­¸é")]
+    [Header("ì‹œì‘ í™”ë©´")]
     [SerializeField] string _mainMenuSceneName = "MainMenu";
 
-    [Header("°ÔÀÓ °á°ú")]
+    [Header("ê²Œì„ ê²°ê³¼")]
     [SerializeField] GameObject _resultPanel;
     [SerializeField] TMP_Text _resultTitle;
     [SerializeField] TMP_Text _resultMessage;
@@ -69,7 +69,7 @@ public class GameUIManager : MonoBehaviour
     float _noticeTimer;
     void Awake()
     {
-        //ÅØ½ºÆ®¿Í °¢ È­¸éÀÇ ÃÊ±â Ç¥½Ã »óÅÂ ¼³Á¤
+        //í…ìŠ¤íŠ¸ì™€ ê° í™”ë©´ì˜ ì´ˆê¸° í‘œì‹œ ìƒíƒœ ì„¤ì •
         PrepareText(_interactionText);
         PrepareText(_objectiveText);
         PrepareText(_coinText);
@@ -89,9 +89,9 @@ public class GameUIManager : MonoBehaviour
 
      void Start()
     {
-        //°ÔÀÓ ½ÃÀÛ ½Ã ¸ñÇ¥¿Í Á¶ÀÛ¹ı ¾È³»
+        //ê²Œì„ ì‹œì‘ ì‹œ ëª©í‘œì™€ ì¡°ì‘ë²• ì•ˆë‚´
         if (!_showStartNotice) return;
-        ShowNotice("¸ñÇ¥¹°À» È®º¸ÇÏ°í Çö°üÀ¸·Î Å»ÃâÇÏ¼¼¿ä.\n" + "Á¶ÀÛ¹ıÀº ESC ¸Ş´º¿¡¼­ È®ÀÎÇÒ ¼ö ÀÖ½À´Ï´Ù.");
+        ShowNotice("ëª©í‘œë¬¼ì„ í™•ë³´í•˜ê³  í˜„ê´€ìœ¼ë¡œ íƒˆì¶œí•˜ì„¸ìš”.\n" + "ì¡°ì‘ë²•ì€ ESC ë©”ë‰´ì—ì„œ í™•ì¸í•  ìˆ˜ ìˆìŠµë‹ˆë‹¤.");
         if (_noticeTimer > 0f)
             _noticeTimer = _startNoticeDuration;
     }
@@ -101,7 +101,7 @@ public class GameUIManager : MonoBehaviour
         if (_gameManagr == null || !_gameManagr.IsPlaying) return;
 
         if(!Input.GetKeyDown(KeyCode.Escape)) return;
-        //ESC·Î ÀÏ½ÃÁ¤Áö, Á¶ÀÛ¹ı ´İ±â, °ÔÀÓ Àç°³
+        //ESCë¡œ ì¼ì‹œì •ì§€, ì¡°ì‘ë²• ë‹«ê¸°, ê²Œì„ ì¬ê°œ
         if (!_isPaused)
             PauseGame();
         else if (_controlsBox != null && _controlsBox.activeSelf)
@@ -109,7 +109,7 @@ public class GameUIManager : MonoBehaviour
         else
             ResumeGame();
     }
-    //Á¶ÀÛ¹ı È­¸éÀ» ´İ°í ±âº» ÀÏ½ÃÁ¤Áö ¸Ş´º Ç¥½Ã
+    //ì¡°ì‘ë²• í™”ë©´ì„ ë‹«ê³  ê¸°ë³¸ ì¼ì‹œì •ì§€ ë©”ë‰´ í‘œì‹œ
     void ShowPauseMenu()
     {
         if(_pauseMenuBox != null)
@@ -134,11 +134,11 @@ public class GameUIManager : MonoBehaviour
     public void PauseGame()
     {
         if (_isPaused || _pausePanel == null || _gameManagr == null || !_gameManagr.IsPlaying) return;
-        //±âÁ¸ °ÔÀÓ ¼Óµµ¸¦ ÀúÀåÇÏ°í ½Ã°£ Á¤Áö
+        //ê¸°ì¡´ ê²Œì„ ì†ë„ë¥¼ ì €ì¥í•˜ê³  ì‹œê°„ ì •ì§€
         _isPaused = true;
         _timeScaleBeforePause = Time.timeScale;
         Time.timeScale = 0f;
-        //¸Ş´º »ç¿ë Áß Ä«¸Ş¶ó Á¶ÀÛ Áß´Ü
+        //ë©”ë‰´ ì‚¬ìš© ì¤‘ ì¹´ë©”ë¼ ì¡°ì‘ ì¤‘ë‹¨
         if(_cameraInputController != null)
         {
             _cameraInputWasEnable = _cameraInputController.enabled;
@@ -152,7 +152,7 @@ public class GameUIManager : MonoBehaviour
     public void ResumeGame()
     {
         if (!_isPaused || _gameManagr == null || !_gameManagr.IsPlaying) return;
-        //ÀÏ½ÃÁ¤Áö Àü °ÔÀÓ ¼Óµµ¿Í Ä«¸Ş¶ó Á¶ÀÛ »óÅÂ º¹±¸
+        //ì¼ì‹œì •ì§€ ì „ ê²Œì„ ì†ë„ì™€ ì¹´ë©”ë¼ ì¡°ì‘ ìƒíƒœ ë³µêµ¬
         _isPaused = false;
         _pausePanel.SetActive(false);
         Time.timeScale = _timeScaleBeforePause;
@@ -161,7 +161,7 @@ public class GameUIManager : MonoBehaviour
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false; 
     }
-    //ÇöÀç ¾ÀÀ» ´Ù½Ã ºÒ·¯¿Í °ÔÀÓ Àç½ÃÀÛ
+    //í˜„ì¬ ì”¬ì„ ë‹¤ì‹œ ë¶ˆëŸ¬ì™€ ê²Œì„ ì¬ì‹œì‘
     public void RestartGame()
     {
         Scene currentScene = SceneManager.GetActiveScene();
@@ -172,7 +172,7 @@ public class GameUIManager : MonoBehaviour
     public void QuitGame()
     {
     #if UNITY_EDITOR
-        //¿¡‹JÅÍ¿¡¼­´Â ÇÃ·¹ÀÌ ¸ğµå Á¾·á
+        //ì—ë”­í„°ì—ì„œëŠ” í”Œë ˆì´ ëª¨ë“œ ì¢…ë£Œ
             UnityEditor.EditorApplication.isPlaying = false;
     #else
             Application.Quit();
@@ -183,7 +183,7 @@ public class GameUIManager : MonoBehaviour
     {
         UpdateResultUI();
         bool isPlaying = _gameManagr != null && _gameManagr.IsPlaying && !_isPaused;
-        //°ÔÀÓ »óÅÂ¿¡ ¸ÂÃç È­¸é Á¤º¸ °»½Å
+        //ê²Œì„ ìƒíƒœì— ë§ì¶° í™”ë©´ ì •ë³´ ê°±ì‹ 
         UpdateInteractionUI(isPlaying);
         UpdateObjectiveUI(isPlaying);
         UpdateCoinUI(isPlaying);
@@ -195,11 +195,11 @@ public class GameUIManager : MonoBehaviour
     void PrepareText(TMP_Text text)
     {
         if(text == null) return;
-        //ÅØ½ºÆ®°¡ ¸¶¿ì½º Å¬¸¯À» °¡·Î¸·Áö ¾Êµµ·Ï ¼³Á¤
+        //í…ìŠ¤íŠ¸ê°€ ë§ˆìš°ìŠ¤ í´ë¦­ì„ ê°€ë¡œë§‰ì§€ ì•Šë„ë¡ ì„¤ì •
         text.raycastTarget = false;
         text.enabled = false;
     }
-    //ÇöÀç »óÈ£ÀÛ¿ëÇÒ ¼ö ÀÖ´Â ´ë»óÀÇ ¾È³» Ç¥½Ã
+    //í˜„ì¬ ìƒí˜¸ì‘ìš©í•  ìˆ˜ ìˆëŠ” ëŒ€ìƒì˜ ì•ˆë‚´ í‘œì‹œ
     void UpdateInteractionUI(bool isPlaying)
     {
         string message = isPlaying && _playerInteraction != null ? _playerInteraction.GetInteractionPrompt() : string.Empty;
@@ -214,8 +214,8 @@ public class GameUIManager : MonoBehaviour
             SetText(_objectiveText,string.Empty);
             return;
         }
-        //¸ñÇ¥¹° È¹µæ ¿©ºÎ¿¡ µû¶ó ÇöÀç ¸ñÇ¥ º¯°æ
-        string message = _gameManagr.HasObjective ? "<size=22><color=#D5DBE3>ÇöÀç ¸ñÇ¥</color></size>\nÇö°üÀ¸·Î ÀÌµ¿ÇØ Å»ÃâÇÏ¼¼¿ä." : "<size=22><color=#D5DBE3>ÇöÀç ¸ñÇ¥</color></size>\n¸ñÇ¥¹°À» È®º¸ÇÏ¼¼¿ä.";
+        //ëª©í‘œë¬¼ íšë“ ì—¬ë¶€ì— ë”°ë¼ í˜„ì¬ ëª©í‘œ ë³€ê²½
+        string message = _gameManagr.HasObjective ? "<size=22><color=#D5DBE3>í˜„ì¬ ëª©í‘œ</color></size>\ní˜„ê´€ìœ¼ë¡œ ì´ë™í•´ íƒˆì¶œí•˜ì„¸ìš”." : "<size=22><color=#D5DBE3>í˜„ì¬ ëª©í‘œ</color></size>\nëª©í‘œë¬¼ì„ í™•ë³´í•˜ì„¸ìš”.";
         SetText(_objectiveText,message);    
     }
 
@@ -227,7 +227,7 @@ public class GameUIManager : MonoBehaviour
             SetText(_objectiveMarkerText,string.Empty);
             return;
         }
-        //¸ñÇ¥¹°À» ¾òÀ¸¸é Ç¥½Ã ´ë»óÀ» Å»Ãâ ÁöÁ¡À¸·Î º¯°æ
+        //ëª©í‘œë¬¼ì„ ì–»ìœ¼ë©´ í‘œì‹œ ëŒ€ìƒì„ íƒˆì¶œ ì§€ì ìœ¼ë¡œ ë³€ê²½
         bool hasObjective = _gameManagr.HasObjective;
         Transform targetPoint = hasObjective ? _escapeMarkerPoint : _objectiveMarkerPoint;
         if(targetPoint == null || !targetPoint.gameObject.activeInHierarchy)
@@ -235,7 +235,7 @@ public class GameUIManager : MonoBehaviour
             SetText(_objectiveMarkerText, string.Empty);
             return;
         }
-        //¿ùµå À§Ä¡¸¦ È­¸é À§Ä¡·Î º¯È¯ÇÏ°í Ä«¸Ş¶ó ¾ÕµÚ ¹üÀ§ È®ÀÎ
+        //ì›”ë“œ ìœ„ì¹˜ë¥¼ í™”ë©´ ìœ„ì¹˜ë¡œ ë³€í™˜í•˜ê³  ì¹´ë©”ë¼ ì•ë’¤ ë²”ìœ„ í™•ì¸
         Vector3 screenPoint = _markerCamera.WorldToScreenPoint(targetPoint.position);
         if(screenPoint.z < _markerCamera.nearClipPlane || screenPoint.z > _markerCamera.farClipPlane)
         {
@@ -250,14 +250,14 @@ public class GameUIManager : MonoBehaviour
         float marginY = _markerScreenMargin.y * canvasScale;
 
         Rect cameraRect = _markerCamera.pixelRect;
-        //È­¸é °¡ÀåÀÚ¸® ¿©¹éÀ» ¹ş¾î³ª¸é Ç¥½Ã ¼û±â±â
+        //í™”ë©´ ê°€ì¥ìë¦¬ ì—¬ë°±ì„ ë²—ì–´ë‚˜ë©´ í‘œì‹œ ìˆ¨ê¸°ê¸°
         bool outsideScreen = screenPoint.x < cameraRect.xMin + marginX || screenPoint.x > cameraRect.xMax - marginX || screenPoint.y < cameraRect.yMin + marginY || screenPoint.y > cameraRect.yMax - marginY;
         if (outsideScreen)
         {
             SetText(_objectiveMarkerText,string.Empty);
             return;
         }
-        //È­¸é À§Ä¡¸¦ Äµ¹ö½º ¾ÈÀÇ À§Ä¡·Î º¯È¯
+        //í™”ë©´ ìœ„ì¹˜ë¥¼ ìº”ë²„ìŠ¤ ì•ˆì˜ ìœ„ì¹˜ë¡œ ë³€í™˜
         if(!RectTransformUtility.ScreenPointToLocalPointInRectangle(_markerCanvasRect, new Vector2(screenPoint.x,screenPoint.y),null,out Vector2 localPoint))
         {
             SetText(_objectiveMarkerText, string.Empty);
@@ -265,28 +265,28 @@ public class GameUIManager : MonoBehaviour
         }
 
         _objectiveMarkerText.rectTransform.localPosition = new Vector3(localPoint.x, localPoint.y, 0f);
-        string message = hasObjective ? "¡ß Å»Ãâ ÁöÁ¡" : "¡ß ¸ñÇ¥¹°";
+        string message = hasObjective ? "â—† íƒˆì¶œ ì§€ì " : "â—† ëª©í‘œë¬¼";
         SetText(_objectiveMarkerText,message);  
     }
 
     void UpdateResultUI()
     {
-        //°ÔÀÓ Á¾·á ÈÄ °á°ú È­¸éÀ» ÇÑ ¹ø¸¸ Ç¥½Ã
+        //ê²Œì„ ì¢…ë£Œ í›„ ê²°ê³¼ í™”ë©´ì„ í•œ ë²ˆë§Œ í‘œì‹œ
         if(_gameManagr == null || _gameManagr.IsPlaying || _resultShown || _resultPanel == null) return;
         _resultShown = true;
         _isPaused = false;
         if(_pausePanel != null)
             _pausePanel.SetActive(false);
         bool success = _gameManagr.CurrentState == GameManager.GameState.Success;
-        //¼º°ø ¿©ºÎ¿¡ µû¶ó Á¦¸ñ, »ö»ó, ¼³¸í º¯°æ
+        //ì„±ê³µ ì—¬ë¶€ì— ë”°ë¼ ì œëª©, ìƒ‰ìƒ, ì„¤ëª… ë³€ê²½
         if(_resultTitle != null)
         {
-            _resultTitle.text = success ? "ÀÓ¹« ¿Ï·á" : "ÀÓ¹« ½ÇÆĞ";
+            _resultTitle.text = success ? "ì„ë¬´ ì™„ë£Œ" : "ì„ë¬´ ì‹¤íŒ¨";
             _resultTitle.color = success ? new Color32(199, 170, 112, 255) : new Color32(220, 110, 110, 255);
         }
         
         if(_resultMessage != null)
-            _resultMessage.text = success ? "¸ñÇ¥¹°À» È®º¸ÇÏ°í Å»ÃâÇß½À´Ï´Ù." : "°æºñ¿¡°Ô ºÙÀâÇû½À´Ï´Ù.";
+            _resultMessage.text = success ? "ëª©í‘œë¬¼ì„ í™•ë³´í•˜ê³  íƒˆì¶œí–ˆìŠµë‹ˆë‹¤." : "ê²½ë¹„ì—ê²Œ ë¶™ì¡í˜”ìŠµë‹ˆë‹¤.";
 
         if(_cameraInputController != null)
             _cameraInputController.enabled = false;
@@ -295,11 +295,11 @@ public class GameUIManager : MonoBehaviour
 
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
-        //°á°ú È­¸éÀÌ ´Ù¸¥ UIº¸´Ù ¾Õ¿¡ Ç¥½ÃµÇµµ·Ï ¼³Á¤
+        //ê²°ê³¼ í™”ë©´ì´ ë‹¤ë¥¸ UIë³´ë‹¤ ì•ì— í‘œì‹œë˜ë„ë¡ ì„¤ì •
         _resultPanel.SetActive(true);
         _resultPanel.transform.SetAsLastSibling();
     }
-    //³²Àº µ¿Àü ¼ö¿Í ÃÖ´ë °³¼ö Ç¥½Ã
+    //ë‚¨ì€ ë™ì „ ìˆ˜ì™€ ìµœëŒ€ ê°œìˆ˜ í‘œì‹œ
     void UpdateCoinUI(bool isPlaying)
     {
         bool show = isPlaying && _coinThrower != null;
@@ -313,16 +313,16 @@ public class GameUIManager : MonoBehaviour
 
         int count = _coinThrower.CoinCount;
         int max = _coinThrower.MaxCoins;
-        //Ç¥½Ã »óÅÂ³ª °³¼ö°¡ ¹Ù²î¾úÀ» ¶§¸¸ ¹®ÀÚ¿­ »ı¼º
+        //í‘œì‹œ ìƒíƒœë‚˜ ê°œìˆ˜ê°€ ë°”ë€Œì—ˆì„ ë•Œë§Œ ë¬¸ìì—´ ìƒì„±
         if (_coinUIVisible && count == _lastCoinCount && max == _lastMaxCoins) return;
         
         _coinUIVisible = true;
         _lastCoinCount = count;
         _lastMaxCoins = max;
 
-        SetText(_coinText,$"<color=#C7AA70>µ¿Àü</color> {count}/{max}");
+        SetText(_coinText,$"<color=#C7AA70>ë™ì „</color> {count}/{max}");
     }
-    //³»¿ëÀÌ ºñ¾î ÀÖÀ¸¸é ¼û±â°í, ´Ş¶óÁø ³»¿ë¸¸ °»½Å
+    //ë‚´ìš©ì´ ë¹„ì–´ ìˆìœ¼ë©´ ìˆ¨ê¸°ê³ , ë‹¬ë¼ì§„ ë‚´ìš©ë§Œ ê°±ì‹ 
     void SetText(TMP_Text text, string message)
     {
         if(text == null) { return; }
@@ -341,7 +341,7 @@ public class GameUIManager : MonoBehaviour
         SetBackground(_coinBackground, _coinText);
         SetBackground(_objectiveAccent, _objectiveText); 
     }
-    //ÅØ½ºÆ® Ç¥½Ã »óÅÂ¿¡ ¸ÂÃç ¹è°æµµ Ç¥½ÃÇÏ°Å³ª ¼û±â±â
+    //í…ìŠ¤íŠ¸ í‘œì‹œ ìƒíƒœì— ë§ì¶° ë°°ê²½ë„ í‘œì‹œí•˜ê±°ë‚˜ ìˆ¨ê¸°ê¸°
     void SetBackground(Image background, TMP_Text text)
     {
         if(background == null) { return; }
@@ -353,7 +353,7 @@ public class GameUIManager : MonoBehaviour
     {
         if (_gameManagr == null || !_gameManagr.IsPlaying || _isPaused || _noticePanel == null || _noticeText == null || string.IsNullOrWhiteSpace(message))
             return;
-        //°°Àº ¾È³»°¡ Ç¥½Ã ÁßÀÌ¸é Ç¥½Ã ½Ã°£À» ´Ù½Ã ½ÃÀÛÇÏÁö ¾ÊÀ½
+        //ê°™ì€ ì•ˆë‚´ê°€ í‘œì‹œ ì¤‘ì´ë©´ í‘œì‹œ ì‹œê°„ì„ ë‹¤ì‹œ ì‹œì‘í•˜ì§€ ì•ŠìŒ
         if (_noticeTimer > 0f && _noticeText.text == message)
             return;
         _noticeText.text = message;
@@ -368,7 +368,7 @@ public class GameUIManager : MonoBehaviour
             HideNotice();
             return;
         }
-        //ÀÏ½ÃÁ¤Áö Áß¿¡´Â ³²Àº ¾È³» ½Ã°£À» À¯ÁöÇÏ°í ¼û±â±â
+        //ì¼ì‹œì •ì§€ ì¤‘ì—ëŠ” ë‚¨ì€ ì•ˆë‚´ ì‹œê°„ì„ ìœ ì§€í•˜ê³  ìˆ¨ê¸°ê¸°
         if (_isPaused)
         {
             if(_noticePanel != null)
@@ -382,7 +382,7 @@ public class GameUIManager : MonoBehaviour
             HideNotice();
             return;
         }
-        //¾È³» ½Ã°£ÀÌ ³¡³ª¸é ¸Ş½ÃÁö ¼û±â±â
+        //ì•ˆë‚´ ì‹œê°„ì´ ëë‚˜ë©´ ë©”ì‹œì§€ ìˆ¨ê¸°ê¸°
         _noticeTimer = Mathf.Max(0f,_noticeTimer - Time.deltaTime);
         if(_noticeTimer <=0f)
         {
@@ -405,10 +405,10 @@ public class GameUIManager : MonoBehaviour
     public void ReturnToMainMenu()
     {
         if(_isReturningToMenu) return;
-        //½ÃÀÛ È­¸é ¾ÀÀ» ºÒ·¯¿Ã ¼ö ÀÖ´ÂÁö È®ÀÎ
+        //ì‹œì‘ í™”ë©´ ì”¬ì„ ë¶ˆëŸ¬ì˜¬ ìˆ˜ ìˆëŠ”ì§€ í™•ì¸
         if(string.IsNullOrWhiteSpace(_mainMenuSceneName) || !Application.CanStreamedLevelBeLoaded(_mainMenuSceneName))
         {
-            Debug.LogError("½ÃÀÛ È­¸é ¾À ÀÌ¸§°ú ºôµå ¾À ¸ñ·ÏÀ» È®ÀÎÇÏ¼¼¿ä.", this);
+            Debug.LogError("ì‹œì‘ í™”ë©´ ì”¬ ì´ë¦„ê³¼ ë¹Œë“œ ì”¬ ëª©ë¡ì„ í™•ì¸í•˜ì„¸ìš”.", this);
             return;
         }
 
@@ -420,7 +420,7 @@ public class GameUIManager : MonoBehaviour
     }
     void OnDisable()
     {
-        //ºñÈ°¼ºÈ­µÇ¸é °ÔÀÓ ¾È³»¿Í ¹è°æ ¼û±â±â
+        //ë¹„í™œì„±í™”ë˜ë©´ ê²Œì„ ì•ˆë‚´ì™€ ë°°ê²½ ìˆ¨ê¸°ê¸°
         SetText(_interactionText,string.Empty);
         SetText(_objectiveText,string.Empty);   
         SetText(_coinText,string.Empty);    

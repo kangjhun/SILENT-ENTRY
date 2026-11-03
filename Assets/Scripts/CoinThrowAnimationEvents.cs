@@ -1,18 +1,18 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
-//¾Ö´Ï¸ŞÀÌ¼Ç ÀÌº¥Æ®¸¦ µ¿Àü ´øÁö±â ±â´É¿¡ Àü´Ş
+//ì• ë‹ˆë©”ì´ì…˜ ì´ë²¤íŠ¸ë¥¼ ë™ì „ ë˜ì§€ê¸° ê¸°ëŠ¥ì— ì „ë‹¬
 public class CoinThrowAnimationEvents : MonoBehaviour
 {
     [SerializeField] PlayerCoinThrower _coinThrower;
 
-    //µ¿ÀüÀÌ ¼Õ¿¡¼­ ¶³¾îÁö´Â ½ÃÁ¡
+    //ë™ì „ì´ ì†ì—ì„œ ë–¨ì–´ì§€ëŠ” ì‹œì 
     public void OnCoinRelease()
     {
         if (_coinThrower != null)
             _coinThrower.ReleaseCoin();
     }
 
-    //´øÁö´Â ¾Ö´Ï¸ŞÀÌ¼ÇÀÌ ³¡³ª´Â ½ÃÁ¡
+    //ë˜ì§€ëŠ” ì• ë‹ˆë©”ì´ì…˜ì´ ëë‚˜ëŠ” ì‹œì 
     public void OnCoinThrowFinished()
     {
         if (_coinThrower != null)

@@ -1,12 +1,12 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using UnityEngine.SceneManagement;
-//½ÃÀÛ È­¸éÀÇ °ÔÀÓ ½ÃÀÛ, Á¶ÀÛ¹ı, Á¾·á ¹öÆ° Ã³¸®
+//ì‹œì‘ í™”ë©´ì˜ ê²Œì„ ì‹œì‘, ì¡°ì‘ë²•, ì¢…ë£Œ ë²„íŠ¼ ì²˜ë¦¬
 public class MainMenuUI : MonoBehaviour
 {
-    [Header("½ÃÀÛÇÒ °ÔÀÓ ¾À")]
+    [Header("ì‹œì‘í•  ê²Œì„ ì”¬")]
     [SerializeField] string _gameSceneName;
 
-    [Header("È­¸é")]
+    [Header("í™”ë©´")]
     [SerializeField] GameObject _mainMenuBox;
     [SerializeField] GameObject _controlsBox;
 
@@ -14,7 +14,7 @@ public class MainMenuUI : MonoBehaviour
 
      void Awake()
     {
-        //°ÔÀÓ ½Ã°£À» º¹±¸ÇÏ°í ¸Ş´º¿¡¼­ »ç¿ëÇÒ Ä¿¼­ Ç¥½Ã
+        //ê²Œì„ ì‹œê°„ì„ ë³µêµ¬í•˜ê³  ë©”ë‰´ì—ì„œ ì‚¬ìš©í•  ì»¤ì„œ í‘œì‹œ
         Time.timeScale = 1f;
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
@@ -24,7 +24,7 @@ public class MainMenuUI : MonoBehaviour
     void Update()
     {
         if (_isLoading) return;
-        //Á¶ÀÛ¹ı È­¸é¿¡¼­ ESC¸¦ ´©¸£¸é ±âº» ¸Ş´º·Î µ¹¾Æ°¨
+        //ì¡°ì‘ë²• í™”ë©´ì—ì„œ ESCë¥¼ ëˆ„ë¥´ë©´ ê¸°ë³¸ ë©”ë‰´ë¡œ ëŒì•„ê°
         if (Input.GetKeyDown(KeyCode.Escape) && _controlsBox != null && _controlsBox.activeSelf)
         {
             CloseControls();
@@ -33,24 +33,24 @@ public class MainMenuUI : MonoBehaviour
 
     public void StartGame()
     {
-        //¾ÀÀ» Áßº¹À¸·Î ºÒ·¯¿ÀÁö ¾Êµµ·Ï Â÷´Ü
+        //ì”¬ì„ ì¤‘ë³µìœ¼ë¡œ ë¶ˆëŸ¬ì˜¤ì§€ ì•Šë„ë¡ ì°¨ë‹¨
         if(_isLoading) return;
         if (string.IsNullOrWhiteSpace(_gameSceneName))
         {
-            Debug.LogError("½ÃÀÛÇÒ °ÔÀÓ ¾À ÀÌ¸§À» ÀÔ·ÂÇÏ¼¼¿ä.", this);
+            Debug.LogError("ì‹œì‘í•  ê²Œì„ ì”¬ ì´ë¦„ì„ ì…ë ¥í•˜ì„¸ìš”.", this);
             return;
         }
-        //¼³Á¤µÈ ¾ÀÀ» ºÒ·¯¿Ã ¼ö ÀÖ´ÂÁö È®ÀÎ
+        //ì„¤ì •ëœ ì”¬ì„ ë¶ˆëŸ¬ì˜¬ ìˆ˜ ìˆëŠ”ì§€ í™•ì¸
         if (!Application.CanStreamedLevelBeLoaded(_gameSceneName))
         {
-            Debug.LogError($"'{_gameSceneName}' ¾ÀÀ» ºÒ·¯¿Ã ¼ö ¾ø½À´Ï´Ù. " + "¾À ÀÌ¸§°ú ºôµå ¾À ¸ñ·ÏÀ» È®ÀÎÇÏ¼¼¿ä.",this);
+            Debug.LogError($"'{_gameSceneName}' ì”¬ì„ ë¶ˆëŸ¬ì˜¬ ìˆ˜ ì—†ìŠµë‹ˆë‹¤. " + "ì”¬ ì´ë¦„ê³¼ ë¹Œë“œ ì”¬ ëª©ë¡ì„ í™•ì¸í•˜ì„¸ìš”.",this);
             return;
         }
         _isLoading = true;
         Time.timeScale = 1f;
         SceneManager.LoadScene(_gameSceneName); 
     }
-    //±âº» ¸Ş´º¸¦ ¼û±â°í Á¶ÀÛ¹ı Ç¥½Ã
+    //ê¸°ë³¸ ë©”ë‰´ë¥¼ ìˆ¨ê¸°ê³  ì¡°ì‘ë²• í‘œì‹œ
     public void OpenControls()
     {
         if(_isLoading || _controlsBox == null) return;
@@ -58,7 +58,7 @@ public class MainMenuUI : MonoBehaviour
             _mainMenuBox.SetActive(false);
         _controlsBox.SetActive(true);
     }
-    //Á¶ÀÛ¹ıÀ» ¼û±â°í ±âº» ¸Ş´º Ç¥½Ã
+    //ì¡°ì‘ë²•ì„ ìˆ¨ê¸°ê³  ê¸°ë³¸ ë©”ë‰´ í‘œì‹œ
     public void CloseControls()
     {
         if (_mainMenuBox != null)
@@ -70,7 +70,7 @@ public class MainMenuUI : MonoBehaviour
     public void QuitGame()
     {
 #if UNITY_EDITOR
-        //¿¡µğÅÍ¿¡¼­´Â ÇÃ·¹ÀÌ ¸ğµå Á¾·á
+        //ì—ë””í„°ì—ì„œëŠ” í”Œë ˆì´ ëª¨ë“œ ì¢…ë£Œ
         UnityEditor.EditorApplication.isPlaying = false;
 #else
         Application.Quit();

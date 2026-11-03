@@ -1,7 +1,7 @@
-
+ï»¿
 using UnityEngine;
 using UnityEngine.UI;
-//µ¿Àü ÃæÀü, ÅõÃ´ ¾Ö´Ï¸ŞÀÌ¼Ç, »ı¼º°ú È¸¼ö Ã³¸®
+//ë™ì „ ì¶©ì „, íˆ¬ì²™ ì• ë‹ˆë©”ì´ì…˜, ìƒì„±ê³¼ íšŒìˆ˜ ì²˜ë¦¬
 public class PlayerCoinThrower : MonoBehaviour
 {
     [SerializeField] Camera _playerCamera;
@@ -29,13 +29,13 @@ public class PlayerCoinThrower : MonoBehaviour
     [SerializeField] LayerMask _environmentMask;
     [SerializeField, Min(0.01f)] float _spawnCheckRadius = 0.09f;
 
-    [Header("È­¸é ¾È³»")]
+    [Header("í™”ë©´ ì•ˆë‚´")]
     [SerializeField] GameUIManager _gameUIManager;
 
-    [Header("ÅõÃ´ ¿¹»ó °æ·Î")]
+    [Header("íˆ¬ì²™ ì˜ˆìƒ ê²½ë¡œ")]
     [SerializeField] LineRenderer _trajectoryLine;
     [SerializeField] Transform _impactMarker;
-    //¿¹Ãø¿¡ »ç¿ëÇÏ´Â µ¿ÀüÀÇ ´ë·«ÀûÀÎ ¹İ°æ
+    //ì˜ˆì¸¡ì— ì‚¬ìš©í•˜ëŠ” ë™ì „ì˜ ëŒ€ëµì ì¸ ë°˜ê²½
     [SerializeField, Min(0.001f)] float _predictionRadius = 0.025f;
 
     [SerializeField, Min(0.5f)] float _predictionDuration = 3f;
@@ -43,7 +43,7 @@ public class PlayerCoinThrower : MonoBehaviour
 
     bool _isCharging;
     bool _isThrowing;
-    bool _releasePending;//¾Ö´Ï¸ŞÀÌ¼Ç¿¡¼­ µ¿ÀüÀ» ³õÀ» ½ÃÁ¡À» ±â´Ù¸®´Â Áß
+    bool _releasePending;//ì• ë‹ˆë©”ì´ì…˜ì—ì„œ ë™ì „ì„ ë†“ì„ ì‹œì ì„ ê¸°ë‹¤ë¦¬ëŠ” ì¤‘
 
     float _pendingPower;
     float _throwTimeoutAt;
@@ -57,7 +57,7 @@ public class PlayerCoinThrower : MonoBehaviour
     public int CoinCount { get; private set; }
     public int MaxCoins => _maxCoins;
     public bool CanRecoverCoin => CoinCount < _maxCoins;
-    //ÃæÀü ½Ã°£À» 0~1 ¹üÀ§ÀÇ °ªÀ¸·Î º¯È¯
+    //ì¶©ì „ ì‹œê°„ì„ 0~1 ë²”ìœ„ì˜ ê°’ìœ¼ë¡œ ë³€í™˜
     public float ChargeRatio => Mathf.Clamp01(_chargeTime / Mathf.Max(_fullChargeTime, 0.01f));
 
 
@@ -71,7 +71,7 @@ public class PlayerCoinThrower : MonoBehaviour
         CoinCount = _maxCoins;
         _playerColliders = GetComponentsInChildren<Collider>();
         PrintCount();
-        //ÃæÀü °ÔÀÌÁö¸¦ Ç¥½Ã¿ëÀ¸·Î ¼³Á¤
+        //ì¶©ì „ ê²Œì´ì§€ë¥¼ í‘œì‹œìš©ìœ¼ë¡œ ì„¤ì •
         if(_chargeSlider != null)
         {
             _chargeSlider.minValue = 0f;
@@ -95,36 +95,36 @@ public class PlayerCoinThrower : MonoBehaviour
 
      void Update()
     {
-        //ÀÏ½ÃÁ¤Áö, ¸Ş´º »ç¿ë, ¾öÆó Áß¿¡´Â ÃæÀü°ú ÅõÃ´ Ãë¼Ò
+        //ì¼ì‹œì •ì§€, ë©”ë‰´ ì‚¬ìš©, ì—„í ì¤‘ì—ëŠ” ì¶©ì „ê³¼ íˆ¬ì²™ ì·¨ì†Œ
         if (Time.timeScale == 0f || Cursor.lockState != CursorLockMode.Locked || (_playerCover != null && _playerCover.IsInCover))
         {
             CancelCharge();
             CancelThrowAnimation();
             return; 
         }
-        //ÅõÃ´ Áß¿¡´Â Ãß°¡ ÀÔ·ÂÀ» ¸·°í, Á¾·áµÇÁö ¾ÊÀ¸¸é ½Ã°£ ÃÊ°ú Ã³¸®
+        //íˆ¬ì²™ ì¤‘ì—ëŠ” ì¶”ê°€ ì…ë ¥ì„ ë§‰ê³ , ì¢…ë£Œë˜ì§€ ì•Šìœ¼ë©´ ì‹œê°„ ì´ˆê³¼ ì²˜ë¦¬
         if (_isThrowing)
         {
             if(Time.time >= _throwTimeoutAt)
             {
-                Debug.LogWarning("ÅõÃ´ ¾Ö´Ï¸ŞÀÌ¼Ç ÀÌº¥Æ®¿Í ÀüÀÌ¸¦ È®ÀÎ", this);
+                Debug.LogWarning("íˆ¬ì²™ ì• ë‹ˆë©”ì´ì…˜ ì´ë²¤íŠ¸ì™€ ì „ì´ë¥¼ í™•ì¸", this);
                 CancelThrowAnimation();
             }
             return;
         }
-        //GÅ°¸¦ ´©¸£¸é ÅõÃ´ Á¶°ÇÀ» È®ÀÎÇÏ°í ÃæÀü ½ÃÀÛ
+        //Gí‚¤ë¥¼ ëˆ„ë¥´ë©´ íˆ¬ì²™ ì¡°ê±´ì„ í™•ì¸í•˜ê³  ì¶©ì „ ì‹œì‘
         if (Input.GetKeyDown(KeyCode.G) && !_isCharging)
         {
             if (Time.time < _nextThrowTime) return;
 
             if(CoinCount <= 0)
             {
-                ShowNotice("´øÁú µ¿ÀüÀÌ ¾ø½À´Ï´Ù.");
+                ShowNotice("ë˜ì§ˆ ë™ì „ì´ ì—†ìŠµë‹ˆë‹¤.");
                 return;
             }
             if(_playerCamera == null || _throwOrigin == null || _coinPrefab == null)
             {
-                Debug.LogWarning("µ¿Àü ÅõÃ´¿¡ ÇÊ¿äÇÑ ¿¬°áÀ» È®ÀÎÇÏ¼¼¿ä.", this);
+                Debug.LogWarning("ë™ì „ íˆ¬ì²™ì— í•„ìš”í•œ ì—°ê²°ì„ í™•ì¸í•˜ì„¸ìš”.", this);
                 return;
             }
 
@@ -138,13 +138,13 @@ public class PlayerCoinThrower : MonoBehaviour
         }
 
         if(!_isCharging) { return; }
-        //GÅ°¸¦ ´©¸£°í ÀÖ´Â µ¿¾È ÅõÃ´ Èû ÃæÀü
+        //Gí‚¤ë¥¼ ëˆ„ë¥´ê³  ìˆëŠ” ë™ì•ˆ íˆ¬ì²™ í˜ ì¶©ì „
         if (Input.GetKey(KeyCode.G))
         {
             _chargeTime = Mathf.Min(_chargeTime + Time.deltaTime, _fullChargeTime);
             UpdateChargeGauge();
         }
-        //GÅ°¸¦ ³õÀ¸¸é ÃæÀü·®À» ÀúÀåÇÏ°í ÅõÃ´ ¾Ö´Ï¸ŞÀÌ¼Ç ½ÃÀÛ
+        //Gí‚¤ë¥¼ ë†“ìœ¼ë©´ ì¶©ì „ëŸ‰ì„ ì €ì¥í•˜ê³  íˆ¬ì²™ ì• ë‹ˆë©”ì´ì…˜ ì‹œì‘
         if (Input.GetKeyUp(KeyCode.G))
         {
             float power = ChargeRatio;
@@ -160,7 +160,7 @@ public class PlayerCoinThrower : MonoBehaviour
         if (_chargeSlider != null)
             _chargeSlider.value = ChargeRatio;
     }
-    //ÃæÀü »óÅÂ¸¦ ÃÊ±âÈ­ÇÏ°í °ÔÀÌÁö ¼û±â±â
+    //ì¶©ì „ ìƒíƒœë¥¼ ì´ˆê¸°í™”í•˜ê³  ê²Œì´ì§€ ìˆ¨ê¸°ê¸°
     void CancelCharge()
     {
         _isCharging = false;
@@ -181,7 +181,7 @@ public class PlayerCoinThrower : MonoBehaviour
         CancelCharge() ;
         CancelThrowAnimation();
     }
-    //´Ù¸¥ Ã¢À¸·Î ÀüÈ¯ÇÏ¸é ÁøÇà ÁßÀÎ ÃæÀü°ú ÅõÃ´ Ãë¼Ò
+    //ë‹¤ë¥¸ ì°½ìœ¼ë¡œ ì „í™˜í•˜ë©´ ì§„í–‰ ì¤‘ì¸ ì¶©ì „ê³¼ íˆ¬ì²™ ì·¨ì†Œ
      void OnApplicationFocus(bool hasFocus)
     {
         if (!hasFocus)
@@ -196,13 +196,13 @@ public class PlayerCoinThrower : MonoBehaviour
 
         if (_playerCamera == null || _throwOrigin == null || _coinPrefab == null)
         {
-            Debug.LogWarning("µ¿Àü ÅõÃ´¿¡ ÇÊ¿äÇÑ ¿¬°áÀ» È®ÀÎÇÏ¼¼¿ä.", this);
+            Debug.LogWarning("ë™ì „ íˆ¬ì²™ì— í•„ìš”í•œ ì—°ê²°ì„ í™•ì¸í•˜ì„¸ìš”.", this);
             return;
         }
 
         if (CoinCount <= 0)
         {
-            ShowNotice("´øÁú µ¿ÀüÀÌ ¾ø½À´Ï´Ù.");
+            ShowNotice("ë˜ì§ˆ ë™ì „ì´ ì—†ìŠµë‹ˆë‹¤.");
             return;
         }
 
@@ -210,7 +210,7 @@ public class PlayerCoinThrower : MonoBehaviour
 
         if (IsThrowBlocked(origin))
         {
-            ShowNotice("Àå¾Ö¹°¿¡ ³Ê¹« °¡±î¿ö ´øÁú ¼ö ¾ø½À´Ï´Ù.");
+            ShowNotice("ì¥ì• ë¬¼ì— ë„ˆë¬´ ê°€ê¹Œì›Œ ë˜ì§ˆ ìˆ˜ ì—†ìŠµë‹ˆë‹¤.");
             return;
         }
 
@@ -225,7 +225,7 @@ public class PlayerCoinThrower : MonoBehaviour
         PrintCount();
         
     }
-    //ÃÖ´ë °³¼ö¸¦ ³ÑÁö ¾ÊÀ» ¶§¸¸ µ¿Àü È¸¼ö
+    //ìµœëŒ€ ê°œìˆ˜ë¥¼ ë„˜ì§€ ì•Šì„ ë•Œë§Œ ë™ì „ íšŒìˆ˜
     public bool TryRecoverCoin()
     {
         if(!CanRecoverCoin) return false;
@@ -236,7 +236,7 @@ public class PlayerCoinThrower : MonoBehaviour
 
     void PrintCount()
     {
-        Debug.Log($"µ¿Àü : {CoinCount}/{_maxCoins}", this);
+        Debug.Log($"ë™ì „ : {CoinCount}/{_maxCoins}", this);
     }
 
     void BeginThrowAnimation(float power)
@@ -246,10 +246,10 @@ public class PlayerCoinThrower : MonoBehaviour
 
         if(_animator == null || !_animator.isActiveAndEnabled)
         {
-            Debug.LogWarning("ÅõÃ´¿¡ »ç¿ëÇÒ Animator¸¦ ¿¬°áÇÏ¼¼¿ä", this);
+            Debug.LogWarning("íˆ¬ì²™ì— ì‚¬ìš©í•  Animatorë¥¼ ì—°ê²°í•˜ì„¸ìš”", this);
             return;
         }
-        //ÃæÀü·®À» ÀúÀåÇÏ°í ¾Ö´Ï¸ŞÀÌ¼ÇÀÇ µ¿Àü ¹ß»ç ½ÅÈ£ ´ë±â
+        //ì¶©ì „ëŸ‰ì„ ì €ì¥í•˜ê³  ì• ë‹ˆë©”ì´ì…˜ì˜ ë™ì „ ë°œì‚¬ ì‹ í˜¸ ëŒ€ê¸°
         _pendingPower = power;
         _releasePending = true;
         _isThrowing = true;
@@ -259,18 +259,18 @@ public class PlayerCoinThrower : MonoBehaviour
         _animator.ResetTrigger(ThrowCoinHash);
         _animator.SetTrigger(ThrowCoinHash);
     }
-    //¾Ö´Ï¸ŞÀÌ¼Ç¿¡¼­ µ¿ÀüÀÌ ¼ÕÀ» ¶°³ª´Â ½ÃÁ¡¿¡ È£Ãâ
+    //ì• ë‹ˆë©”ì´ì…˜ì—ì„œ ë™ì „ì´ ì†ì„ ë– ë‚˜ëŠ” ì‹œì ì— í˜¸ì¶œ
     public void ReleaseCoin()
     {
         if(!isActiveAndEnabled || !_isThrowing || !_releasePending) return;
-        //°°Àº ÅõÃ´¿¡¼­ µ¿ÀüÀÌ ¿©·¯ ¹ø »ı¼ºµÇÁö ¾Êµµ·Ï Ã³¸®
+        //ê°™ì€ íˆ¬ì²™ì—ì„œ ë™ì „ì´ ì—¬ëŸ¬ ë²ˆ ìƒì„±ë˜ì§€ ì•Šë„ë¡ ì²˜ë¦¬
         _releasePending = false;
 
         if (Time.timeScale == 0f || Cursor.lockState != CursorLockMode.Locked || (_playerCover != null && _playerCover.IsInCover))
             return;
         TryThrow(_pendingPower);
     }
-    //ÅõÃ´ ¾Ö´Ï¸ŞÀÌ¼ÇÀÌ ³¡³ª¸é ´ÙÀ½ ÅõÃ´ Çã¿ë
+    //íˆ¬ì²™ ì• ë‹ˆë©”ì´ì…˜ì´ ëë‚˜ë©´ ë‹¤ìŒ íˆ¬ì²™ í—ˆìš©
     public void FinishCoinThrow()
     {
         _isThrowing = false;
@@ -285,7 +285,7 @@ public class PlayerCoinThrower : MonoBehaviour
 
         if (_animator == null) return;
         _animator.ResetTrigger(ThrowCoinHash);
-        //ÅõÃ´ ÁßÀÌ¾ú´Ù¸é ÇØ´ç ¾Ö´Ï¸ŞÀÌ¼ÇÀ» ºó »óÅÂ·Î ÀüÈ¯
+        //íˆ¬ì²™ ì¤‘ì´ì—ˆë‹¤ë©´ í•´ë‹¹ ì• ë‹ˆë©”ì´ì…˜ì„ ë¹ˆ ìƒíƒœë¡œ ì „í™˜
         if(wasThrowing && _animator.isActiveAndEnabled)
         {
             int layerIndex = _animator.GetLayerIndex("CoinThrow");
@@ -336,7 +336,7 @@ public class PlayerCoinThrower : MonoBehaviour
             return;
         }
         Vector3 position = _throwOrigin.position;
-        //´øÁú °ø°£ÀÌ ¾øÀ¸¸é ¿¹Ãø Ç¥½Ãµµ ¼û±â±â
+        //ë˜ì§ˆ ê³µê°„ì´ ì—†ìœ¼ë©´ ì˜ˆì¸¡ í‘œì‹œë„ ìˆ¨ê¸°ê¸°
         if (IsThrowBlocked(position))
         {
             HideTrajectory();

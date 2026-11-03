@@ -1,6 +1,6 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using UnityEngine.UI;
-//½ºÅÂ¹Ì³ª ÀÜ·®°ú Å»Áø »óÅÂ¸¦ °ÔÀÌÁö·Î Ç¥½Ã
+//ìŠ¤íƒœë¯¸ë‚˜ ì”ëŸ‰ê³¼ íƒˆì§„ ìƒíƒœë¥¼ ê²Œì´ì§€ë¡œ í‘œì‹œ
 public class PlayerStaminaUI : MonoBehaviour
 {
     [SerializeField] PlayerMovement _movement;
@@ -13,7 +13,7 @@ public class PlayerStaminaUI : MonoBehaviour
     {
         if(_movement == null || _slider == null)
         {
-            Debug.LogError("PlayerMovement¿Í Slider¸¦ ¿¬°áÇÏ¼¼¿ä.", this);
+            Debug.LogError("PlayerMovementì™€ Sliderë¥¼ ì—°ê²°í•˜ì„¸ìš”.", this);
             enabled = false;
             return;
         }
@@ -37,16 +37,16 @@ public class PlayerStaminaUI : MonoBehaviour
     void RefreshUI()
     {
         float ratio = _movement.StaminaRatio;
-        //´Ş¸®°Å³ª Å»Áø ÁßÀÌ°Å³ª ½ºÅÂ¹Ì³ª°¡ ´ú Ã¡À¸¸é Ç¥½Ã
+        //ë‹¬ë¦¬ê±°ë‚˜ íƒˆì§„ ì¤‘ì´ê±°ë‚˜ ìŠ¤íƒœë¯¸ë‚˜ê°€ ëœ ì°¼ìœ¼ë©´ í‘œì‹œ
         bool show = _movement.IsRunning || _movement.IsExhausted || ratio < 0.999f;
 
         if(_slider.gameObject.activeSelf != show)
         {
             _slider.gameObject.SetActive(show);
         }
-        //ÇöÀç ½ºÅÂ¹Ì³ª ºñÀ²À» °ÔÀÌÁö¿¡ ¹İ¿µ
+        //í˜„ì¬ ìŠ¤íƒœë¯¸ë‚˜ ë¹„ìœ¨ì„ ê²Œì´ì§€ì— ë°˜ì˜
         _slider.SetValueWithoutNotify(ratio);
-        //Å»Áø »óÅÂ¿¡ µû¶ó °ÔÀÌÁö »ö»ó º¯°æ
+        //íƒˆì§„ ìƒíƒœì— ë”°ë¼ ê²Œì´ì§€ ìƒ‰ìƒ ë³€ê²½
         if(_fillImage != null)
         {
             _fillImage.color = _movement.IsExhausted ? _exhaustedColor : _normalColor;
