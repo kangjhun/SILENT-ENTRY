@@ -234,7 +234,8 @@ public class EnemyFSM : MonoBehaviour
     public void RequestAlertPatrol()
     {
         if(GameEnded || _alertPatrolRequested) return;
-        if(_alertPatrolRequested == null || _alertPatrolPoints.Length == 0)
+        //새 순찰 지점이 연결되어 있는지 확인
+        if(_alertPatrolPoints == null || _alertPatrolPoints.Length == 0)
         {
             Debug.LogWarning("경계 강화 후 사용할 순찰 지점을 연결하세요.", this);
             return;
@@ -705,7 +706,7 @@ public class EnemyFSM : MonoBehaviour
         DoorController door = FindDoorOnPath();
         if(door != null)
         {
-            door.RequestOpen();
+            door.RequestOpen(transform.position);
             if (!door.IsPassable)
             {
                 _agent.isStopped = true;
@@ -765,7 +766,7 @@ public class EnemyFSM : MonoBehaviour
 
                 if (door.IsPassable)
                 {
-                    door.RequestOpen();
+                    door.RequestOpen(transform.position);
                     continue;
                 }
 

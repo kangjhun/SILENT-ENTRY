@@ -11,6 +11,10 @@ public class DoorController : MonoBehaviour,IInteractable
     [SerializeField] LayerMask _characterMask;
 
     [SerializeField] float _openAngle = 90f;
+
+    [Header("문을 여는 플레이어")]
+    [SerializeField] Transform _player;
+
     [SerializeField, Min(1f)] float _rotationSpeed = 180f;
 
     [SerializeField] bool _autoClose = true;
@@ -20,7 +24,7 @@ public class DoorController : MonoBehaviour,IInteractable
 
     float _angle;
     float _lastOpenRequestTime;
-
+    float _activeOpenAngle; //문이 열릴 방향과 각도
     bool _targetOpen;
     bool _ready;
 
@@ -28,7 +32,7 @@ public class DoorController : MonoBehaviour,IInteractable
     //지정된 상호작용 위치가 없으면 문짝 중심을 사용
     public Vector3 InteractionPosition => _interactionPoint != null ? _interactionPoint.position : (_leafCollider != null ? _leafCollider.bounds.center : transform.position);
 
-    public bool IsMoving => Mathf.Abs(_angle - (_targetOpen ? _openAngle : 0f)) > 0.01f;
+    public bool IsMoving => Mathf.Abs(_angle - (_targetOpen ? _activeOpenAngle : 0f)) > 0.01f;
 
     public bool CanInteract => _ready && isActiveAndEnabled && !IsMoving;
    //문이 완전히 열린 상태에서 통과 가능
@@ -44,7 +48,7 @@ public class DoorController : MonoBehaviour,IInteractable
             return;
         }
         _closedRotation = _hinge.localRotation;
-
+        _activeOpenAngle = _openAngle;
         _passage.isTrigger = true;
         _clearanceZone.isTrigger = true;
 
@@ -58,7 +62,7 @@ public class DoorController : MonoBehaviour,IInteractable
         if (!_targetOpen && _angle != 0f && IsOccupied())
             RequestOpen();
 
-        float targetAngle = _targetOpen ? _openAngle : 0f;
+        float targetAngle = _targetOpen ? _activeOpenAngle : 0f;
         //목표 각도를 향해 문 회전
         _angle = Mathf.MoveTowards(_angle, targetAngle, _rotationSpeed * Time.deltaTime);
 
@@ -80,16 +84,39 @@ public class DoorController : MonoBehaviour,IInteractable
         }
         else
         {
-            RequestOpen();
+            if (_player != null)
+                RequestOpen(_player.position);
+            else
+                RequestOpen();
         }
     }
-
+    //기존 방향으로 열기 또는 열림 유지
     public void RequestOpen()
     {
         if(!_ready || !isActiveAndEnabled) return;
         //열기 요청 시간을 갱신하고 목표 상태 변경
         _lastOpenRequestTime = Time.time;
         _targetOpen = true;
+    }
+    //문을 여는 캐릭터의 위치를 받아 열리는 방향 결정
+    public void RequestOpen(Vector3 requesterPosition)
+    {
+        if (!_ready || !isActiveAndEnabled) return;
+        //완전히 닫혀 있을 때만 방향 결정
+        //이미 움직이는 문은 중간에 방향을 뒤집지 않음
+        if(!_targetOpen && Mathf.Abs(_angle) <= 0.01f)
+        {
+            Vector3 hingePosition = _hinge.position;
+            Vector3 doorDirection = _leafCollider.bounds.center - hingePosition;
+            Vector3 rotationAxis = _hinge.TransformDirection(Vector3.up);
+            //문이 양의 각도로 회전할 때 문짝이 움직이는 방향
+            Vector3 openingDirection = Vector3.Cross(rotationAxis, doorDirection);
+            Vector3 toCharacter = requesterPosition - hingePosition;
+            //캐릭터 쪽으로 움직이려 하면 반대 방향 선택
+            float sign = Vector3.Dot(openingDirection, toCharacter) > 0f ? -1f : 1f;
+            _activeOpenAngle = Mathf.Abs(_openAngle) * sign;
+        }
+        RequestOpen();
     }
 
     bool TryClose()

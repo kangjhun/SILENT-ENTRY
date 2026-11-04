@@ -51,19 +51,32 @@ public class EnemyStatusUI : MonoBehaviour
         //감지, 추격, 조사, 수색 중일 때만 UI 표시
         bool suspicious = state == EnemyFSM.EnemyState.Suspicious;
         bool chasing = state == EnemyFSM.EnemyState.Chase;
-        bool invesigating = state == EnemyFSM.EnemyState.Investigate || state == EnemyFSM.EnemyState.Search;
-        bool show = suspicious || chasing || invesigating;
+        bool invesigating = state == EnemyFSM.EnemyState.Investigate;
+        bool searching =  state == EnemyFSM.EnemyState.Search;
+        bool show = suspicious || chasing || invesigating || searching;
 
         _statusCanvas.enabled = show;
 
         if (!show) return;
         //UI가 플레이어 카메라를 향하도록 회전
         _statusCanvas.transform.rotation = _playerCamera.transform.rotation;
-        //추격 중이면 빨간 느낌표, 그 외에는 노란 물음표 표시
-        _stateText.text = chasing ? "!" : "?";
+
+        if (chasing)
+        {
+            _stateText.text = "!";
+        }else if (suspicious)
+        {
+            _stateText.text = "?";
+        }else if (invesigating)
+        {
+            _stateText.text = "소음 확인 중";
+        }else if (searching)
+        {
+            _stateText.text = "조사 중";
+        }
         _stateText.color = chasing ? _chaseColor : _suspiciousColor;
         //플레이어를 감지하는 동안만 게이지 표시
-        _detectionSlider.gameObject.SetActive(suspicious);
+         _detectionSlider.gameObject.SetActive(suspicious);
 
         if (suspicious)
         {

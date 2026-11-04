@@ -14,7 +14,7 @@ public class PlayerNoise : MonoBehaviour
     [SerializeField, Min(0.05f)] float _walkInterval = 0.3f;
 
     //달리기 소음의 범위와 발생 간격
-    [SerializeField, Min(0f)] float _runNoiseRadius = 6f;
+    [SerializeField, Min(0f)] float _runNoiseRadius = 4f;
     [SerializeField, Min(0.05f)] float _runInterval = 0.2f;
 
     [SerializeField, Min(0.01f)] float _minimumMoveSpeed = 0.1f;
@@ -108,7 +108,7 @@ public class PlayerNoise : MonoBehaviour
             {
                 if(enemy == null) continue;
 
-                enemy.HearNoise(noisePosition,radius);
+                enemy.HearNoise(noisePosition,radius,0);
             }
         }
 

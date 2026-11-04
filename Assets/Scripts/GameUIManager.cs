@@ -29,6 +29,11 @@ public class GameUIManager : MonoBehaviour
     [SerializeField] Transform _objectiveMarkerPoint;
     [SerializeField] Transform _escapeMarkerPoint;
 
+    [Header("위치 안내 표시 거리")]
+    [SerializeField] Transform _playerTransform;
+    [SerializeField, Min(0.1f)] float _objectiveMarkerDistance = 5f;
+    [SerializeField, Min(0.1f)] float _escapeMarkerDistance = 6f; 
+
     [SerializeField] Vector2 _markerScreenMargin = new Vector2(110f, 40f);
 
     [Header("일시적인 안내 메시지")]
@@ -231,6 +236,24 @@ public class GameUIManager : MonoBehaviour
         bool hasObjective = _gameManagr.HasObjective;
         Transform targetPoint = hasObjective ? _escapeMarkerPoint : _objectiveMarkerPoint;
         if(targetPoint == null || !targetPoint.gameObject.activeInHierarchy)
+        {
+            SetText(_objectiveMarkerText, string.Empty);
+            return;
+        }
+        //플레이어가 연결되지 않았다면 위치 안내 숨기기
+        if(_playerTransform == null)
+        {
+            SetText(_objectiveMarkerText, string.Empty);
+            return;
+        }
+        //목표물과 탈출구에 서로 다른 표시 거리 적용
+        float showDistance = hasObjective ? _escapeMarkerDistance : _objectiveMarkerDistance;
+
+        Vector3 toTarget = targetPoint.position - _playerTransform.position;
+
+        toTarget.y = 0f;
+        //표시 거리 밖이면 안내를 숨기고 함수종료
+        if(toTarget.sqrMagnitude > showDistance * showDistance)
         {
             SetText(_objectiveMarkerText, string.Empty);
             return;
