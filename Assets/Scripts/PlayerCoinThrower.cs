@@ -32,6 +32,11 @@ public class PlayerCoinThrower : MonoBehaviour
     [Header("화면 안내")]
     [SerializeField] GameUIManager _gameUIManager;
 
+    [Header("동전 투척 사운드")]
+    [SerializeField] AudioSource _throwAudioSource;
+    [SerializeField] AudioClip _throwClip;
+    [SerializeField, Range(0f, 1f)] float _throwVolume = 0.4f;
+
     [Header("투척 예상 경로")]
     [SerializeField] LineRenderer _trajectoryLine;
     [SerializeField] Transform _impactMarker;
@@ -218,6 +223,10 @@ public class PlayerCoinThrower : MonoBehaviour
         ThrowableCoin coin = Instantiate(_coinPrefab, origin, Quaternion.identity);
 
         coin.Initialize(this, launchVelocity,_playerColliders);
+        if(_throwAudioSource != null && _throwClip != null)
+        {
+            _throwAudioSource.PlayOneShot(_throwClip, _throwVolume);
+        }
 
         CoinCount--;
         _nextThrowTime = Time.time + _throwCooldown;
@@ -370,7 +379,22 @@ public class PlayerCoinThrower : MonoBehaviour
 
                 if(_impactMarker != null)
                 {
-                    _impactMarker.position = hit.point + hit.normal * 0.02f;
+                    //화살촉을 궤적 선의 끝점에 연결
+                    _impactMarker.position = endPoint;
+                    //마지막 궤적 구간을 화면 좌표로 변환
+                    Vector3 screenStart = _playerCamera.WorldToScreenPoint(position);
+                    Vector3 screenEnd = _playerCamera.WorldToScreenPoint(endPoint);
+
+                    Vector2 screenDirection = new Vector2(screenEnd.x - screenStart.x, screenEnd.y - screenStart.y);
+                    //화면에서 두 점이 거의 겹치면 아래쪽을 기본 방향으로 사용
+                    if (screenDirection.sqrMagnitude < 0.0001f)
+                        screenDirection = Vector2.down;
+                    screenDirection.Normalize();
+                    //화면상의 진행 방향을 카메라 기준 방향으로 변환
+                    Transform cameraTransform = _playerCamera.transform;
+                    Vector3 arrowDirection = cameraTransform.right * screenDirection.x + cameraTransform.up * screenDirection.y;
+                    //화살촉의 면은 화면과 나란하게 유지
+                    _impactMarker.rotation = Quaternion.LookRotation(cameraTransform.forward, -arrowDirection);
                     _impactMarker.gameObject.SetActive(true);
                 }
 

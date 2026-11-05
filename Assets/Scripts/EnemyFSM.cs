@@ -105,7 +105,7 @@ public class EnemyFSM : MonoBehaviour
 
     public EnemyState CurrentState => _currentState;
     public bool IsTurning => !_waitingForDoor && (_turningBeforeMove || (_currentState == EnemyState.Suspicious && Mathf.Abs(TurnDirection) > 0.01f));
-
+    public bool IsChasing => _currentState == EnemyState.Chase;
     public float TurnDirection {  get; private set; }   
 
     //Agent가 실제 NavMesh 이동을 수행할 수 있는 상태인지 확인
