@@ -75,7 +75,6 @@ public class PlayerCoinThrower : MonoBehaviour
     {
         CoinCount = _maxCoins;
         _playerColliders = GetComponentsInChildren<Collider>();
-        PrintCount();
         //충전 게이지를 표시용으로 설정
         if(_chargeSlider != null)
         {
@@ -231,7 +230,6 @@ public class PlayerCoinThrower : MonoBehaviour
         CoinCount--;
         _nextThrowTime = Time.time + _throwCooldown;
 
-        PrintCount();
         
     }
     //최대 개수를 넘지 않을 때만 동전 회수
@@ -239,14 +237,9 @@ public class PlayerCoinThrower : MonoBehaviour
     {
         if(!CanRecoverCoin) return false;
         CoinCount++;
-        PrintCount();
         return true;
     }
 
-    void PrintCount()
-    {
-        Debug.Log($"동전 : {CoinCount}/{_maxCoins}", this);
-    }
 
     void BeginThrowAnimation(float power)
     {

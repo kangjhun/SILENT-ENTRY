@@ -49,7 +49,7 @@ public class NoiseDevice : MonoBehaviour,IInteractable
         if (_soundActive || Time.time < _nextUseTime) return;
         if(_audioSource == null || _audioSource.clip == null)
         {
-            Debug.Log("라디오의 Audio Source와 음악을 연결하세요.", this);
+            Debug.LogWarning("라디오의 Audio Source와 음악을 연결하세요.", this);
             return;
         }
 

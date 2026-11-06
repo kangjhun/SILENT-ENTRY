@@ -52,15 +52,7 @@ public class EnemyVision : MonoBehaviour
     }
     void CheckPlayer(Vector3 eyePosition, Vector3 forward)
     {
-        bool detected = IsPlayerVisible(eyePosition, forward);
-
-        //플레이어가 보이거나 안 보이는 상태로 바뀔 때만 로그 출력
-        if (detected != _canSeePlayer)
-        {
-            Debug.Log(detected ? "플레이어 시야에 들어옴" : "플레이어 시야에서 벗어남", this);
-
-        }
-        _canSeePlayer = detected;
+        _canSeePlayer = IsPlayerVisible(eyePosition, forward);
     }
 
     bool IsPlayerVisible(Vector3 eyePosition, Vector3 forward)

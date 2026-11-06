@@ -1,6 +1,5 @@
 ﻿using UnityEngine;
 using UnityEngine.AI;
-
 [DefaultExecutionOrder(100)]
 [RequireComponent(typeof(NavMeshAgent),typeof(EnemyVision))]
 public class EnemyFSM : MonoBehaviour
@@ -36,6 +35,8 @@ public class EnemyFSM : MonoBehaviour
 
     [Header("조사")]
     [SerializeField, Min(0.1f)] float _investigateSpeed = 2.8f;
+    //소음 위치까지 이동을 시도하는 최대 시간
+    [SerializeField, Min(1f)] float _investigateMoveTimeout = 8f;
 
     [Header("추격")]
     [SerializeField] float _chaseSpeed = 4f;
@@ -69,7 +70,11 @@ public class EnemyFSM : MonoBehaviour
     NavMeshAgent _agent;
     EnemyVision _vision;
     NavMeshPath _path;
-
+    //문 확인에 사용할 경로 좌표
+    Vector3[] _doorCorners = new Vector3[32];
+    //순찰 복귀 거리 계산에 사용할 경로 좌표
+    Vector3[] _distanceCorners = new Vector3[32];
+    int _doorCornerCount;
     int _patrolIndex;
     int _activeNoisePriority;
 
@@ -95,6 +100,7 @@ public class EnemyFSM : MonoBehaviour
 
 
     Vector3 _noisePosition;
+
     Vector3 _lastSeenPosition;
     Vector3 _searchPosition;
 
@@ -102,7 +108,7 @@ public class EnemyFSM : MonoBehaviour
     const float ReturnRetryInterval = 1f;
     const float NoiseMemoryTime = 1f; //라디오 전달 간격(0.5초보다) 여유 있게 설정
     CharacterController _playerController;
-
+  
     public EnemyState CurrentState => _currentState;
     public bool IsTurning => !_waitingForDoor && (_turningBeforeMove || (_currentState == EnemyState.Suspicious && Mathf.Abs(TurnDirection) > 0.01f));
     public bool IsChasing => _currentState == EnemyState.Chase;
@@ -113,9 +119,32 @@ public class EnemyFSM : MonoBehaviour
 
     //GameManager를 연결하지 않은 AI 단독 테스트는 허용
     bool GameEnded => _gameManger != null && !_gameManger.IsPlaying;
+    //기존 배열에 경로 좌표를 저장한다. 배열이 부족한 경우에만 크기를 늘림
+    static int ReadCorners(NavMeshPath path, ref Vector3[] buffer)
+    {
+        int count = path.GetCornersNonAlloc(buffer);
+        while(count >= buffer.Length)
+        {
+            System.Array.Resize(ref buffer, buffer.Length*2);
+            count = path.GetCornersNonAlloc(buffer);
+        }
+        return count;
+    }
+    //현재 Agent가 향하는 코너를 저장된 경로에서 찾는다.
+    int FindSteeringCorner(Vector3 steeringTarget)
+    {
+        for(int i = 1; i < _doorCornerCount; i++)
+        {
+            if ((_doorCorners[i]-steeringTarget).sqrMagnitude < 0.0001f)
+                return i;
+        }
+        return -1;
+    }
+
+
 
     //이동과 시야 감지에 필요한 컴포넌트 준비
-     void Awake()
+    void Awake()
     {
         _agent = GetComponent<NavMeshAgent>();  
         _vision = GetComponent<EnemyVision>();  
@@ -432,13 +461,14 @@ public class EnemyFSM : MonoBehaviour
         MoveTo(_patrolPoints[_patrolIndex].position,true);
     }
     //소리가 난 곳으로 이동한 뒤 주변 수색
+    //도착하거나 이동 제한시간이 지나면 주변 수색
     void UpdateInvestigate()
     {
         _moveTimer += Time.deltaTime;
 
         bool arrived = HasArrived();
 
-        if(_hasDestination && !arrived && _moveTimer < _moveTimeout) return;
+        if(_hasDestination && !arrived && _moveTimer < _investigateMoveTimeout) return;
 
         //도착했다면 소음 위치를 수색, 이동실패나 시간 초과라면 현재 위치를 수색
         _searchPosition = arrived ? _noisePosition : transform.position;   
@@ -590,7 +620,8 @@ public class EnemyFSM : MonoBehaviour
         _hasDestination = _agent.SetPath(_path);
 
         if (!_hasDestination) { StopMoving(); return; }
-
+        //경로 설정에 성공했을 때 좌표를 저장
+        _doorCornerCount = ReadCorners(_path, ref _doorCorners);
         _turningBeforeMove = turnBeforeMove;
 
         _agent.updateRotation = !turnBeforeMove;
@@ -614,6 +645,7 @@ public class EnemyFSM : MonoBehaviour
         _agent.ResetPath();
         _agent.isStopped = true;
         _hasDestination = false;
+        _doorCornerCount = 0;
     }
 
     //들리는 범위와 소음 우선순위를 확인하고 소음 조사 시작
@@ -648,8 +680,7 @@ public class EnemyFSM : MonoBehaviour
         _noisePosition = position;
         _hasConfirmedPlayer = false;
 
-
-        if(_currentState == EnemyState.Investigate)
+        if (_currentState == EnemyState.Investigate)
         {
             _moveTimer = 0f;
             MoveTo(_noisePosition);
@@ -730,9 +761,22 @@ public class EnemyFSM : MonoBehaviour
         if(!_hasDestination || !_agent.hasPath || _agent.pathPending || HasArrived()||_doors == null)
             return null;
 
-        Vector3[] corners = _agent.path.corners;
+        if(_doors.Length == 0) return null;
 
-        if(corners.Length < 2) return null;
+        Vector3 steeringTarget = _agent.steeringTarget;
+        int firstCorner = FindSteeringCorner(steeringTarget);
+        //자동 재탐색 등으로 저장된 경로와 달라졌을 때 갱신
+        if (firstCorner <0)
+        {
+            NavMeshPath currentPath = _agent.path;
+            _doorCornerCount = ReadCorners(currentPath, ref _doorCorners);
+            firstCorner = FindSteeringCorner(steeringTarget);
+        }
+
+        if (_doorCornerCount < 2) return null;
+        if (firstCorner < 0) firstCorner = 1;
+
+        Vector3[] corners = _doorCorners;
 
         Vector3 start = _agent.nextPosition;
 
@@ -740,7 +784,7 @@ public class EnemyFSM : MonoBehaviour
 
         float remaining = Mathf.Max(_doorLookAhead, _agent.radius + _agent.speed * Time.deltaTime + 0.2f);
 
-        for(int i=1; i<corners.Length && remaining > 0f; i++)
+        for(int i=firstCorner; i<_doorCornerCount && remaining > 0f; i++)
         {
             Vector3 direction = corners[i] -start;
             float length = direction.magnitude;
@@ -807,11 +851,12 @@ public class EnemyFSM : MonoBehaviour
 
             if(_path.status != NavMeshPathStatus.PathComplete) continue;
 
-            Vector3[] corners = _path.corners;
-            if (corners.Length == 0) continue;
+            int cornerCount = ReadCorners(_path,ref _distanceCorners);
+            Vector3[] corners = _distanceCorners;
+            if (cornerCount == 0) continue;
             float distance = 0f;
 
-            for(int j = 1; j < corners.Length; j++)
+            for(int j = 1; j < cornerCount; j++)
             {
                 distance += Vector3.Distance(corners[j - 1], corners[j]);
             }
@@ -848,4 +893,5 @@ public class EnemyFSM : MonoBehaviour
         if (distance > 0.001f && _vision.CheckObstacle(_vision.EyePosition, direction / distance, distance, out _)) return false;
         return true;
     }
+
 }

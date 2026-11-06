@@ -77,10 +77,7 @@ public class DoorController : MonoBehaviour,IInteractable
         if(!CanInteract) return;
         if (_targetOpen)
         {
-            if (!TryClose())
-            {
-                Debug.Log("문 주변에 캐릭터가 있어 닫을 수 없습니다.", this);
-            }
+            TryClose();
         }
         else
         {
