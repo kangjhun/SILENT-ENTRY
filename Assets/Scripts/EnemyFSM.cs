@@ -412,7 +412,7 @@ public class EnemyFSM : MonoBehaviour
                 break;   
             case EnemyState.Return:
                 SelectClosestPatrolPoint();
-                MoveTo(_patrolPoints[_patrolIndex].position);
+                MoveTo(_patrolPoints[_patrolIndex].position,true);
                 break;
             case EnemyState.Investigate:
                 _agent.speed = _investigateSpeed;
