@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using UnityEngine;
 using UnityEngine.SceneManagement;
 //시작 화면의 게임 시작, 조작법, 종료 버튼 처리
 public class MainMenuUI : MonoBehaviour
@@ -10,6 +11,10 @@ public class MainMenuUI : MonoBehaviour
     [SerializeField] GameObject _mainMenuBox;
     [SerializeField] GameObject _controlsBox;
 
+    [Header("버튼 효과음")]
+    [SerializeField] AudioSource _audioSource;
+    [SerializeField] AudioClip _clickSound;
+
     bool _isLoading;
 
      void Awake()
@@ -18,8 +23,9 @@ public class MainMenuUI : MonoBehaviour
         Time.timeScale = 1f;
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
-
-        CloseControls();
+        if(_audioSource == null)
+            _audioSource = GetComponent<AudioSource>();
+        CloseControls(false);
     }
     void Update()
     {
@@ -29,6 +35,12 @@ public class MainMenuUI : MonoBehaviour
         {
             CloseControls();
         }
+    }
+
+    void PlayClickSound()
+    {
+        if(_audioSource != null && _clickSound != null)
+            _audioSource.PlayOneShot(_clickSound);
     }
 
     public void StartGame()
@@ -47,13 +59,28 @@ public class MainMenuUI : MonoBehaviour
             return;
         }
         _isLoading = true;
+        PlayClickSound();
+
+        StartCoroutine(LoadGameAfterSound());
+        
+        
+    }
+
+    IEnumerator LoadGameAfterSound()
+    {
         Time.timeScale = 1f;
+
+        float delay = _clickSound != null ? Mathf.Min(_clickSound.length, 0.3f) : 0f;
+        if(delay > 0f)
+            yield return new WaitForSeconds(delay);
         SceneManager.LoadScene(_gameSceneName); 
+
     }
     //기본 메뉴를 숨기고 조작법 표시
     public void OpenControls()
     {
         if(_isLoading || _controlsBox == null) return;
+        PlayClickSound();
         if(_mainMenuBox != null)
             _mainMenuBox.SetActive(false);
         _controlsBox.SetActive(true);
@@ -61,6 +88,14 @@ public class MainMenuUI : MonoBehaviour
     //조작법을 숨기고 기본 메뉴 표시
     public void CloseControls()
     {
+        CloseControls(true);
+        
+    }
+
+    void CloseControls(bool playSound)
+    {
+        if (playSound)
+            PlayClickSound();
         if (_mainMenuBox != null)
             _mainMenuBox.SetActive(true);
         if(_controlsBox != null)
@@ -69,7 +104,16 @@ public class MainMenuUI : MonoBehaviour
 
     public void QuitGame()
     {
-#if UNITY_EDITOR
+        PlayClickSound();
+        StartCoroutine(QuitAfterSound());
+
+    }
+    IEnumerator QuitAfterSound()
+    {
+        float delay = _clickSound != null ? Mathf.Min(_clickSound.length, 0.3f) : 0f;
+        if(delay > 0f)
+            yield return new WaitForSecondsRealtime(delay);
+        #if UNITY_EDITOR
         //에디터에서는 플레이 모드 종료
         UnityEditor.EditorApplication.isPlaying = false;
 #else

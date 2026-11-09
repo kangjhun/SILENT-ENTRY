@@ -2,6 +2,7 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using System.Collections;
 //게임 안내, 일시정지 메뉴, 결과 화면 관리
 public class GameUIManager : MonoBehaviour
 {
@@ -56,6 +57,10 @@ public class GameUIManager : MonoBehaviour
     [Header("시작 화면")]
     [SerializeField] string _mainMenuSceneName = "MainMenu";
 
+    [Header("UI 버튼 효과음")]
+    [SerializeField] AudioSource _uiAudioSource;
+    [SerializeField] AudioClip _buttonClickSound;
+
     [Header("게임 결과")]
     [SerializeField] GameObject _resultPanel;
     [SerializeField] TMP_Text _resultTitle;
@@ -72,6 +77,11 @@ public class GameUIManager : MonoBehaviour
 
     float _timeScaleBeforePause = 1f;
     float _noticeTimer;
+    void PlayButtonClick()
+    {
+        if (_uiAudioSource != null && _buttonClickSound != null)
+            _uiAudioSource.PlayOneShot(_buttonClickSound);
+    }
     void Awake()
     {
         //텍스트와 각 화면의 초기 표시 상태 설정
@@ -125,21 +135,28 @@ public class GameUIManager : MonoBehaviour
 
     public void OpenControls()
     {
-        if(!_isPaused || _controlsBox == null) return;
-        if(_pauseMenuBox != null)
+        if (!_isPaused || _controlsBox == null) return;
+
+        PlayButtonClick();
+
+        if (_pauseMenuBox != null)
             _pauseMenuBox.SetActive(false);
+
         _controlsBox.SetActive(true);
     }
 
     public void CloseControls()
     {
         if (!_isPaused) return;
+
+        PlayButtonClick();
         ShowPauseMenu();
     }
     public void PauseGame()
     {
         if (_isPaused || _pausePanel == null || _gameManagr == null || !_gameManagr.IsPlaying) return;
         //기존 게임 속도를 저장하고 시간 정지
+        PlayButtonClick();
         _isPaused = true;
         _timeScaleBeforePause = Time.timeScale;
         Time.timeScale = 0f;
@@ -158,6 +175,7 @@ public class GameUIManager : MonoBehaviour
     {
         if (!_isPaused || _gameManagr == null || !_gameManagr.IsPlaying) return;
         //일시정지 전 게임 속도와 카메라 조작 상태 복구
+        PlayButtonClick();
         _isPaused = false;
         _pausePanel.SetActive(false);
         Time.timeScale = _timeScaleBeforePause;
@@ -169,8 +187,20 @@ public class GameUIManager : MonoBehaviour
     //현재 씬을 다시 불러와 게임 재시작
     public void RestartGame()
     {
-        Scene currentScene = SceneManager.GetActiveScene();
+        if (_isReturningToMenu) return;
+
+        _isReturningToMenu = true;
+        PlayButtonClick();
+        StartCoroutine(RestartAfterClick());
+    }
+
+    IEnumerator RestartAfterClick()
+    {
+        yield return new WaitForSecondsRealtime(0.2f);
+
         Time.timeScale = 1f;
+
+        Scene currentScene = SceneManager.GetActiveScene();
         SceneManager.LoadScene(currentScene.buildIndex);
     }
 
@@ -427,18 +457,28 @@ public class GameUIManager : MonoBehaviour
 
     public void ReturnToMainMenu()
     {
-        if(_isReturningToMenu) return;
-        //시작 화면 씬을 불러올 수 있는지 확인
-        if(string.IsNullOrWhiteSpace(_mainMenuSceneName) || !Application.CanStreamedLevelBeLoaded(_mainMenuSceneName))
+        if (_isReturningToMenu) return;
+
+        if (string.IsNullOrWhiteSpace(_mainMenuSceneName) ||
+            !Application.CanStreamedLevelBeLoaded(_mainMenuSceneName))
         {
             Debug.LogError("시작 화면 씬 이름과 빌드 씬 목록을 확인하세요.", this);
             return;
         }
 
         _isReturningToMenu = true;
+        PlayButtonClick();
+        StartCoroutine(ReturnToMenuAfterClick());
+    }
+
+    IEnumerator ReturnToMenuAfterClick()
+    {
+        yield return new WaitForSecondsRealtime(0.2f);
+
         Time.timeScale = 1f;
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
+
         SceneManager.LoadScene(_mainMenuSceneName);
     }
     void OnDisable()

@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Unity.Jobs;
+using UnityEngine;
 using UnityEngine.AI;
 [DefaultExecutionOrder(100)]
 [RequireComponent(typeof(NavMeshAgent),typeof(EnemyVision))]
@@ -22,6 +23,7 @@ public class EnemyFSM : MonoBehaviour
     [SerializeField] float _walkSpeed = 2f;
     [SerializeField] float _patrolWaitTime = 1f;
 
+
     [Header("목표물 획득 후 순찰")]
     [SerializeField] Transform[] _alertPatrolPoints;
     bool _alertPatrolRequested;
@@ -44,6 +46,17 @@ public class EnemyFSM : MonoBehaviour
 
     [Header("수색")]
     [SerializeField] float _searchDuration = 6.5f;
+
+    [Header("수색 중 주변 확인")]
+    [SerializeField] float _searchTurnAngle = 60f;
+    [SerializeField] float _searchTurnSpeed = 90f;
+    [SerializeField] float _searchLookTime = 0.6f;
+    [SerializeField, Min(0.1f)] float _searchTurnDuration = 1.633f;
+
+    float _searchTurnTimer;
+    float _searchLookTimer;
+    int _searchTurnIndex;
+    Quaternion _searchBaseRotation;
 
     [Header("이동 판정")]
     [SerializeField] float _stoppingDistance = 0.3f;
@@ -110,7 +123,9 @@ public class EnemyFSM : MonoBehaviour
     CharacterController _playerController;
   
     public EnemyState CurrentState => _currentState;
-    public bool IsTurning => !_waitingForDoor && (_turningBeforeMove || (_currentState == EnemyState.Suspicious && Mathf.Abs(TurnDirection) > 0.01f));
+    public bool IsTurning => !_waitingForDoor && 
+        (_turningBeforeMove || (_currentState == EnemyState.Suspicious && Mathf.Abs(TurnDirection) > 0.01f) ||
+        (_currentState == EnemyState.Search && _searchingAround && Mathf.Abs(TurnDirection) > 0.01f));
     public bool IsChasing => _currentState == EnemyState.Chase;
     public float TurnDirection {  get; private set; }   
 
@@ -141,7 +156,7 @@ public class EnemyFSM : MonoBehaviour
         return -1;
     }
 
-
+    
 
     //이동과 시야 감지에 필요한 컴포넌트 준비
     void Awake()
@@ -439,12 +454,20 @@ public class EnemyFSM : MonoBehaviour
     void UpdatePatrol()
     {
         _moveTimer += Time.deltaTime;
-        if(_hasDestination && !HasArrived())
+        if(_hasDestination)
         {
-            //목적지로 이동 중이면 기다림
-            if (_moveTimer < _moveTimeout) return;
-            //너무 오래 걸리면 현재 경로를 포기
-            StopMoving();
+            if (!HasArrived())
+            {
+                //목적지로 이동 중이면 기다림
+                if (_moveTimer < _moveTimeout) return;
+                
+                StopMoving();
+            }
+            else
+            {
+                StopMoving();
+            }
+            
         }
 
         //도착했거나 경로를 포기한 뒤 잠시 대기
@@ -534,11 +557,18 @@ public class EnemyFSM : MonoBehaviour
 
             
             _searchTimer = 0f;
+            _searchLookTimer = 0f;
+            _searchTurnIndex = 0;
+
+            _searchBaseRotation = transform.rotation;
+
             _searchingAround = true; 
 
         }
 
         _searchTimer += Time.deltaTime;
+        //수색 중 좌우로 몸을 회전
+        UpdateSearchRotation();
 
         if (_searchTimer < Mathf.Max(_searchDuration, 0.01f)) return;
         //소음 조사 중이고 아직 소리가 들리면 현장에서 대기
@@ -549,6 +579,57 @@ public class EnemyFSM : MonoBehaviour
         ChangeState(EnemyState.Return);
         
     }
+    //수색 중 좌우로 몸을 돌려 주변 확인
+    void UpdateSearchRotation()
+    {
+        switch (_searchTurnIndex)
+        {
+            case 0:
+            case 2:
+                TurnDirection = 0f;
+
+                _searchLookTimer += Time.deltaTime;
+
+                if (_searchLookTimer >= _searchLookTime)
+                {
+                    _searchLookTimer = 0f;
+                    _searchTurnTimer = 0f;
+                    _searchTurnIndex++;
+                }
+                break;
+
+            case 1:
+                TurnDirection = -1f;
+                _searchTurnTimer += Time.deltaTime;
+
+                if (_searchTurnTimer >= _searchTurnDuration)
+                {
+                    TurnDirection = 0f;
+                    _searchTurnTimer = 0f;
+                    _searchTurnIndex++;
+                }
+                break;
+
+            case 3:
+                TurnDirection = 1f;
+                _searchTurnTimer += Time.deltaTime;
+
+                if (_searchTurnTimer >= _searchTurnDuration)
+                {
+                    TurnDirection = 0f;
+                    _searchTurnTimer = 0f;
+                    _searchTurnIndex++;
+                }
+                break;
+
+            default:
+                TurnDirection = 0f;
+                break;
+        }
+    }
+
+
+
     //순찰 지점으로 복귀하고, 이동에 실패하면 다시 시도
     void UpdateReturn()
     {

@@ -45,8 +45,8 @@ public class EnemyAnimation : MonoBehaviour
         if (Time.timeScale == 0f) return;
         //FSM에서 탐색과 회전 상태 확인
         bool fsmActive = _fsm.isActiveAndEnabled;
-        bool isSearching = fsmActive && _fsm.IsSearchingAround;
-        bool isTurning = fsmActive && !isSearching && _fsm.IsTurning;
+        bool isSearching = false;
+        bool isTurning = fsmActive  && _fsm.IsTurning;
 
         _animator.SetBool(IsSearchingHash, isSearching);
 
@@ -76,5 +76,13 @@ public class EnemyAnimation : MonoBehaviour
         float speed = velocity.magnitude;
 
         return speed < StopThreshole ? 0f : speed;
+    }
+
+    void OnAnimatorMove()
+    {
+        if (_animator == null || _fsm == null)
+            return;
+        if (_fsm.CurrentState == EnemyFSM.EnemyState.Search && _fsm.IsTurning)
+            transform.rotation *= _animator.deltaRotation;
     }
 }
