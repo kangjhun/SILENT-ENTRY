@@ -17413,7 +17413,7 @@ MonoBehaviour:
   _resultAudioSource: {fileID: 678245901}
   _successClip: {fileID: 8300000, guid: d7df19e63e4e35d40885b64b215724cd, type: 3}
   _failureClip: {fileID: 8300000, guid: ed77634258e5f124883eca4b3c2212dc, type: 3}
-  _resultVolume: 0.5
+  _resultVolume: 0.2
 --- !u!1001 &992197397
 PrefabInstance:
   m_ObjectHideFlags: 0
