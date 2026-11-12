@@ -43,6 +43,7 @@ public class PlayerMovement : MonoBehaviour
     float _verticalSpeed;
 
     PlayerCover _cover;
+    PlayerCoinThrower _coinThrower;
     public float MoveSpeed { get; private set; }
     public bool IsRunning {  get; private set; }
     public Vector2 AnimationMove {  get; private set; }
@@ -51,6 +52,7 @@ public class PlayerMovement : MonoBehaviour
     {
         _controller = GetComponent<CharacterController> ();
         _cover = GetComponent<PlayerCover> ();
+        _coinThrower = GetComponentInChildren<PlayerCoinThrower> ();
         _standingHeight = _controller.height;
         _standingCenter = _controller.center;
         _curretStamina = _maxStamina;
@@ -127,9 +129,11 @@ public class PlayerMovement : MonoBehaviour
         bool wantsRun = runPressed && hasInput && !IsCrouching && !isInCover && CanRun; 
         float speed = IsCrouching ? _crouchSpeed  : wantsRun ? _runSpeed : _walkSpeed;
 
+        //투척 애니메이션 중에는 투척 방향을 유지
+        bool isThrowing = _coinThrower != null && _coinThrower.IsThrowing;
         //이동 방향으로 캐릭터 회전
         //엄폐 중 회전은 PlayerCover가 처리
-        if (!isInCover&&Cursor.lockState == CursorLockMode.Locked && hasInput && moveDirection.sqrMagnitude > 0.001f)
+        if (!isInCover && !isThrowing && Cursor.lockState == CursorLockMode.Locked && hasInput && moveDirection.sqrMagnitude > 0.001f)
         {
             Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
             transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, _rotationSpeed * Time.deltaTime);
@@ -192,7 +196,16 @@ public class PlayerMovement : MonoBehaviour
         AnimationMove = Vector2.ClampMagnitude(new Vector2(localVelocity.x, localVelocity.z) / Mathf.Max(animationBaseSpeed, 0.01f), 1f);
 
     }
-
+    //동전을 던지는 방향으로 캐릭터 몸 회전
+    public void FaceThrowDirection(Vector3 direction)
+    {
+        //엄페 중 몸 회전은 PlayerCover에서 처리
+        if (_cover != null && _cover.IsInCover) return;
+        //위아래 기울기를 제외하고 좌우로만 회전
+        direction.y = 0f;
+        if (direction.sqrMagnitude < 0.001f) return;
+        transform.rotation = Quaternion.LookRotation(direction);
+    }
     void UpdateStamina(bool isActuallyRunning)
     {
         float deltaTime = Time.deltaTime;

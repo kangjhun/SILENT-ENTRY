@@ -23287,6 +23287,9 @@ MonoBehaviour:
   _investigateMoveTimeout: 8
   _chaseSpeed: 4
   _repathInterval: 0.2
+  _closeTrackingDistance: 3
+  _lostSightGraceTime: 0.8
+  _closeLostSightGraceTime: 2
   _searchDuration: 6.5
   _searchTurnAngle: 60
   _searchTurnSpeed: 90
@@ -31034,6 +31037,9 @@ MonoBehaviour:
   _investigateMoveTimeout: 8
   _chaseSpeed: 4
   _repathInterval: 0.2
+  _closeTrackingDistance: 3
+  _lostSightGraceTime: 0.8
+  _closeLostSightGraceTime: 2
   _searchDuration: 6.5
   _searchTurnAngle: 60
   _searchTurnSpeed: 90

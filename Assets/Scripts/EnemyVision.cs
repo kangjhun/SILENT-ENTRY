@@ -76,6 +76,21 @@ public class EnemyVision : MonoBehaviour
         bool blocked = CheckObstacle(eyePosition, toPlayer / distance, distance, out _);
         return !blocked;
     }
+    //추격 중 근거리 확인요.
+    //시야각은 검사하지 않지만 거리와 장애물은 검사한다.
+    public bool CanTrackNearbyPlayer(float radius)
+    {
+        if(_playerTarget==null || !_playerTarget.gameObject.activeInHierarchy)
+            return false;
+        Vector3 toPlayer = _playerTarget.position - EyePosition;
+        float distance = toPlayer.magnitude;
+
+        if(distance > radius) return false;
+        if (distance <= 0.001f) return true;
+
+        return !CheckObstacle(EyePosition, toPlayer / distance, distance, out _);
+
+    }
 
      void OnDisable()
     {

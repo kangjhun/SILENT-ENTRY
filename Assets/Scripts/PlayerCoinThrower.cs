@@ -56,6 +56,9 @@ public class PlayerCoinThrower : MonoBehaviour
     float _nextPreviewTime;
 
     Collider[] _playerColliders;
+    PlayerMovement _playerMovement;
+    public bool IsThrowing => _isThrowing;
+
     float _nextThrowTime;
 
     static readonly int ThrowCoinHash = Animator.StringToHash("ThrowCoin");
@@ -74,6 +77,7 @@ public class PlayerCoinThrower : MonoBehaviour
     void Awake()
     {
         CoinCount = _maxCoins;
+        _playerMovement = GetComponentInParent<PlayerMovement>();
         _playerColliders = GetComponentsInChildren<Collider>();
         //충전 게이지를 표시용으로 설정
         if(_chargeSlider != null)
@@ -209,7 +213,9 @@ public class PlayerCoinThrower : MonoBehaviour
             ShowNotice("던질 동전이 없습니다.");
             return;
         }
-
+        //발사 순간 카메라 방향이 바뀌었다면 몸 방향도 다시 맞춤
+        FaceThrowDirection();
+        //회전 후 동전 생성 위치 확인
         Vector3 origin = _throwOrigin.position;
 
         if (IsThrowBlocked(origin))
@@ -245,7 +251,11 @@ public class PlayerCoinThrower : MonoBehaviour
     {
         if(_isThrowing || CoinCount <= 0) return;
         if (Time.time < _nextThrowTime) return;
-
+        if(_playerCamera == null || _throwOrigin == null || _coinPrefab == null)
+        {
+            Debug.LogWarning("동전 투척에 필요한 연결을 확인하세요.", this);
+            return;
+        }
         if(_animator == null || !_animator.isActiveAndEnabled)
         {
             Debug.LogWarning("투척에 사용할 Animator를 연결하세요", this);
@@ -253,11 +263,21 @@ public class PlayerCoinThrower : MonoBehaviour
         }
         //충전량을 저장하고 애니메이션의 동전 발사 신호 대기
         _pendingPower = power;
+        //먼저 몸을 투척 방향으로 회전
+        FaceThrowDirection();
+        // 회전한 뒤의 손 위치에서 장애물 확인
+        if (IsThrowBlocked(_throwOrigin.position))
+        {
+            ShowNotice("장애물에 너무 가까워 던질 수 없습니다.");
+            return;
+        }
+        //던질 수 있을 때만 애니메이션 시작
         _releasePending = true;
         _isThrowing = true;
 
         _throwTimeoutAt = Time.time + _throwAnimationTimeout;
-
+        
+        
         _animator.ResetTrigger(ThrowCoinHash);
         _animator.SetTrigger(ThrowCoinHash);
     }
@@ -397,7 +417,13 @@ public class PlayerCoinThrower : MonoBehaviour
             position = nextPosition;
         }
     }
-
+    //현재 조준한 투척 방향으로 플레이어 몸 회전
+    void FaceThrowDirection()
+    {
+        if(_playerMovement == null || _playerCamera == null || _throwOrigin == null) return;
+        Vector3 launchVelocity = CalculateLaunchVelocity(_throwOrigin.position, _pendingPower);
+        _playerMovement.FaceThrowDirection(launchVelocity);
+    }
     void HideTrajectory()
     {
         if(_trajectoryLine != null)

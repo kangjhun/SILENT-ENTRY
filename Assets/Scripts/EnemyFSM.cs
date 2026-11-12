@@ -44,6 +44,14 @@ public class EnemyFSM : MonoBehaviour
     [SerializeField] float _chaseSpeed = 4f;
     [SerializeField] float _repathInterval = 0.2f;
 
+    [Header("추격 유지")]
+    [SerializeField, Min(0.1f)] float _closeTrackingDistance = 3f;
+    [SerializeField, Min(0f)] float _lostSightGraceTime = 0.8f;
+    [SerializeField, Min(0f)] float _closeLostSightGraceTime = 2f;
+    //마지막으로 실제 확인한 시간과 거리
+    float _lastConfirmedTime = float.NegativeInfinity;
+    float _lastConfirmedDistance = float.PositiveInfinity;
+
     [Header("수색")]
     [SerializeField] float _searchDuration = 6.5f;
 
@@ -156,6 +164,12 @@ public class EnemyFSM : MonoBehaviour
         return -1;
     }
 
+    void RememberPlayer(Vector3 position)
+    {
+        _lastSeenPosition = position;
+        _lastConfirmedTime = Time.time;
+        _lastConfirmedDistance = Vector3.Distance(transform.position, position);
+    }
     
 
     //이동과 시야 감지에 필요한 컴포넌트 준비
@@ -305,33 +319,44 @@ public class EnemyFSM : MonoBehaviour
         _touchingPlayer = touchingNow;
         if (_touchingPlayer)
         {
-            _lastSeenPosition = _playerController.transform.position;
+            RememberPlayer(_playerController.transform.position);
             _hasConfirmedPlayer = true;
             _detectionAmount = 1f;
 
             ChangeState(EnemyState.Chase);
             return;
         }
-
-        bool seesPlayer = _vision.isActiveAndEnabled && _vision.CanSeePlayer && _vision.PlayerTarget != null;
-
+        bool visionReady = _vision.isActiveAndEnabled && _vision.PlayerTarget != null;
+        bool seesPlayer = visionReady && _vision.CanSeePlayer;
+        //이미 추격 중일 때만 근거리 감지를 추가 적용
+        //최초 발견에는 기존 시야각 조건을 그대로 사용.
+        if(_currentState == EnemyState.Chase && visionReady && !seesPlayer)
+        {
+            seesPlayer = _vision.CanTrackNearbyPlayer(_closeTrackingDistance);
+        }
+        
         if(_currentState == EnemyState.Chase)
         {
             if(seesPlayer)
             {
-                _lastSeenPosition = _vision.PlayerTarget.position;
+                RememberPlayer(_vision.PlayerTarget.position);
             }
             else
             {
-                _searchPosition = _lastSeenPosition;
-                ChangeState(EnemyState.Search);
+                //마지막으로 확인했을 때 가까웠다면 더 오래 추격 유지
+                float graceTime = _lastConfirmedDistance <= _closeTrackingDistance ? _closeLostSightGraceTime : _lostSightGraceTime;
+                if(Time.time - _lastConfirmedTime >= graceTime)
+                {
+                    _searchPosition = _lastSeenPosition;
+                    ChangeState(EnemyState.Search);
+                }
             }
             return;
         }
         if (seesPlayer)
         {
             //보이는 동안만 플레이어 위치를 기억
-            _lastSeenPosition = _vision.PlayerTarget.position;
+            RememberPlayer(_vision.PlayerTarget.position);
             if (_hasConfirmedPlayer)
             {
                 _detectionAmount = 1f;
