@@ -17,7 +17,8 @@ public class PlayerAnimation : MonoBehaviour
     static readonly int IsCrouchingHash = Animator.StringToHash("IsCrouching");
     static readonly int CrouchSpeedHash = Animator.StringToHash("CrouchSpeed");
     static readonly int ISInCoverHash = Animator.StringToHash("IsInCover");
-    static readonly int CoverMoveHash = Animator.StringToHash("CoverMove");
+    static readonly int CoverSideHash = Animator.StringToHash("CoverSide");
+    static readonly int CoverSpeedHash = Animator.StringToHash("CoverSpeed");
      void Awake()
     {
         _playerMovement = GetComponent<PlayerMovement>();
@@ -50,8 +51,13 @@ public class PlayerAnimation : MonoBehaviour
         //앉은 상태의 이동량을 0~1 범위로 전달
         float crouchSpeed = Mathf.Clamp01(move.magnitude);
         _animator.SetFloat(CrouchSpeedHash, crouchSpeed, _blendTime, Time.deltaTime);
-        //엄폐 중 이동 값을 애니메이션에 반영
-        _animator.SetFloat(CoverMoveHash, _playerMovement.CoverMove, _blendTime, Time.deltaTime);
+        if(_playerCover != null)
+        {
+            _animator.SetFloat(CoverSideHash, _playerCover.CoverSide);
+            float coverSpeed = isInCover ? Mathf.Abs(_playerMovement.CoverMove) : 0f;
+
+            _animator.SetFloat(CoverSpeedHash,coverSpeed,_blendTime, Time.deltaTime);
+        }
     }
 
     

@@ -22,11 +22,29 @@ public class PlayerCover : MonoBehaviour
 
     public bool IsInCover {  get; private set; }
     public float CoverSpeed => _coverSpeed;
+    //벽 표면에서 바깥으로 향하는 방향
+    public Vector3 WallNormal => _wallNormal;
+    //벽을 따라 플레이어의 오른쪽으로 향하는 향
+    public Vector3 WallRight => Vector3.Cross(Vector3.up, _wallNormal).normalized;
     //플레이어 중심을 벽 검사 기준점으로 사용
     public Vector3 ProbePosition => transform.TransformPoint(_controller.center);
     //서 있고 바닥에 닿아 있을 때만 엄폐 진입 가능
     public bool CanEnter => !IsInCover && !_movement.IsCrouching && _controller.isGrounded;
-     void Awake()
+    //-1: 왼쪽, 1: 오른쪽 
+    //멈ㅊ춰도 마지막 엄폐 방향 유지
+    public int CoverSide { get; private set; } = 1;
+
+    public void SetCoverSide(int side)
+    {
+        if (side == 0) return;
+        CoverSide = side > 0 ? 1 : -1;
+    }
+    public void SwitchCoverSide()
+    {
+        if(!IsInCover) return;
+        CoverSide *= -1;
+    }
+    void Awake()
     {
         _controller = GetComponent<CharacterController>();
         _movement = GetComponent<PlayerMovement>(); 
@@ -88,6 +106,10 @@ public class PlayerCover : MonoBehaviour
     public Vector3 GetVelocity(float horizontal)
     {
         if(!IsInCover) return Vector3.zero;
+        if(Mathf.Abs(horizontal) > 0.1f)
+        {
+            SetCoverSide(horizontal > 0f ? 1 : -1);
+        }
         if(_wall == null || !_wall.enabled || !_wall.gameObject.activeInHierarchy)
         {
             ExitCover();
@@ -137,6 +159,15 @@ public class PlayerCover : MonoBehaviour
 
         //처음 엄폐한 면과 방향이 거의 같아야 유지
         return Vector3.Dot(hit.normal, _wallNormal) > 0.95f;
+    }
+    //플레이어 중심에서 일정 거리 옆에 벽이 없으면 벽 끝으로 판다
+    public bool IsAtCoverEdge(int side, float extraDistance = 0.2f)
+    {
+        if(!IsInCover || _wall == null) return false;
+
+        Vector3 direction = WallRight *(side >= 0 ? 1f : -1f);
+        Vector3 probe = ProbePosition + direction * (_controller.radius + extraDistance);
+        return !HasWall(probe);
     }
 
     void OnDisable()

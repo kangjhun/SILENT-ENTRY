@@ -26267,6 +26267,7 @@ GameObject:
   - component: {fileID: 1495763570}
   - component: {fileID: 1495763576}
   - component: {fileID: 1495763574}
+  - component: {fileID: 1495763577}
   m_Layer: 0
   m_Name: CinemachineCamera
   m_TagString: Untagged
@@ -26521,6 +26522,30 @@ MonoBehaviour:
     NearLimit: 5
     FarLimit: 30
     MaxQualityBoost: 0.2
+--- !u!114 &1495763577
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1495763569}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b164e589f96e7094fb577cf9718c03ce, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerCoverCamera
+  _cover: {fileID: 739977564}
+  _coverRadius: 1.4
+  _coverHeight: 1.5
+  _outwardOffset: 0.2
+  _sideOffset: 0.8
+  _screenOffset: 0.22
+  _switchSideKey: 113
+  _horizontalSensitivity: 1
+  _verticalSensitivity: 0.4
+  _horizontalLimit: 15
+  _verticalRange: {x: -10, y: 20}
+  _blendSpeed: 10
 --- !u!1 &1509813559
 GameObject:
   m_ObjectHideFlags: 0
