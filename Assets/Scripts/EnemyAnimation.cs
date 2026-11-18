@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Unity.VisualScripting;
+using UnityEngine;
 using UnityEngine.AI;
 
 [RequireComponent(typeof(NavMeshAgent), typeof(EnemyFSM))]
@@ -17,6 +18,7 @@ public class EnemyAnimation : MonoBehaviour
     static readonly int isTurningHash = Animator.StringToHash("IsTurning");
     static readonly int TurnDirectionHash = Animator.StringToHash("TurnDirection");
     static readonly int IsSearchingHash = Animator.StringToHash("IsSearching");
+    static readonly int IsInvestigaatingHash = Animator.StringToHash("IsInvestigatingMove");  
     //아주 작은 움직임은 정지로 처리
     const float StopThreshole = 0.05f;
      void Awake()
@@ -45,14 +47,17 @@ public class EnemyAnimation : MonoBehaviour
         if (Time.timeScale == 0f) return;
         //FSM에서 탐색과 회전 상태 확인
         bool fsmActive = _fsm.isActiveAndEnabled;
-        bool isSearching = false;
         bool isTurning = fsmActive  && _fsm.IsTurning;
-
+        bool isSearching = fsmActive && _fsm.CurrentState == EnemyFSM.EnemyState.Search && _fsm.IsSearchingAround;
+        float moveSpeed = GetMovementSpeed();
+        bool isInvestigatingMove = fsmActive && _fsm.CurrentState == EnemyFSM.EnemyState.Investigate && !isTurning && moveSpeed > StopThreshole ;
         _animator.SetBool(IsSearchingHash, isSearching);
 
         _animator.SetBool(isTurningHash,isTurning);
 
         _animator.SetFloat(TurnDirectionHash, isTurning ? _fsm.TurnDirection : 0f);
+        _animator.SetBool(IsInvestigaatingHash,isInvestigatingMove);
+        
         //탐색하거나 제자리 회전 중이면 이동 애니메이션 정지
         if (isSearching || isTurning)
         {
@@ -60,7 +65,7 @@ public class EnemyAnimation : MonoBehaviour
         }
         else
         {
-            _animator.SetFloat(SpeedHash, GetMovementSpeed(), _blendTime, Time.deltaTime);
+            _animator.SetFloat(SpeedHash,moveSpeed, _blendTime, Time.deltaTime);
         }
     }
 
@@ -78,11 +83,5 @@ public class EnemyAnimation : MonoBehaviour
         return speed < StopThreshole ? 0f : speed;
     }
 
-    void OnAnimatorMove()
-    {
-        if (_animator == null || _fsm == null)
-            return;
-        if (_fsm.CurrentState == EnemyFSM.EnemyState.Search && _fsm.IsTurning)
-            transform.rotation *= _animator.deltaRotation;
-    }
+  
 }

@@ -20,7 +20,8 @@ public class ThrowableCoin : MonoBehaviour,IInteractable
     bool _hasImpacted;
     bool _collected;
     float _firstImpactTime;
-
+    //미리보기에서도 실제 동전과 같은 소음 반경을 사용
+    public float NoiseRadius => _noiseRadius;
     public string DisplayName => "동전 회수";
 
     public Vector3 InteractionPosition => _collider != null ? _collider.bounds.center : transform.position;

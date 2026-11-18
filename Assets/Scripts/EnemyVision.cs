@@ -34,14 +34,17 @@ public class EnemyVision : MonoBehaviour
 
     public Vector3 GetFlatForward()
     {
+        Vector3 direction = _eyePoint != null ? _eyePoint.forward : transform.forward;
         //위아래 기울기를 제외한 수평 정면 방향 계산
-        Vector3 forward = Vector3.ProjectOnPlane(transform.forward, Vector3.up);
+        Vector3 forward = Vector3.ProjectOnPlane(direction, Vector3.up);
         
         //수평 방향을 구할 수 없으면 월드 앞쪽 방향 사용
         if (forward.sqrMagnitude < 0.001f)
         {
-            forward = Vector3.forward;
+            forward = Vector3.ProjectOnPlane(transform.forward, Vector3.up);
         }
+        if (forward.sqrMagnitude < 0.001f)
+            return Vector3.forward;
         return forward.normalized;
     }
 
@@ -96,5 +99,13 @@ public class EnemyVision : MonoBehaviour
     {
         //비활성화되면 감지 결과 초기화
         _canSeePlayer = false;
+    }
+    void OnDrawGizmosSelected()
+    {
+        Gizmos.color = Color.cyan;
+
+        Gizmos.DrawRay(
+            EyePosition,
+            GetFlatForward() * _viewRadius);
     }
 }

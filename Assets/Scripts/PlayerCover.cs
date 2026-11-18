@@ -12,6 +12,15 @@ public class PlayerCover : MonoBehaviour
     [SerializeField, Min(0f)] float _wallGap = 0f;
     [SerializeField, Min(0.1f)] float _attachSpeed = 3f;
 
+    [Header("엄폐 끝 장애물 검사")]
+    [Tooltip("벽과 문 등 관찰을 막는 장애물 레이어")]
+    [SerializeField] LayerMask _coverObstacleMask;
+
+    [Tooltip("옆으로 이어진 벽을 확인할 거리")]
+    [SerializeField, Min(0.1f)] float _cornerCheckDistance = 1f;
+
+    [SerializeField, Min(0.01f)] float _cornerProbeRadius = 0.08f;
+
     CharacterController _controller;
     PlayerMovement _movement;
 
@@ -160,15 +169,33 @@ public class PlayerCover : MonoBehaviour
         //처음 엄폐한 면과 방향이 거의 같아야 유지
         return Vector3.Dot(hit.normal, _wallNormal) > 0.95f;
     }
-    //플레이어 중심에서 일정 거리 옆에 벽이 없으면 벽 끝으로 판다
-    public bool IsAtCoverEdge(int side, float extraDistance = 0.2f)
+    //side: -1은 벽을 따른 왼쪽, 1은 오른쪽
+    public bool IsAtCoverEdge(int side, float extraDistance)
     {
-        if(!IsInCover || _wall == null) return false;
+        if(!IsInCover || _wall == null || !_wall.enabled || !_wall.gameObject.activeInHierarchy) return false;
 
-        Vector3 direction = WallRight *(side >= 0 ? 1f : -1f);
-        Vector3 probe = ProbePosition + direction * (_controller.radius + extraDistance);
-        return !HasWall(probe);
+        Vector3 sideDirection = WallRight * (side >= 0 ? 1f : -1f);
+        float edgeDistance = _controller.radius + Mathf.Max(0f, extraDistance);
+
+        Vector3 edgeProbe = ProbePosition + sideDirection * edgeDistance;
+
+        //현재 벽이 이어지고 있으면 끝 x
+        if (HasWall(edgeProbe))
+            return false;
+        //다른 콜라이더의 벽이 뒤쪽에 이어져 있어도 열린 통로로 판단 x
+        if (Physics.Raycast(edgeProbe, -_wallNormal, _enterDistance + _controller.radius, _coverObstacleMask, QueryTriggerInteraction.Ignore))
+            return false;
+        //관찰하려는 공간에 벽이나 장애물이 있는지 확인
+        float checkDistance = Mathf.Max(edgeDistance,_cornerCheckDistance);
+        //검사 시작점이 장애물 안이면 관찰 x
+        if (Physics.CheckSphere(ProbePosition, _cornerProbeRadius, _coverObstacleMask, QueryTriggerInteraction.Ignore))
+            return false;
+        if(Physics.SphereCast(ProbePosition,_cornerProbeRadius,sideDirection,out RaycastHit hit, checkDistance,_coverObstacleMask,QueryTriggerInteraction.Ignore))
+            return false;
+        //현재 벽이 끝났고 옆 공간도 막혀 있지 않음
+        return true;
     }
+    
 
     void OnDisable()
     {

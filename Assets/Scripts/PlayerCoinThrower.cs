@@ -46,6 +46,13 @@ public class PlayerCoinThrower : MonoBehaviour
     [SerializeField, Min(0.5f)] float _predictionDuration = 3f;
     [SerializeField, Min(0.02f)] float _previewInterval = 0.05f;
 
+    [Header("소음 범위 미리보기")]
+    [SerializeField] LineRenderer _noiseRangeLine;
+
+    [SerializeField, Range(24, 128)] int _noiseRangeSegements = 64;
+    [SerializeField, Min(0.001f)] float _noiseRangeWidth = 0.035f;
+    [SerializeField, Min(0.001f)] float _noiseSurfaceOffset = 0.03f;
+
     bool _isCharging;
     bool _isThrowing;
     bool _releasePending;//애니메이션에서 동전을 놓을 시점을 기다리는 중
@@ -64,6 +71,7 @@ public class PlayerCoinThrower : MonoBehaviour
     static readonly int ThrowCoinHash = Animator.StringToHash("ThrowCoin");
     public int CoinCount { get; private set; }
     public int MaxCoins => _maxCoins;
+    public bool IsCharging => _isCharging;
     public bool CanRecoverCoin => CoinCount < _maxCoins;
     //충전 시간을 0~1 범위의 값으로 변환
     public float ChargeRatio => Mathf.Clamp01(_chargeTime / Mathf.Max(_fullChargeTime, 0.01f));
@@ -97,6 +105,18 @@ public class PlayerCoinThrower : MonoBehaviour
 
             _trajectoryLine.positionCount = 0;
             _trajectoryLine.enabled = false;
+        }
+        if(_noiseRangeLine != null)
+        {
+            _noiseRangeLine.useWorldSpace = true;
+            _noiseRangeLine.loop = true;
+            _noiseRangeLine.widthCurve = AnimationCurve.Linear(0f, 1f, 1f, 1f);
+            _noiseRangeLine.widthMultiplier = _noiseRangeWidth;
+            //범위를 일정한 두께의 원으로 표시
+            _noiseRangeLine.startColor = new Color(0.2f, 1f, 0.8f, 0.7f);
+            _noiseRangeLine.endColor = new Color(0.2f, 1f, 0.8f, 0.7f);
+            _noiseRangeLine.positionCount = 0;
+            _noiseRangeLine.enabled = false;
         }
         CancelCharge();
     }
@@ -376,6 +396,9 @@ public class PlayerCoinThrower : MonoBehaviour
 
         if(_impactMarker != null)
             _impactMarker.gameObject.SetActive(false);
+        //이번 예측에서 충돌하지 않으면 범위를 표시하지 않음
+        if(_noiseRangeLine != null)
+            _noiseRangeLine.enabled = false;
         for(int i = 1; i <= steps; i++)
         {
             velocity += Physics.gravity * stepTime;
@@ -388,7 +411,10 @@ public class PlayerCoinThrower : MonoBehaviour
             {
                 Vector3 endPoint = position + segment / distance * hit.distance;
                 _trajectoryLine.SetPosition(i,endPoint);
-                _trajectoryLine.positionCount = i +1;   
+                _trajectoryLine.positionCount = i +1;
+                //실제 소음도 충돌 접촉점을 기준으로 발생하므로
+                //동전 중심인 endPoint 대신 hit.point 사용
+                ShowNoiseRange(hit.point, hit.normal);
 
                 if(_impactMarker != null)
                 {
@@ -430,5 +456,30 @@ public class PlayerCoinThrower : MonoBehaviour
             _trajectoryLine.enabled = false;
         if (_impactMarker != null)
             _impactMarker.gameObject.SetActive(false);
+        if(_noiseRangeLine != null)
+            _noiseRangeLine.enabled = false;
+    }
+    //예상 충돌 위치를 중심으로 소음 반경 표시
+    void ShowNoiseRange(Vector3 impactPoint,Vector3 surfaceNormal)
+    {
+        if(_noiseRangeLine == null || _coinPrefab == null) return;
+        
+        //충돌한 표면과 관계 없이 항상 수평으로 표시
+        Vector3 axisX = Vector3.right;
+        Vector3 axisY = Vector3.forward;
+
+        //표면과 겹쳐 깜빡이지 않도록 조금 띄우기
+        Vector3 center = impactPoint + surfaceNormal.normalized * _noiseSurfaceOffset + Vector3.up * _noiseSurfaceOffset;
+        float radius = _coinPrefab.NoiseRadius;
+        int segments = Mathf.Clamp(_noiseRangeSegements, 24, 128);
+        _noiseRangeLine.positionCount = segments;
+
+        for(int i = 0; i < segments; i++)
+        {
+            float angle = i / (float)segments * Mathf.PI * 2f;
+            Vector3 point = center + axisX * (Mathf.Cos(angle) * radius) + axisY * (Mathf.Sin(angle) * radius);
+            _noiseRangeLine.SetPosition(i,point);
+        }
+        _noiseRangeLine.enabled = true;
     }
 }
