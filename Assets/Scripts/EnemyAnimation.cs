@@ -1,5 +1,4 @@
-﻿using Unity.VisualScripting;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.AI;
 
 [RequireComponent(typeof(NavMeshAgent), typeof(EnemyFSM))]
@@ -18,7 +17,7 @@ public class EnemyAnimation : MonoBehaviour
     static readonly int isTurningHash = Animator.StringToHash("IsTurning");
     static readonly int TurnDirectionHash = Animator.StringToHash("TurnDirection");
     static readonly int IsSearchingHash = Animator.StringToHash("IsSearching");
-    static readonly int IsInvestigaatingHash = Animator.StringToHash("IsInvestigatingMove");  
+    static readonly int IsInvestigatingHash = Animator.StringToHash("IsInvestigatingMove");  
     //아주 작은 움직임은 정지로 처리
     const float StopThreshole = 0.05f;
      void Awake()
@@ -56,7 +55,7 @@ public class EnemyAnimation : MonoBehaviour
         _animator.SetBool(isTurningHash,isTurning);
 
         _animator.SetFloat(TurnDirectionHash, isTurning ? _fsm.TurnDirection : 0f);
-        _animator.SetBool(IsInvestigaatingHash,isInvestigatingMove);
+        _animator.SetBool(IsInvestigatingHash,isInvestigatingMove);
         
         //탐색하거나 제자리 회전 중이면 이동 애니메이션 정지
         if (isSearching || isTurning)
@@ -83,5 +82,15 @@ public class EnemyAnimation : MonoBehaviour
         return speed < StopThreshole ? 0f : speed;
     }
 
-  
+     void OnDisable()
+    {
+        if(_animator == null) return;
+        _animator.SetFloat(SpeedHash,0f);
+        _animator.SetBool(isTurningHash,false);
+        _animator.SetFloat(TurnDirectionHash,0f);
+        _animator.SetBool(IsSearchingHash,false);
+        _animator.SetBool(IsInvestigatingHash,false);
+
+    }
+
 }

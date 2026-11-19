@@ -11,6 +11,8 @@ public class EnemyVision : MonoBehaviour
     [SerializeField, Min(0.1f)]
     float _viewRadius = 8f;
 
+    [SerializeField, Range(0.2f, 1f)] float _crouchViewRadiusMultiplier = 0.6f; //웅크린 플레이어는 쵀대 시야 거리가 60%로 축소
+
     [SerializeField, Range(1f, 360f)]
     float _viewAngle = 90f;
 
@@ -18,6 +20,8 @@ public class EnemyVision : MonoBehaviour
     [SerializeField] LayerMask _obstacleMask;
 
     bool _canSeePlayer;
+    PlayerMovement _playerMovement;
+    PlayerCover _playerCover;
 
     public bool CanSeePlayer => _canSeePlayer;
     public float ViewRadius => _viewRadius;
@@ -26,7 +30,17 @@ public class EnemyVision : MonoBehaviour
     //눈 위치가 없으면 현재 오브젝트 위치 사용
     public Vector3 EyePosition => _eyePoint != null ? _eyePoint.position : transform.position;
     public Transform PlayerTarget => _playerTarget;
-
+    //EnemmyFSM에서 감지 게이지 속도 조절에 사용할 상태 프로퍼티
+    public bool IsPlayerStealthStance => (_playerMovement != null && _playerMovement.IsCrouching) || (_playerCover != null && _playerCover.IsInCover);
+    public float CurrentPlayerDistance => _playerTarget != null ? Vector3.Distance(EyePosition, _playerTarget.position) : float.PositiveInfinity;
+     void Awake()
+    {
+        if(_playerTarget != null)
+        {
+            _playerMovement = _playerTarget.GetComponentInParent<PlayerMovement>();
+            _playerCover = _playerTarget.GetComponentInParent<PlayerCover>();
+        }
+    }
     void Update()
     {
         CheckPlayer(EyePosition, GetFlatForward());
@@ -64,8 +78,12 @@ public class EnemyVision : MonoBehaviour
         if (_playerTarget == null || !_playerTarget.gameObject.activeInHierarchy) return false;
         Vector3 toPlayer = _playerTarget.position - eyePosition;
         float distance = toPlayer.magnitude;
+
+        //웅크리거나 엄폐 중일 때는 유효 최대 시야 거리 축소(다른 방 순찰 적의 원거리 발각 방지)
+        float effectiveRadius = IsPlayerStealthStance ? _viewRadius * _crouchViewRadiusMultiplier : _viewRadius;
+
         //시야 거리 밖이면 감지하지 않음
-        if (distance > _viewRadius) return false;
+        if (distance > effectiveRadius) return false;
         //두 기준점이 겹치면 감지하고 방향 계산 생략
         if (distance <= 0.001f) return true;
 

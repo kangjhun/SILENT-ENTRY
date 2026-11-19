@@ -21,6 +21,11 @@ public class PlayerCover : MonoBehaviour
 
     [SerializeField, Min(0.01f)] float _cornerProbeRadius = 0.08f;
 
+    [Header("엄폐 시야 피격점 보정")]
+    [SerializeField] Transform _visionTarget;
+    [SerializeField, Min(0f)] float _coverVisionInset = 0.22f;//벽 쪽으로 몸을 바짝 붙이는 깊이
+    Vector3 _visionOriginalLocalPos;
+
     CharacterController _controller;
     PlayerMovement _movement;
 
@@ -56,11 +61,16 @@ public class PlayerCover : MonoBehaviour
     void Awake()
     {
         _controller = GetComponent<CharacterController>();
-        _movement = GetComponent<PlayerMovement>(); 
-        //엄폐 해제 시 복구할 모델 위치 저장
-        if(_visualRoot != null)
+        _movement = GetComponent<PlayerMovement>();
+        // 엄폐 해제 시 복구할 모델 위치 저장
+        if (_visualRoot != null)
         {
             _visualOriginalLocalPosition = _visualRoot.localPosition;
+        }
+        // 엄폐 해제 시 복구할 시야 타겟 위치 저장
+        if (_visionTarget != null)
+        {
+            _visionOriginalLocalPos = _visionTarget.localPosition;
         }
     }
 
@@ -90,24 +100,34 @@ public class PlayerCover : MonoBehaviour
         //캐릭터의 등이 벽을 향하도록 회전
         transform.rotation = Quaternion.LookRotation(_wallNormal);
         IsInCover = true;
-        //모젤을 벽 쪽으로 옮겨 기대는 모습 조정
-        if(_visualRoot != null)
+        // 모델을 벽 쪽으로 옮겨 기대는 모습 조정
+        if (_visualRoot != null)
         {
             _visualRoot.localPosition = _visualOriginalLocalPosition;
-            _visualRoot.position -= _wallNormal * _visualWallOffset;   
+            _visualRoot.position -= _wallNormal * _visualWallOffset;
+        }
+        // 시야 피격점도 벽 안쪽으로 바짝 당겨 모서리 노출 방지
+        if (_visionTarget != null)
+        {
+            _visionTarget.localPosition = _visionOriginalLocalPos - Vector3.forward * _coverVisionInset;
         }
 
-        
+
     }
 
     public void ExitCover()
     {
         IsInCover = false;
         _wall = null;
-        //모델을 원래 위치로 복구
-        if(_visualRoot != null )
+        // 모델을 원래 위치로 복구
+        if (_visualRoot != null)
         {
             _visualRoot.localPosition = _visualOriginalLocalPosition;
+        }
+        // 시야 피격점을 원래 위치로 복구
+        if (_visionTarget != null)
+        {
+            _visionTarget.localPosition = _visionOriginalLocalPos;
         }
     }
 

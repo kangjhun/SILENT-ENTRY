@@ -760,14 +760,15 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "<color=#C7AA70>W A S D</color><pos=240>\uC774\uB3D9\r\n<color=#C7AA70>\uB9C8\uC6B0\uC2A4</color><pos=240>\uC2DC\uC810
-    \uD68C\uC804\r\n<color=#C7AA70>\uC67C\uCABD Shift</color><pos=240>\uB2EC\uB9AC\uAE30
-    \u2014 \uC2A4\uD0DC\uBBF8\uB098 \uC18C\uBAA8\r\n<color=#C7AA70>C</color><pos=240>\uC6C5\uD06C\uB9AC\uAE30
+  m_text: "<color=#C7AA70>W A S D</color><pos=240>\uC774\uB3D9 (\uC5C4\uD3D0 \uC911
+    \uC88C\uC6B0 \uC774\uB3D9)\r\n<color=#C7AA70>\uB9C8\uC6B0\uC2A4</color><pos=240>\uC2DC\uC810
+    \uD68C\uC804 (\uBCBD \uB05D \uC2DC\uC57C \uD655\uBCF4)\r\n<color=#C7AA70>\uC67C\uCABD
+    Shift</color><pos=240>\uB2EC\uB9AC\uAE30 (\uC2A4\uD0DC\uBBF8\uB098 \xB7 \uC18C\uC74C)\r\n<color=#C7AA70>C</color><pos=240>\uC6C5\uD06C\uB9AC\uAE30
     / \uC77C\uC5B4\uC11C\uAE30\r\n<color=#C7AA70>E</color><pos=240>\uC0C1\uD638\uC791\uC6A9
-    / \uC5C4\uD3D0 \uD574\uC81C\r\n<color=#C7AA70>G \uB204\uB974\uAE30 \uC720\uC9C0</color><pos=240>\uB3D9\uC804
-    \uD22C\uCC99 \uD798 \uCDA9\uC804\r\n<color=#C7AA70>G \uB5BC\uAE30</color><pos=240>\uB3D9\uC804
-    \uB358\uC9C0\uAE30\r\n<color=#C7AA70>ESC</color><pos=240>\uC77C\uC2DC\uC815\uC9C0
-    / \uC870\uC791\uBC95 \uB2EB\uAE30 "
+    / \uC5C4\uD3D0 / \uC5C4\uD3D0 \uD574\uC81C\r\n<color=#C7AA70>G \uB204\uB974\uAE30
+    \uC720\uC9C0</color><pos=240>\uB3D9\uC804 \uC870\uC900 \uBC0F \uD798 \uCDA9\uC804\r\n<color=#C7AA70>G
+    \uB5BC\uAE30</color><pos=240>\uB3D9\uC804 \uB358\uC9C0\uAE30\r\n<color=#C7AA70>ESC</color><pos=240>\uC77C\uC2DC\uC815\uC9C0
+    / \uC870\uC791\uBC95 \uB2EB\uAE30"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 5de1eb114f3df854b9b1ed819db4653b, type: 2}
   m_sharedMaterial: {fileID: -7487908760576022764, guid: 5de1eb114f3df854b9b1ed819db4653b, type: 2}
@@ -794,8 +795,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 26
-  m_fontSizeBase: 26
+  m_fontSize: 22
+  m_fontSizeBase: 22
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -904,10 +905,14 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\uB3D9\uC804\uC774 \uBD80\uB527\uD78C \uACF3\uC73C\uB85C \uACBD\uBE44\uB97C
-    \uC720\uC778\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4.\n\uB358\uC9C4 \uB3D9\uC804\uC740
-    \uAC00\uAE4C\uC774\uC5D0\uC11C E\uD0A4\uB85C \uD68C\uC218\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4.\n\uBAA9\uD45C\uBB3C\uC744
-    \uD655\uBCF4\uD55C \uB4A4 \uD604\uAD00\uC5D0\uC11C \uD0C8\uCD9C\uD558\uC138\uC694."
+  m_text: "<color=#C7AA70>\u2022 \uC18C\uC74C \uC720\uC778</color>  \uB3D9\uC804
+    \uD22C\uCC99\xB7\uB77C\uB514\uC624\uB85C \uACBD\uBE44\uB97C \uC720\uC778\uD558\uACE0,
+    \uB3D9\uC804\uC740 E\uD0A4\uB85C \uD68C\uC218\uD558\uC138\uC694.\r\n<color=#C7AA70>\u2022
+    \uC740\uC2E0\uACFC \uC5C4\uD3D0</color>  \uC6C5\uD06C\uB9AC\uAC70\uB098 \uBCBD
+    \uC5C4\uD3D0\uB85C \uB178\uCD9C\uC744 \uC904\uC774\uACE0, \uBCBD \uB05D\uC5D0\uC11C
+    \uC815\uCC30\uD558\uC138\uC694.\r\n<color=#C7AA70>\u2022 \uD0C8\uCD9C \uBAA9\uD45C</color> 
+    \uBAA9\uD45C\uBB3C \uD655\uBCF4 \uC2DC \uACBD\uBE44\uAC00 \uAC15\uD654\uB418\uB2C8
+    \uC8FC\uC758\uD574 \uD604\uAD00\uC73C\uB85C \uD0C8\uCD9C\uD558\uC138\uC694."
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 5de1eb114f3df854b9b1ed819db4653b, type: 2}
   m_sharedMaterial: {fileID: -7487908760576022764, guid: 5de1eb114f3df854b9b1ed819db4653b, type: 2}

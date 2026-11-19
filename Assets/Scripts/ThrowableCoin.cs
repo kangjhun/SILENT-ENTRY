@@ -25,9 +25,18 @@ public class ThrowableCoin : MonoBehaviour,IInteractable
     public string DisplayName => "동전 회수";
 
     public Vector3 InteractionPosition => _collider != null ? _collider.bounds.center : transform.position;
-    //첫 충돌 후 일정 시간이 지나고 거의 멈췄을 때 회수 가능
-    public bool CanInteract => isActiveAndEnabled && !_collected && _owner != null && _owner.CanRecoverCoin && _hasImpacted &&
-        Time.time >= _firstImpactTime + _pickupDelay && _rigidbody != null && _rigidbody.linearVelocity.sqrMagnitude <= _pickupMaxSpeed * _pickupMaxSpeed;
+    //첫 충돌 후 거의 멈췄거나, 일정 시간(2.5초)이 경과하면 회수 가능
+    public bool CanInteract
+    {
+        get{ 
+            if (!isActiveAndEnabled || _collected || _owner == null || !_owner.CanRecoverCoin || !_hasImpacted) return false; 
+            float elapsed = Time.time - _firstImpactTime;
+            if(elapsed < _pickupDelay) return false;
+
+            bool isSlowEnough = _rigidbody != null && _rigidbody.linearVelocity.sqrMagnitude <= _pickupMaxSpeed * _pickupMaxSpeed;
+            return isSlowEnough || elapsed >= 2.5f;
+        }
+    }
     //게임 실행 시작 시 이전 이벤트 연결 초기화
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     static void ResetEvents()

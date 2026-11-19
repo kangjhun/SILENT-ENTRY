@@ -75,7 +75,8 @@ public class PlayerCoinThrower : MonoBehaviour
     public bool CanRecoverCoin => CoinCount < _maxCoins;
     //충전 시간을 0~1 범위의 값으로 변환
     public float ChargeRatio => Mathf.Clamp01(_chargeTime / Mathf.Max(_fullChargeTime, 0.01f));
-
+    Vector3 _pendingSpawnPosition;
+    Vector3 _pendingLaunchVelocity;
 
     void ShowNotice(string message)
     {
@@ -86,7 +87,8 @@ public class PlayerCoinThrower : MonoBehaviour
     {
         CoinCount = _maxCoins;
         _playerMovement = GetComponentInParent<PlayerMovement>();
-        _playerColliders = GetComponentsInChildren<Collider>();
+        Transform rootTransform = _playerMovement != null ? _playerMovement.transform : transform.root;
+        _playerColliders = rootTransform.GetComponentsInChildren<Collider>();
         //충전 게이지를 표시용으로 설정
         if(_chargeSlider != null)
         {
@@ -220,7 +222,6 @@ public class PlayerCoinThrower : MonoBehaviour
     }
     void TryThrow(float chargeRatio)
     {
-        if (Time.time < _nextThrowTime) return;
 
         if (_playerCamera == null || _throwOrigin == null || _coinPrefab == null)
         {
@@ -236,7 +237,7 @@ public class PlayerCoinThrower : MonoBehaviour
         //발사 순간 카메라 방향이 바뀌었다면 몸 방향도 다시 맞춤
         FaceThrowDirection();
         //회전 후 동전 생성 위치 확인
-        Vector3 origin = _throwOrigin.position;
+        Vector3 origin = IsThrowBlocked(_throwOrigin.position) ? _pendingSpawnPosition : _throwOrigin.position;
 
         if (IsThrowBlocked(origin))
         {
@@ -244,10 +245,9 @@ public class PlayerCoinThrower : MonoBehaviour
             return;
         }
 
-        Vector3 launchVelocity = CalculateLaunchVelocity(origin, chargeRatio);
         ThrowableCoin coin = Instantiate(_coinPrefab, origin, Quaternion.identity);
 
-        coin.Initialize(this, launchVelocity,_playerColliders);
+        coin.Initialize(this, _pendingLaunchVelocity,_playerColliders);
         if(_throwAudioSource != null && _throwClip != null)
         {
             _throwAudioSource.PlayOneShot(_throwClip, _throwVolume);
@@ -285,16 +285,21 @@ public class PlayerCoinThrower : MonoBehaviour
         _pendingPower = power;
         //먼저 몸을 투척 방향으로 회전
         FaceThrowDirection();
+
+        Vector3 spawnOrigin = _throwOrigin.position;
         // 회전한 뒤의 손 위치에서 장애물 확인
-        if (IsThrowBlocked(_throwOrigin.position))
+        if (IsThrowBlocked(spawnOrigin))
         {
             ShowNotice("장애물에 너무 가까워 던질 수 없습니다.");
             return;
         }
+
+        _pendingSpawnPosition = spawnOrigin;
+        _pendingLaunchVelocity = CalculateLaunchVelocity(spawnOrigin,power);
+
         //던질 수 있을 때만 애니메이션 시작
         _releasePending = true;
         _isThrowing = true;
-
         _throwTimeoutAt = Time.time + _throwAnimationTimeout;
         
         
@@ -353,15 +358,16 @@ public class PlayerCoinThrower : MonoBehaviour
 
     Vector3 CalculateLaunchVelocity(Vector3 origin, float chargeRatio)
     {
+        float clampedCharge = Mathf.Clamp01(chargeRatio);
         Ray aimRay = _playerCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
         Vector3 aimPoint = aimRay.GetPoint(15f);
 
         if(Physics.Raycast(aimRay,out RaycastHit hit, 15f, _environmentMask, QueryTriggerInteraction.Ignore))
             aimPoint = hit.point;
         Vector3 direction = (aimPoint - origin).normalized;
-        float speed = Mathf.Lerp(_minThrowSpeed, _maxThrowSpeed, Mathf.Clamp01(chargeRatio));
-
-        return direction * speed + Vector3.up * _upwardSpeed;
+        float speed = Mathf.Lerp(_minThrowSpeed, _maxThrowSpeed, clampedCharge);
+        float upward = _upwardSpeed * Mathf.Lerp(0.35f,1f,clampedCharge);
+        return direction * speed + Vector3.up * upward;
     }
 
     bool IsThrowBlocked(Vector3 origin)

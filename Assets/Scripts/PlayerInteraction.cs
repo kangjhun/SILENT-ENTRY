@@ -105,11 +105,13 @@ public class PlayerInteraction : MonoBehaviour
 
     IInteractable FindTarget()
     {
-        //동전 -> 문, 라디오 -> 일반 대상 -> 엄폐 순으로 우선 선택
+        //목표물 -> 문, 라디오 -> 동전 -> 일반 대상 -> 엄폐 순으로 우선 선택
         int GetInteractionPriority(IInteractable target)
         {
-            if (target is ThrowableCoin) return 3;
-            if(target is DoorController || target is NoiseDevice) return 2;
+            if (target is ObjectiveItem) return 4;
+            if(target is DoorController) return 3;
+            if (target is NoiseDevice device) return device.IsPlaying ? -1 : 3;
+            if (target is ThrowableCoin) return 2;
             if (target is CoverWall) return 0;
             return 1;
         }

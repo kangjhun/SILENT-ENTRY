@@ -34,7 +34,9 @@ public class NoiseDevice : MonoBehaviour,IInteractable
 
     public Vector3 InteractionPosition => _interactionPoint != null ? _interactionPoint.position : transform.position;
 
-    //재생 중이나 쿨타임 중에도 안내를 표시할 수 있도록 유지
+    // 외부(PlayerInteraction)에서 재생 중 여부 확인용
+    public bool IsPlaying => _soundActive || Time.time < _nextUseTime;
+    //재생 중이나 쿨타임 중에도 안내 문구("라디오 재생 중")를 표시할 수 있도록 유지
     public bool CanInteract => isActiveAndEnabled;
 
     void Awake()

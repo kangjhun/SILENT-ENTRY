@@ -68,7 +68,7 @@ public class PlayerCoverCamera : MonoBehaviour
 
         if(_cover == null)
         {
-            Debug.LogError("PlayerCoverCamera에 PlayerCover를 연겷세요.");
+            Debug.LogError("PlayerCoverCamera에 PlayerCover를 연결하세요.");
             enabled = false;
             return;
         }
@@ -141,7 +141,7 @@ public class PlayerCoverCamera : MonoBehaviour
             //열린 벽 끝에서만 옆으로 이동
             float sideOffset = _edgeSide != 0 ? _sideOffset : 0f;
             //카메라 회전 중심을 벽 바깥과 관찰 방향으로 이동
-            Vector3 worldOffset = Vector3.up * _coverHeight + _cover.WallNormal * _outwardOffset + alongWall * _sideOffset;
+            Vector3 worldOffset = Vector3.up * _coverHeight + _cover.WallNormal * _outwardOffset + alongWall * sideOffset;
             //월드 방향을 Player의 로컬 방향으로 변환
             targetOffset = _cover.transform.InverseTransformDirection(worldOffset);
 

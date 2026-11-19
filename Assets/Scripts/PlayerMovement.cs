@@ -19,6 +19,11 @@ public class PlayerMovement : MonoBehaviour
 
     [SerializeField] float _gravity = -20f;
 
+    [Header("시야 타겟 높이 보정")]
+    [SerializeField] Transform _visionTarget;
+    [SerializeField] float _crouchTargetY = 0.65f;//웅크렸을 때 타겟의 로컬 Y높이
+    float _standingTargetY;
+
     [Header("스태미나")]
     [SerializeField, Min(1f)] float _maxStamina = 100f;
     [SerializeField, Min(0.1f)] float _staminaDrainPerSecond = 40f;
@@ -26,6 +31,8 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField, Min(0f)] float _staminaRecoveryDelay = 1f;
 
     [SerializeField, Range(0.01f, 1f)] float _runResumeRatio = 0.5f;
+
+
 
     float _curretStamina;
     float _staminaRecoveryTimer;
@@ -53,6 +60,8 @@ public class PlayerMovement : MonoBehaviour
         _controller = GetComponent<CharacterController> ();
         _cover = GetComponent<PlayerCover> ();
         _coinThrower = GetComponentInChildren<PlayerCoinThrower> ();
+        if (_visionTarget != null)
+            _standingTargetY = _visionTarget.localPosition.y;
         _standingHeight = _controller.height;
         _standingCenter = _controller.center;
         _curretStamina = _maxStamina;
@@ -83,7 +92,11 @@ public class PlayerMovement : MonoBehaviour
     void Update()
     {
 
-        if (Time.timeScale == 0f) return;
+        if (Time.timeScale == 0f)
+        {
+            IsRunning = false;
+            return;
+        }
 
         if(_camerTransform == null) return; 
 
@@ -252,6 +265,12 @@ public class PlayerMovement : MonoBehaviour
 
         _controller.height = height;
         _controller.center = center;
+        if(_visionTarget != null)
+        {
+            Vector3 targetPos = _visionTarget.localPosition;
+            targetPos.y = crouching ? _crouchTargetY : _standingTargetY;
+            _visionTarget.localPosition = targetPos;
+        }
     }
     //현재 머리 위치부터 일어섰을 때의 머리 위치까지 장애물 확인
     bool CanStand()
